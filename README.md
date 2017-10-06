@@ -57,7 +57,7 @@ binance.buy("ETHBTC", 1, 0.0679); //symbol, quantity, price
 #### Placing a MARKET order
 ```javascript
 binance.buy("ETHBTC", 1, 0, "MARKET") //symbol, quantity, price, type
-binance.sell(symbol, quantity, 0, "MARKET");
+//binance.sell(symbol, quantity, 0, "MARKET");
 ```
 
 #### Cancel an order
