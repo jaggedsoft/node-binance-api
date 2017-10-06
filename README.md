@@ -5,8 +5,8 @@ This project is to help get you started trading on Binance with the API. Advance
 ```javascript
 const binance = require('./node-binance-api.js');
 binance.options({
-  'APIKEY':'<key>',
-  'APISECRET':'<secret>'
+	'APIKEY':'<key>',
+	'APISECRET':'<secret>'
 });
 ```
 
@@ -37,7 +37,7 @@ binance.bookTickers(function(ticker) {
 #### Get all bid/ask prices
 ```javascript
 binance.allBookTickers(function(json) {
-  console.log("allBookTickers",json);
+	console.log("allBookTickers",json);
 });
 ```
 
@@ -92,7 +92,7 @@ binance.cancel("ETHBTC", orderid, function(response) {
 #### Trade history
 ```javascript
 binance.trades("SNMBTC", function(json) {
-  console.log("trade history",json);
+	console.log("trade history",json);
 });
 ```
 
