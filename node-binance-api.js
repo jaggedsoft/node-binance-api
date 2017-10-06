@@ -22,26 +22,26 @@ module.exports = function() {
 	const request = require('request');
 	const crypto = require('crypto');
 	const base = 'https://www.binance.com/api/';
-    let options = {};
-    
-    const publicRequest = function(url, data, callback, method = "GET") {
-        if ( !data ) data = {};
-        let opt = {
-            url: url,
-            qs: data,
-            method: method,
-            agent: false,
-            headers: {
-                'User-Agent': 'Mozilla/4.0 (compatible; Node Binance API)',
-                'Content-type': 'application/x-www-form-urlencoded'
-            }
-        };
-        request(opt, function(error, response, body) {
-            if ( !response || !body ) throw "publicRequest error: "+error;
-            if ( callback ) callback(JSON.parse(body));
-        });
-    };
-    
+	let options = {};
+	
+	const publicRequest = function(url, data, callback, method = "GET") {
+		if ( !data ) data = {};
+		let opt = {
+			url: url,
+			qs: data,
+			method: method,
+			agent: false,
+			headers: {
+				'User-Agent': 'Mozilla/4.0 (compatible; Node Binance API)',
+				'Content-type': 'application/x-www-form-urlencoded'
+			}
+		};
+		request(opt, function(error, response, body) {
+			if ( !response || !body ) throw "publicRequest error: "+error;
+			if ( callback ) callback(JSON.parse(body));
+		});
+	};
+		
 	const signedRequest = function(url, data, callback, method = "GET") {
 		if ( !data ) data = {};
 		data.timestamp = new Date().getTime();
@@ -64,59 +64,59 @@ module.exports = function() {
 			if ( callback ) callback(JSON.parse(body));
 		});
 	};
-    
-    const order = function(side, symbol, quantity, price, type = "LIMIT") {
-        let opt = {
-            symbol: symbol,
-            side: side,
-            type: type,
-            price: price,
-            quantity: quantity,
-            timeInForce: "GTC",
-            recvWindow: 60000
-        };
-        signedRequest(base+"v3/order", opt, function(response) {
-            console.log(side+"("+symbol+","+quantity+","+price+") ",response);
-        }, "POST");
-    };
-    ////////////////////////////
-    const priceData = function(data) {
-        let prices = {};
-        for ( let obj of data ) {
-            prices[obj.symbol] = obj.price;
-        }
-        return prices;
+	
+	const order = function(side, symbol, quantity, price, type = "LIMIT") {
+		let opt = {
+			symbol: symbol,
+			side: side,
+			type: type,
+			price: price,
+			quantity: quantity,
+			timeInForce: "GTC",
+			recvWindow: 60000
+		};
+		signedRequest(base+"v3/order", opt, function(response) {
+				console.log(side+"("+symbol+","+quantity+","+price+") ",response);
+		}, "POST");
 	};
-    const bookPriceData = function(data) {
-        let prices = {};
-        for ( let obj of data ) {
-            prices[obj.symbol] = {
-                bid:obj.bidPrice,
-                bids:obj.bidQty,
-                ask:obj.askPrice,
-                asks:obj.askQty
-            };
-        }
-        return prices;
+	////////////////////////////
+	const priceData = function(data) {
+		let prices = {};
+		for ( let obj of data ) {
+				prices[obj.symbol] = obj.price;
+		}
+		return prices;
 	};
-    const balanceData = function(data) {
-        let balances = {};
-        for ( let obj of data.balances ) {
-            balances[obj.asset] = {available:obj.free, onOrder:obj.locked};
-        }
-        return balances;
+	const bookPriceData = function(data) {
+		let prices = {};
+		for ( let obj of data ) {
+			prices[obj.symbol] = {
+				bid:obj.bidPrice,
+				bids:obj.bidQty,
+				ask:obj.askPrice,
+				asks:obj.askQty
+			};
+		}
+		return prices;
 	};
-    ////////////////////////////
+	const balanceData = function(data) {
+		let balances = {};
+		for ( let obj of data.balances ) {
+			balances[obj.asset] = {available:obj.free, onOrder:obj.locked};
+		}
+		return balances;
+	};
+	////////////////////////////
 	return {
 		options: function(opt) {
 			options = opt;
 		},
 		buy: function(symbol, quantity, price, type = "LIMIT") {
-            order("BUY", symbol, quantity, price, type);
+				order("BUY", symbol, quantity, price, type);
 		},
 		sell: function(symbol, quantity, price, type = "LIMIT") {
-            order("SELL", symbol, quantity, price, type);
-        },
+				order("SELL", symbol, quantity, price, type);
+			},
 		cancel: function(symbol, orderid, callback) {
 			signedRequest(base+"v3/order", {symbol:symbol, orderId:orderid}, callback, "DELETE");
 		},
@@ -149,15 +149,15 @@ module.exports = function() {
 		},
 		balance: function(callback) {
 			signedRequest(base+"v3/account", {}, function(data) {
-                if ( callback ) callback(balanceData(data));
-            });
+				if ( callback ) callback(balanceData(data));
+			});
 		},
 		trades: function(symbol,callback) {
 			signedRequest(base+"v3/myTrades", {symbol:symbol}, callback);
 		},
-        publicRequest: function(url, data, callback, method = "GET") {
-            publicRequest(url, data, callback, method)
-        },
+		publicRequest: function(url, data, callback, method = "GET") {
+			publicRequest(url, data, callback, method)
+		},
 		signedRequest: function(url, data, callback, method = "GET") {
 			signedRequest(url, data, callback, method);
 		}
