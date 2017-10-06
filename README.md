@@ -1,5 +1,6 @@
 # Node Binance API
 =========
+
 This project is to help get you started trading on Binance with the API. Advanced features are going to be added such as WebSockets, reading candlestick chart data, stop losses and iceberg orders.
 
 #### Getting started
