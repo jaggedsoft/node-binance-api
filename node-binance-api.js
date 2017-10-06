@@ -1,7 +1,6 @@
 /* ============================================================
  * node-binance-api
  * https://github.com/jaggedsoft/node-binance-api
- *
  * ============================================================
  * Copyright 2017-, Jon Eyrick
  * Released under the MIT License
@@ -112,11 +111,11 @@ module.exports = function() {
 			options = opt;
 		},
 		buy: function(symbol, quantity, price, type = "LIMIT") {
-				order("BUY", symbol, quantity, price, type);
+			order("BUY", symbol, quantity, price, type);
 		},
 		sell: function(symbol, quantity, price, type = "LIMIT") {
-				order("SELL", symbol, quantity, price, type);
-			},
+			order("SELL", symbol, quantity, price, type);
+		},
 		cancel: function(symbol, orderid, callback) {
 			signedRequest(base+"v3/order", {symbol:symbol, orderId:orderid}, callback, "DELETE");
 		},
