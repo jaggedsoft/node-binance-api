@@ -69,3 +69,11 @@ binance.balance(function(balances) {
 //binance.buy(symbol, quantity, price, type);
 //binance.buy("ETHBTC", 1, 0, "MARKET")
 //binance.sell(symbol, quantity, 0, "MARKET");
+
+// Periods: 1m,3m,5m,15m,30m,1h,2h,4h,6h,8h,12h,1d,3d,1w,1M
+binance.candlesticks("BNBBTC", "5m", function(ticks) {
+	console.log("candlesticks()", ticks);
+	let last_tick = ticks[ticks.length - 1];
+	let [time, open, high, low, close, volume, closeTime, assetVolume, trades, buyBaseVolume, buyAssetVolume, ignored] = last_tick;
+	console.log("BNBBTC last close: "+close);
+});
