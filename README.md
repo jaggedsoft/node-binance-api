@@ -113,3 +113,68 @@ binance.candlesticks("BNBBTC", "5m", function(ticks) {
 	console.log("BNBBTC last close: "+close);
 });
 ```
+
+# WebSockets Implementation
+
+#### Get Market depth via WebSocket
+```javascript
+binance.websockets.depth(['BNBBTC'], function(depth) {
+	let {e:eventType, E:eventTime, s:symbol, u:updateId, b:bidDepth, a:askDepth} = depth;
+	console.log(symbol+" market depth update");
+	console.log(bidDepth, askDepth);
+});
+```
+
+#### Get Trade Updates via WebSocket
+```javascript
+binance.websockets.trades(['BNBBTC', 'ETHBTC'], function(trades) {
+	let {e:eventType, E:eventTime, s:symbol, p:price, q:quantity, m:maker, a:tradeId} = trades;
+	console.log(symbol+" trade update. price: "+price+", quantity: "+quantity+", maker: "+maker);
+});
+```
+
+#### User Data: Account Updates, Trade Updates, New Orders, Filled Orders, Cancelled Orders
+```javascript
+binance.websockets.userData(function(data) {
+	let type = data.e;
+	if ( type == "outboundAccountInfo" ) {
+		console.log("Balance Update");
+		for ( let obj of data.B ) {
+			let { a:asset, f:available, l:onOrder } = obj;
+			if ( available == "0.00000000" ) continue;
+			console.log(asset+"\tavailable: "+available+" ("+onOrder+" on order)");
+		}
+	} else if ( type == "executionReport" ) {
+		let { x:executionType, s:symbol, p:price, q:quantity, S:side, o:orderType, i:orderId, X:orderStatus } = data;
+		if ( executionType == "NEW" ) {
+			if ( orderStatus == "REJECTED" ) {
+				console.log("Order Failed! Reason: "+data.r);
+			}
+			console.log(symbol+" "+side+" "+orderType+" ORDER #"+orderId+" ("+orderStatus+")");
+			console.log("..price: "+price+", quantity: "+quantity);
+			return;
+		}
+		//NEW, CANCELED, REPLACED, REJECTED, TRADE, EXPIRED
+		console.log(symbol+"\t"+side+" "+executionType+" "+orderType+" ORDER #"+orderId);
+	} else {
+		console.log("Unexpected data: "+type);
+	}
+});
+```
+
+#### Get Candlestick updates via WebSocket
+```javascript
+// Periods: 1m,3m,5m,15m,30m,1h,2h,4h,6h,8h,12h,1d,3d,1w,1M
+binance.websockets.candlesticks(['BNBBTC'], "1m", function(candlesticks) {
+	let { e:eventType, E:eventTime, s:symbol, k:ticks } = candlesticks;
+	let { o:open, h:high, l:low, c:close, v:volume, n:trades, i:interval, x:isFinal, q:quoteVolume, V:buyVolume, Q:quoteBuyVolume } = ticks;
+	console.log(symbol+" "+interval+" candlestick update");
+	console.log("open: "+open);
+	console.log("high: "+high);
+	console.log("low: "+low);
+	console.log("close: "+close);
+	console.log("volume: "+volume);
+	console.log("isFinal: "+isFinal);
+});
+```
+
