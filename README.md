@@ -1,5 +1,5 @@
 # Node Binance API
-This project is to help get you started trading on Binance with the API and is designed to be as easy to use as possible. You can stream candlestick chart data, or use other advanced features such as setting stop losses and iceberg orders. This project seeks to have complete API coverage including WebSockets and will be updated regularly.
+This project is to help get you started trading on Binance with the API and is designed to be easy to use. You can stream candlestick chart data, or use other advanced features such as setting stop losses and iceberg orders. This project seeks to have complete API coverage including WebSockets and will be updated regularly.
 
 #### Getting started
 ```javascript
