@@ -50,13 +50,15 @@ binance.depth("SNMBTC", function(json) {
 
 #### Placing a LIMIT order
 ```javascript
-binance.buy("ETHBTC", 1, 0.0679); //symbol, quantity, price
+var quantity = 1, price = 0.069;
+binance.buy("ETHBTC", quantity, price);
 //binance.sell("ETHBTC", 1, 0.069);
 ```
 
 #### Placing a MARKET order
 ```javascript
-binance.buy("ETHBTC", 1, 0, "MARKET") //symbol, quantity, price, type
+var quantity = 1;
+binance.buy("ETHBTC", quantity, 0, "MARKET")
 //binance.sell(symbol, quantity, 0, "MARKET");
 ```
 
