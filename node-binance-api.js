@@ -87,13 +87,13 @@ module.exports = function() {
 	////////////////////////////
 	const subscribe = function(endpoint, callback) {
 		const ws = new WebSocket(websocket_base+endpoint);
-	    ws.on('open', function() {
+	  	ws.on('open', function() {
 			//console.log("subscribe("+endpoint+")");
 		});
 		
 		ws.on('message', function(data) {
 			//console.log(data);
-            callback(JSON.parse(data));
+           		callback(JSON.parse(data));
 		});
 	};
 	////////////////////////////
