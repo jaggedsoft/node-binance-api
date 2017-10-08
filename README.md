@@ -1,5 +1,5 @@
 # Node Binance API
-This project is to help get you started trading on Binance with the API. Advanced features are going to be added such as WebSockets, reading candlestick chart data, stop losses and iceberg orders.
+This project is to help get you started trading on Binance with the API. You can stream candlestick chart data or use other advanced features, like stop losses and iceberg orders.
 
 #### Getting started
 ```javascript
@@ -164,7 +164,7 @@ binance.websockets.userData(function(data) {
 });
 ```
 
-#### Get Candlestick updates via WebSocket
+#### Get Candlestick Updates via WebSocket
 ```javascript
 // Periods: 1m,3m,5m,15m,30m,1h,2h,4h,6h,8h,12h,1d,3d,1w,1M
 binance.websockets.candlesticks(['BNBBTC'], "1m", function(candlesticks) {
