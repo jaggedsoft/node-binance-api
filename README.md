@@ -116,7 +116,7 @@ binance.candlesticks("BNBBTC", "5m", function(ticks) {
 
 # WebSockets Implementation
 
-#### Get Market depth via WebSocket
+#### Get Market Depth via WebSocket
 ```javascript
 binance.websockets.depth(['BNBBTC'], function(depth) {
 	let {e:eventType, E:eventTime, s:symbol, u:updateId, b:bidDepth, a:askDepth} = depth;
@@ -133,7 +133,7 @@ binance.websockets.trades(['BNBBTC', 'ETHBTC'], function(trades) {
 });
 ```
 
-#### User Data: Account Updates, Trade Updates, New Orders, Filled Orders, Cancelled Orders
+#### User Data: Account Updates, Trade Updates, New Orders, Filled Orders, Cancelled Orders via WebSocket
 ```javascript
 binance.websockets.userData(function(data) {
 	let type = data.e;
