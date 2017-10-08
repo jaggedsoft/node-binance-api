@@ -3,21 +3,13 @@
  * https://github.com/jaggedsoft/node-binance-api
  * ============================================================ */
 
-/*
-https://www.binance.com/restapipub.html
-TODO: add WebSocket support
-TODO: add candlestick support
-TODO: stopPrice, icebergQty, aggTrades
-
-PUBLIC endpoints:
-GET /api/v1/depth (symbol, limit=100)
-GET /api/v1/klines candlesticks (symbol, interval) [limit=500, startTime, endTime]
-*/
 module.exports = function() {
 	'use strict';
+	const WebSocket = require('ws');
 	const request = require('request');
 	const crypto = require('crypto');
 	const base = 'https://www.binance.com/api/';
+	const websocket_base = 'wss://stream.binance.com:9443/ws/';
 	let options = {};
 	
 	const publicRequest = function(url, data, callback, method = "GET") {
@@ -34,6 +26,23 @@ module.exports = function() {
 		};
 		request(opt, function(error, response, body) {
 			if ( !response || !body ) throw "publicRequest error: "+error;
+			if ( callback ) callback(JSON.parse(body));
+		});
+	};
+	
+	const apiRequest = function(url, callback, method = "GET") {
+		let opt = {
+			url: url,
+			method: method,
+			agent: false,
+			headers: {
+				'User-Agent': 'Mozilla/4.0 (compatible; Node Binance API)',
+				'Content-type': 'application/x-www-form-urlencoded',
+				'X-MBX-APIKEY': options.APIKEY
+			}
+		};
+		request(opt, function(error, response, body) {
+			if ( !response || !body ) throw "apiRequest error: "+error;
 			if ( callback ) callback(JSON.parse(body));
 		});
 	};
@@ -72,14 +81,26 @@ module.exports = function() {
 			recvWindow: 60000
 		};
 		signedRequest(base+"v3/order", opt, function(response) {
-				console.log(side+"("+symbol+","+quantity+","+price+") ",response);
+			console.log(side+"("+symbol+","+quantity+","+price+") ",response);
 		}, "POST");
+	};
+	////////////////////////////
+	const subscribe = function(endpoint, callback) {
+		const ws = new WebSocket(websocket_base+endpoint);
+	    ws.on('open', function() {
+			//console.log("subscribe("+endpoint+")");
+		});
+		
+		ws.on('message', function(data) {
+			//console.log(data);
+            callback(JSON.parse(data));
+		});
 	};
 	////////////////////////////
 	const priceData = function(data) {
 		let prices = {};
 		for ( let obj of data ) {
-				prices[obj.symbol] = obj.price;
+			prices[obj.symbol] = obj.price;
 		}
 		return prices;
 	};
@@ -159,6 +180,35 @@ module.exports = function() {
 		},
 		signedRequest: function(url, data, callback, method = "GET") {
 			signedRequest(url, data, callback, method);
+		},
+		websockets: {
+			userData: function(callback) {
+				apiRequest(base+"v1/userDataStream", function(response) {
+					options.listenKey = response.listenKey;
+					setInterval(function() { // keepalive
+						apiRequest(base+"v1/userDataStream", false, "PUT");
+					},30000);
+					subscribe(options.listenKey, callback);
+				},"POST");
+			},
+			subscribe: function(url, callback) {
+				
+			},
+			depth: function(symbols, callback) {
+				for ( let symbol of symbols ) {
+					subscribe(symbol.toLowerCase()+"@depth", callback);
+				}
+			},
+			trades: function(symbols, callback) {
+				for ( let symbol of symbols ) {
+					subscribe(symbol.toLowerCase()+"@aggTrade", callback);
+				}
+			},
+			candlesticks: function(symbols, interval, callback) {
+				for ( let symbol of symbols ) {
+					subscribe(symbol.toLowerCase()+"@kline_"+interval, callback);
+				}
+			}
 		}
 	};
 }();
