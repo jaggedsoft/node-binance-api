@@ -36,15 +36,15 @@ binance.bookTickers(function(ticker) {
 
 #### Get all bid/ask prices
 ```javascript
-binance.allBookTickers(function(json) {
-	console.log("allBookTickers",json);
+binance.allBookTickers(function(ticker) {
+	console.log("allBookTickers", ticker);
 });
 ```
 
 #### Get market depth for a symbol
 ```javascript
-binance.depth("SNMBTC", function(json) {
-	console.log("market depth",json);
+binance.depth("SNMBTC", function(depth) {
+	console.log("market depth", depth);
 });
 ```
 
@@ -65,43 +65,43 @@ binance.buy("ETHBTC", quantity, 0, "MARKET")
 #### Cancel an order
 ```javascript
 binance.cancel("ETHBTC", orderid, function(response) {
-	console.log("cancel()",response);
+	console.log("cancel()", response);
 });
 ```
 
 #### Getting list of open orders
 ```javascript
-binance.openOrders("ETHBTC", function(json) {
-	console.log("openOrders()",json);
+binance.openOrders("ETHBTC", function(openOrders) {
+	console.log("openOrders()", openOrders);
 });
 ```
 
 #### Check an order's status
 ```javascript
 let orderid = "7610385";
-binance.orderStatus("ETHBTC", orderid, function(json) {
-	console.log("orderStatus()",json);
+binance.orderStatus("ETHBTC", orderid, function(orderStatus) {
+	console.log("orderStatus()", orderStatus);
 });
 ```
 
 #### Cancel an order
 ```javascript
 binance.cancel("ETHBTC", orderid, function(response) {
-	console.log("cancel()",response);
+	console.log("cancel()", response);
 });
 ```
 
 #### Trade history
 ```javascript
-binance.trades("SNMBTC", function(json) {
-	console.log("trade history",json);
+binance.trades("SNMBTC", function(trades) {
+	console.log("trade history", trades);
 });
 ```
 
 #### Get all account orders; active, canceled, or filled.
 ```javascript
-binance.allOrders("ETHBTC", function(json) {
-	console.log(json);
+binance.allOrders("ETHBTC", function(orders) {
+	console.log(orders);
 });
 ```
 
