@@ -52,14 +52,15 @@ binance.depth("SNMBTC", function(depth) {
 ```javascript
 var quantity = 1, price = 0.069;
 binance.buy("ETHBTC", quantity, price);
-//binance.sell("ETHBTC", quantity, 0.069);
+binance.sell("ETHBTC", quantity, price);
 ```
 
 #### Placing a MARKET order
 ```javascript
+// These orders will be executed at current market price.
 var quantity = 1;
-binance.buy("ETHBTC", quantity, 0, {type:"MARKET"})
-//binance.sell(symbol, quantity, 0, {type:"MARKET"});
+binance.buy("BNBBTC", quantity, 0, {type:"MARKET"})
+binance.sell("ETHBTC", quantity, 0, {type:"MARKET"});
 ```
 
 #### Placing a STOP LOSS order
