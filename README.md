@@ -9,7 +9,7 @@ This project is to help get you started trading on Binance with the API and is d
 
 #### Installation
 ```
-npm install node-binance-api
+npm install node-binance-api --save
 ```
 
 #### Getting started
