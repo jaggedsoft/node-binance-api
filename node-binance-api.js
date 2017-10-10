@@ -70,16 +70,19 @@ module.exports = function() {
 		});
 	};
 	
-	const order = function(side, symbol, quantity, price, type = "LIMIT") {
+	const order = function(side, symbol, quantity, price, flags = {}) {
 		let opt = {
 			symbol: symbol,
 			side: side,
-			type: type,
+			type: "LIMIT",
 			price: price,
 			quantity: quantity,
 			timeInForce: "GTC",
 			recvWindow: 60000
 		};
+		if ( typeof flags.type !== "undefined" ) opt.tye = flags.type;
+		if ( typeof flags.icebergQty !== "undefined" ) opt.icebergQty = flags.icebergQty;
+		if ( typeof flags.stopPrice !== "undefined" ) opt.stopPrice = flags.stopPrice;
 		signedRequest(base+"v3/order", opt, function(response) {
 			console.log(side+"("+symbol+","+quantity+","+price+") ",response);
 		}, "POST");
@@ -87,13 +90,13 @@ module.exports = function() {
 	////////////////////////////
 	const subscribe = function(endpoint, callback) {
 		const ws = new WebSocket(websocket_base+endpoint);
-	  	ws.on('open', function() {
+	 	ws.on('open', function() {
 			//console.log("subscribe("+endpoint+")");
 		});
 		
 		ws.on('message', function(data) {
 			//console.log(data);
-           		callback(JSON.parse(data));
+          	  	callback(JSON.parse(data));
 		});
 	};
 	////////////////////////////
@@ -128,11 +131,11 @@ module.exports = function() {
 		options: function(opt) {
 			options = opt;
 		},
-		buy: function(symbol, quantity, price, type = "LIMIT") {
-			order("BUY", symbol, quantity, price, type);
+		buy: function(symbol, quantity, price, flags = {}) {
+			order("BUY", symbol, quantity, price, flags);
 		},
-		sell: function(symbol, quantity, price, type = "LIMIT") {
-			order("SELL", symbol, quantity, price, type);
+		sell: function(symbol, quantity, price, flags = {}) {
+			order("SELL", symbol, quantity, price, flags);
 		},
 		cancel: function(symbol, orderid, callback) {
 			signedRequest(base+"v3/order", {symbol:symbol, orderId:orderid}, callback, "DELETE");
@@ -160,6 +163,9 @@ module.exports = function() {
 				if ( !response || !body ) throw "allBookTickers error: "+error;
 				if ( callback ) callback(bookPriceData(JSON.parse(body)));
 			});
+		},
+		prevDay: function(symbol, callback) {
+			publicRequest(base+"v1/ticker/24hr", {symbol:symbol}, callback);
 		},
 		account: function(callback) {
 			signedRequest(base+"v3/account", {}, callback);
@@ -190,9 +196,6 @@ module.exports = function() {
 					},30000);
 					subscribe(options.listenKey, callback);
 				},"POST");
-			},
-			subscribe: function(url, callback) {
-				
 			},
 			depth: function(symbols, callback) {
 				for ( let symbol of symbols ) {
