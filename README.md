@@ -52,14 +52,33 @@ binance.depth("SNMBTC", function(depth) {
 ```javascript
 var quantity = 1, price = 0.069;
 binance.buy("ETHBTC", quantity, price);
-//binance.sell("ETHBTC", 1, 0.069);
+//binance.sell("ETHBTC", quantity, 0.069);
 ```
 
 #### Placing a MARKET order
 ```javascript
 var quantity = 1;
-binance.buy("ETHBTC", quantity, 0, "MARKET")
-//binance.sell(symbol, quantity, 0, "MARKET");
+binance.buy("ETHBTC", quantity, 0, {type:"MARKET"})
+//binance.sell(symbol, quantity, 0, {type:"MARKET"});
+```
+
+#### Placing an ICEBERG order
+```javascript
+// Iceberg orders are intended to conceal the order quantity.
+var symbol = "ETHBTC";
+var quantity = 1;
+var price = 0.069;
+binance.sell("ETHBTC", quantity, price, {icebergQty: 10});
+```
+
+#### Placing a STOP LOSS order
+```javascript
+// when the stop is reached, a stop order becomes a mar'ket order
+let symbol = "ETHBTC";
+let quantity = 1;
+let price = 0.069;
+let stopPrice = 0.068;
+binance.sell("ETHBTC", quantity, price, {stopPrice: stopPrice});
 ```
 
 #### Cancel an order
@@ -102,6 +121,14 @@ binance.trades("SNMBTC", function(trades) {
 ```javascript
 binance.allOrders("ETHBTC", function(orders) {
 	console.log(orders);
+});
+```
+
+### Getting 24hr ticker price change statistics for a symbol
+```javascript
+binance.prevDay("BNBBTC",function(prevDay) {
+	console.log("prevDay()", prevDay);
+	console.log("BNB change since yesterday: "+prevDay.priceChangePercent+"%")
 });
 ```
 
@@ -180,3 +207,4 @@ binance.websockets.candlesticks(['BNBBTC'], "1m", function(candlesticks) {
 });
 ```
 
+Visit the Binance API documentation at https://www.binance.com/restapipub.html
