@@ -62,6 +62,16 @@ binance.buy("ETHBTC", quantity, 0, {type:"MARKET"})
 //binance.sell(symbol, quantity, 0, {type:"MARKET"});
 ```
 
+#### Placing a STOP LOSS order
+```javascript
+// When the stop is reached, a stop order becomes a market order
+let symbol = "ETHBTC";
+let quantity = 1;
+let price = 0.069;
+let stopPrice = 0.068;
+binance.sell("ETHBTC", quantity, price, {stopPrice: stopPrice});
+```
+
 #### Placing an ICEBERG order
 ```javascript
 // Iceberg orders are intended to conceal the order quantity.
@@ -69,16 +79,6 @@ var symbol = "ETHBTC";
 var quantity = 1;
 var price = 0.069;
 binance.sell("ETHBTC", quantity, price, {icebergQty: 10});
-```
-
-#### Placing a STOP LOSS order
-```javascript
-// when the stop is reached, a stop order becomes a mar'ket order
-let symbol = "ETHBTC";
-let quantity = 1;
-let price = 0.069;
-let stopPrice = 0.068;
-binance.sell("ETHBTC", quantity, price, {stopPrice: stopPrice});
 ```
 
 #### Cancel an order
