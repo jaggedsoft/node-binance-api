@@ -1,8 +1,8 @@
-[![Latest node](https://img.shields.io/node/v/v.svg)]()
-[![Complete coverage](https://camo.githubusercontent.com/f52b6b64144aedecb7596469a608ddf7982a5b01/68747470733a2f2f696d672e736869656c64732e696f2f636f766572616c6c732f726571756573742f726571756573742d70726f6d6973652e7376673f7374796c653d666c61742d737175617265266d61784167653d32353932303030)]()
-[![Build passing](https://camo.githubusercontent.com/16cf66fb5419c83391ce98044e110bc0d4ca1a46/68747470733a2f2f696d672e736869656c64732e696f2f7472617669732f726571756573742f726571756573742f6d61737465722e7376673f7374796c653d666c61742d737175617265)]()
-[![Dependencies up to date](https://camo.githubusercontent.com/895093f8ef43722ff6c4bd61cd720199e76de812/68747470733a2f2f696d672e736869656c64732e696f2f64617669642f726571756573742f726571756573742e7376673f7374796c653d666c61742d737175617265)]()
-[![GitHub last commit](https://img.shields.io/github/last-commit/jaggedsoft/node-binance-api.svg)]()
+[![Latest node](https://img.shields.io/node/v/v.svg)](#)
+[![Complete coverage](https://camo.githubusercontent.com/f52b6b64144aedecb7596469a608ddf7982a5b01/68747470733a2f2f696d672e736869656c64732e696f2f636f766572616c6c732f726571756573742f726571756573742d70726f6d6973652e7376673f7374796c653d666c61742d737175617265266d61784167653d32353932303030)](#)
+[![Build passing](https://camo.githubusercontent.com/16cf66fb5419c83391ce98044e110bc0d4ca1a46/68747470733a2f2f696d672e736869656c64732e696f2f7472617669732f726571756573742f726571756573742f6d61737465722e7376673f7374796c653d666c61742d737175617265)](#)
+[![Dependencies up to date](https://camo.githubusercontent.com/895093f8ef43722ff6c4bd61cd720199e76de812/68747470733a2f2f696d672e736869656c64732e696f2f64617669642f726571756573742f726571756573742e7376673f7374796c653d666c61742d737175617265)](#)
+[![GitHub last commit](https://img.shields.io/github/last-commit/jaggedsoft/node-binance-api.svg)](#)
 
 # Node Binance API
 This project is to help get you started trading on Binance with the API and is designed to be easy to use. You can stream candlestick chart data, or use other advanced features such as setting stop losses and iceberg orders. This project seeks to have complete API coverage including WebSockets and will be updated regularly.
@@ -1169,33 +1169,30 @@ binance.websockets.trades(['BNBBTC', 'ETHBTC'], function(trades) {
 });
 ```
 
-#### User Data: Account Updates, Trade Updates, New Orders, Filled Orders, Cancelled Orders via WebSocket
+#### User Data: Account Balance Updates, Trade Updates, New Orders, Filled Orders, Cancelled Orders via WebSocket
 ```javascript
-binance.websockets.userData(function(data) {
-	let type = data.e;
-	if ( type == "outboundAccountInfo" ) {
-		console.log("Balance Update");
-		for ( let obj of data.B ) {
-			let { a:asset, f:available, l:onOrder } = obj;
-			if ( available == "0.00000000" ) continue;
-			console.log(asset+"\tavailable: "+available+" ("+onOrder+" on order)");
-		}
-	} else if ( type == "executionReport" ) {
-		let { x:executionType, s:symbol, p:price, q:quantity, S:side, o:orderType, i:orderId, X:orderStatus } = data;
-		if ( executionType == "NEW" ) {
-			if ( orderStatus == "REJECTED" ) {
-				console.log("Order Failed! Reason: "+data.r);
-			}
-			console.log(symbol+" "+side+" "+orderType+" ORDER #"+orderId+" ("+orderStatus+")");
-			console.log("..price: "+price+", quantity: "+quantity);
-			return;
-		}
-		//NEW, CANCELED, REPLACED, REJECTED, TRADE, EXPIRED
-		console.log(symbol+"\t"+side+" "+executionType+" "+orderType+" ORDER #"+orderId);
-	} else {
-		console.log("Unexpected data: "+type);
+function balance_update(data) {
+	console.log("Balance Update");
+	for ( let obj of data.B ) {
+		let { a:asset, f:available, l:onOrder } = obj;
+		if ( available == "0.00000000" ) continue;
+		console.log(asset+"\tavailable: "+available+" ("+onOrder+" on order)");
 	}
-});
+}
+function execution_update() {
+	let { x:executionType, s:symbol, p:price, q:quantity, S:side, o:orderType, i:orderId, X:orderStatus } = data;
+	if ( executionType == "NEW" ) {
+		if ( orderStatus == "REJECTED" ) {
+			console.log("Order Failed! Reason: "+data.r);
+		}
+		console.log(symbol+" "+side+" "+orderType+" ORDER #"+orderId+" ("+orderStatus+")");
+		console.log("..price: "+price+", quantity: "+quantity);
+		return;
+	}
+	//NEW, CANCELED, REPLACED, REJECTED, TRADE, EXPIRED
+	console.log(symbol+"\t"+side+" "+executionType+" "+orderType+" ORDER #"+orderId);
+}
+binance.websockets.userData(balance_update, execution_update);
 ```
 <details>
  <summary>View Response</summary>
