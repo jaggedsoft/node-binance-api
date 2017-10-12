@@ -1,8 +1,10 @@
 /* ============================================================
  * node-binance-api
  * https://github.com/jaggedsoft/node-binance-api
+ * ============================================================
+ * Copyright 2017-, Jon Eyrick
+ * Released under the MIT License
  * ============================================================ */
-
 module.exports = function() {
 	'use strict';
 	const WebSocket = require('ws');
@@ -90,14 +92,27 @@ module.exports = function() {
 	////////////////////////////
 	const subscribe = function(endpoint, callback) {
 		const ws = new WebSocket(websocket_base+endpoint);
-	 	ws.on('open', function() {
+	   	ws.on('open', function() {
 			//console.log("subscribe("+endpoint+")");
+		});
+		ws.on('close', function() {
+			console.log("WebSocket connection closed");
 		});
 		
 		ws.on('message', function(data) {
 			//console.log(data);
-          	  	callback(JSON.parse(data));
+            		callback(JSON.parse(data));
 		});
+	};
+	const userDataHandler = function(data) {
+		let type = data.e;
+		if ( type == "outboundAccountInfo" ) {
+			options.balance_callback(data);
+		} else if ( type == "executionReport" ) {
+			options.execution_callback(data);
+		} else {
+			console.log("Unexpected data: "+type);
+		}
 	};
 	////////////////////////////
 	const priceData = function(data) {
@@ -188,14 +203,23 @@ module.exports = function() {
 			signedRequest(url, data, callback, method);
 		},
 		websockets: {
-			userData: function(callback) {
+			userData: function(callback, execution_callback = null) {
 				apiRequest(base+"v1/userDataStream", function(response) {
 					options.listenKey = response.listenKey;
 					setInterval(function() { // keepalive
 						apiRequest(base+"v1/userDataStream", false, "PUT");
 					},30000);
+					if ( typeof execution_callback == "function" ) {
+						options.balance_callback = callback;
+						options.execution_callback = execution_callback;
+						subscribe(options.listenKey, userDataHandler);
+						return;
+					}
 					subscribe(options.listenKey, callback);
 				},"POST");
+			},
+			subscribe: function(url, callback) {
+				
 			},
 			depth: function(symbols, callback) {
 				for ( let symbol of symbols ) {
