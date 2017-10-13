@@ -5,7 +5,7 @@
 [![GitHub last commit](https://img.shields.io/github/last-commit/jaggedsoft/node-binance-api.svg)](#)
 
 # Node Binance API
-This project is to help get you started trading on Binance with the API and is designed to be easy to use. You can stream candlestick chart data, or use other advanced features such as setting stop losses and iceberg orders. This project seeks to have complete API coverage including WebSockets and will be updated regularly.
+This project is designed to help you make your own projects that interact with the [Binance API](https://www.binance.com/restapipub.html). You can stream candlestick chart data, market depth, or use other advanced features such as setting stop losses and iceberg orders. This project seeks to have complete API coverage including WebSockets and will be updated regularly.
 
 #### Installation
 ```
@@ -1186,7 +1186,7 @@ function balance_update(data) {
 		console.log(asset+"\tavailable: "+available+" ("+onOrder+" on order)");
 	}
 }
-function execution_update() {
+function execution_update(data) {
 	let { x:executionType, s:symbol, p:price, q:quantity, S:side, o:orderType, i:orderId, X:orderStatus } = data;
 	if ( executionType == "NEW" ) {
 		if ( orderStatus == "REJECTED" ) {
@@ -1446,5 +1446,3 @@ asks { '0.00022883': '900.00000000',
 //best ask: 0.00022883
 ```
 </details>
-
-Visit the Binance API documentation at https://www.binance.com/restapipub.html
