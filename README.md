@@ -1133,7 +1133,7 @@ binance.allOrders("ETHBTC", function(orders) {
 
 ### Getting 24hr ticker price change statistics for a symbol
 ```javascript
-binance.prevDay("BNBBTC",function(prevDay) {
+binance.prevDay("BNBBTC", function(prevDay) {
 	console.log("prevDay()", prevDay);
 	console.log("BNB change since yesterday: "+prevDay.priceChangePercent+"%")
 });
