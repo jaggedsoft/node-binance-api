@@ -13,8 +13,10 @@ module.exports = function() {
 	const crypto = require('crypto');
 	const base = 'https://www.binance.com/api/';
 	const websocket_base = 'wss://stream.binance.com:9443/ws/';
+	let messageQueue = {};
 	let depthCache = {};
 	let options = {};
+	let info = {};
 	
 	const publicRequest = function(url, data, callback, method = "GET") {
 		if ( !data ) data = {};
@@ -153,6 +155,22 @@ module.exports = function() {
 		}
 		return {bids:bids, asks:asks};
 	}
+	const depthHandler = function(depth, firstUpdateId = 0) {
+		let symbol = depth.s, obj;
+		if ( depth.u <= firstUpdateId ) return;
+		for ( obj of depth.b ) { //bids
+			depthCache[symbol].bids[obj[0]] = obj[1];
+			if ( obj[1] == '0.00000000' ) {
+				delete depthCache[symbol].bids[obj[0]];
+			}
+		}
+		for ( obj of depth.a ) { //asks
+			depthCache[symbol].asks[obj[0]] = obj[1];
+			if ( obj[1] == '0.00000000' ) {
+				delete depthCache[symbol].asks[obj[0]];
+			}
+		}
+	};
 	const getDepthCache = function(symbol) {
 		if ( typeof depthCache[symbol] == "undefined" ) return {bids: {}, asks: {}};
 		return depthCache[symbol];
@@ -162,23 +180,25 @@ module.exports = function() {
 		depthCache: function(symbol) {
 			return getDepthCache(symbol);
 		},
-		sortBids: function(symbol) {
-			let object = {}, cache;
+		sortBids: function(symbol, max = Infinity) {
+			let object = {}, count = 0, cache;
 			if ( typeof symbol == "object" ) cache = symbol;
 			else cache = getDepthCache(symbol).bids;
 			let sorted = Object.keys(cache).sort(function(a, b){return parseFloat(b)-parseFloat(a)});
 			for ( let price of sorted ) {
 				object[price] = cache[price];
+				if ( ++count > max ) break;
 			}
 			return object;
 		},
-		sortAsks: function(symbol) {
-			let object = {}, cache;
+		sortAsks: function(symbol, max = Infinity) {
+			let object = {}, count = 0, cache;
 			if ( typeof symbol == "object" ) cache = symbol;
 			else cache = getDepthCache(symbol).asks;
 			let sorted = Object.keys(cache).sort(function(a, b){return parseFloat(a)-parseFloat(b)});
 			for ( let price of sorted ) {
 				object[price] = cache[price];
+				if ( ++count > max ) break;
 			}
 			return object;
 		},
@@ -272,26 +292,26 @@ module.exports = function() {
 			},
 			depthCache: function(symbols, callback) {
 				for ( let symbol of symbols ) {
+					if ( typeof info[symbol] == "undefined" ) info[symbol] = {};
+					info[symbol].firstUpdateId = 0;
 					depthCache[symbol] = {bids: {}, asks: {}};
-					publicRequest(base+"v1/depth", {symbol:symbol}, function(json) {
-						depthCache[symbol] = depthData(json);
+					messageQueue[symbol] = [];
+					subscribe(symbol.toLowerCase()+"@depth", function(depth) {
+						if ( !info[symbol].firstUpdateId ) {
+							messageQueue[symbol].push(depth);
+							return;
+						}
+						depthHandler(depth);
 						if ( callback ) callback(symbol, depthCache[symbol]);
-						subscribe(symbol.toLowerCase()+"@depth", function(depth) {
-							let obj;
-							for ( obj of depth.b ) { //bids
-								depthCache[symbol].bids[obj[0]] = obj[1];
-								if ( obj[1] == '0.00000000' ) {
-									delete depthCache[symbol].bids[obj[0]];
-								}
-							}
-							for ( obj of depth.a ) { //asks
-								depthCache[symbol].asks[obj[0]] = obj[1];
-								if ( obj[1] == '0.00000000' ) {
-									delete depthCache[symbol].asks[obj[0]];
-								}
-							}
-							if ( callback ) callback(symbol, depthCache[symbol]);
-						});
+					});
+					publicRequest(base+"v1/depth", {symbol:symbol}, function(json) {
+						info[symbol].firstUpdateId = json.lastUpdateId;
+						depthCache[symbol] = depthData(json);
+						for ( let depth of messageQueue[symbol] ) {
+							depthHandler(depth, json.lastUpdateId);
+						}
+						delete messageQueue[symbol];
+						if ( callback ) callback(symbol, depthCache[symbol]);
 					});
 				}
 			},
