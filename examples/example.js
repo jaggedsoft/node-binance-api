@@ -77,3 +77,16 @@ binance.candlesticks("BNBBTC", "5m", function(ticks) {
 	let [time, open, high, low, close, volume, closeTime, assetVolume, trades, buyBaseVolume, buyAssetVolume, ignored] = last_tick;
 	console.log("BNBBTC last close: "+close);
 });
+
+
+// Maintain Market Depth Cache Locally via WebSocket
+binance.websockets.depthCache(["BNBBTC"], function(symbol, depth) {
+	let max = 10; // Show 10 closest orders only
+	let bids = binance.sortBids(depth.bids, max);
+	let asks = binance.sortAsks(depth.asks, max);
+	console.log(symbol+" depth cache update");
+	console.log("asks", asks);
+	console.log("bids", bids);
+	console.log("ask: "+binance.first(asks));
+	console.log("bid: "+binance.first(bids));
+});
