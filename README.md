@@ -1226,7 +1226,7 @@ binance.websockets.depth(['BNBBTC'], function(depth) {
 
 #### Maintain Market Depth Cache Locally via WebSocket
 ```javascript
-binance.websockets.depthCache(["BNBBTC"], function(symbol, depth) {
+binance.websockets.depthCache(['BNBBTC'], function(symbol, depth) {
 	let bids = binance.sortBids(depth.bids);
 	let asks = binance.sortAsks(depth.asks);
 	console.log(symbol+" depth cache update");
