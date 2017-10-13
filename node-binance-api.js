@@ -5,6 +5,7 @@
  * Copyright 2017-, Jon Eyrick
  * Released under the MIT License
  * ============================================================ */
+
 module.exports = function() {
 	'use strict';
 	const WebSocket = require('ws');
@@ -12,6 +13,7 @@ module.exports = function() {
 	const crypto = require('crypto');
 	const base = 'https://www.binance.com/api/';
 	const websocket_base = 'wss://stream.binance.com:9443/ws/';
+	let depthCache = {};
 	let options = {};
 	
 	const publicRequest = function(url, data, callback, method = "GET") {
@@ -92,7 +94,7 @@ module.exports = function() {
 	////////////////////////////
 	const subscribe = function(endpoint, callback) {
 		const ws = new WebSocket(websocket_base+endpoint);
-	   	ws.on('open', function() {
+	    ws.on('open', function() {
 			//console.log("subscribe("+endpoint+")");
 		});
 		ws.on('close', function() {
@@ -101,7 +103,7 @@ module.exports = function() {
 		
 		ws.on('message', function(data) {
 			//console.log(data);
-            		callback(JSON.parse(data));
+            callback(JSON.parse(data));
 		});
 	};
 	const userDataHandler = function(data) {
@@ -141,8 +143,48 @@ module.exports = function() {
 		}
 		return balances;
 	};
+	const depthData = function(data) {
+		let bids = {}, asks = {}, obj;
+		for ( obj of data.bids ) {
+			bids[obj[0]] = obj[1];
+		}
+		for ( obj of data.asks ) {
+			asks[obj[0]] = obj[1];
+		}
+		return {bids:bids, asks:asks};
+	}
+	const getDepthCache = function(symbol) {
+		if ( typeof depthCache[symbol] == "undefined" ) return {bids: {}, asks: {}};
+		return depthCache[symbol];
+	};
 	////////////////////////////
 	return {
+		depthCache: function(symbol) {
+			return getDepthCache(symbol);
+		},
+		sortBids: function(symbol) {
+			let object = {}, cache;
+			if ( typeof symbol == "object" ) cache = symbol;
+			else cache = getDepthCache(symbol).bids;
+			let sorted = Object.keys(cache).sort(function(a, b){return parseFloat(b)-parseFloat(a)});
+			for ( let price of sorted ) {
+				object[price] = cache[price];
+			}
+			return object;
+		},
+		sortAsks: function(symbol) {
+			let object = {}, cache;
+			if ( typeof symbol == "object" ) cache = symbol;
+			else cache = getDepthCache(symbol).asks;
+			let sorted = Object.keys(cache).sort(function(a, b){return parseFloat(a)-parseFloat(b)});
+			for ( let price of sorted ) {
+				object[price] = cache[price];
+			}
+			return object;
+		},
+		first: function(object) {
+			return Object.keys(object)[0];
+		},
 		options: function(opt) {
 			options = opt;
 		},
@@ -165,7 +207,9 @@ module.exports = function() {
 			signedRequest(base+"v3/allOrders", {symbol:symbol, limit:500}, callback);
 		},
 		depth: function(symbol, callback) {
-			publicRequest(base+"v1/depth", {symbol:symbol}, callback);
+			publicRequest(base+"v1/depth", {symbol:symbol}, function(data) {
+				return callback(depthData(data));
+			});
 		},
 		prices: function(callback) {
 			request(base+"v1/ticker/allPrices", function(error, response, body) {
@@ -219,11 +263,36 @@ module.exports = function() {
 				},"POST");
 			},
 			subscribe: function(url, callback) {
-				
+				subscribe(url, callback);
 			},
 			depth: function(symbols, callback) {
 				for ( let symbol of symbols ) {
 					subscribe(symbol.toLowerCase()+"@depth", callback);
+				}
+			},
+			depthCache: function(symbols, callback) {
+				for ( let symbol of symbols ) {
+					depthCache[symbol] = {bids: {}, asks: {}};
+					publicRequest(base+"v1/depth", {symbol:symbol}, function(json) {
+						depthCache[symbol] = depthData(json);
+						if ( callback ) callback(symbol, depthCache[symbol]);
+						subscribe(symbol.toLowerCase()+"@depth", function(depth) {
+							let obj;
+							for ( obj of depth.b ) { //bids
+								depthCache[symbol].bids[obj[0]] = obj[1];
+								if ( obj[1] == '0.00000000' ) {
+									delete depthCache[symbol].bids[obj[0]];
+								}
+							}
+							for ( obj of depth.a ) { //asks
+								depthCache[symbol].asks[obj[0]] = obj[1];
+								if ( obj[1] == '0.00000000' ) {
+									delete depthCache[symbol].asks[obj[0]];
+								}
+							}
+							if ( callback ) callback(symbol, depthCache[symbol]);
+						});
+					});
 				}
 			},
 			trades: function(symbols, callback) {
