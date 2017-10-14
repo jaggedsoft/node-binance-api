@@ -148,10 +148,10 @@ module.exports = function() {
 	const depthData = function(data) {
 		let bids = {}, asks = {}, obj;
 		for ( obj of data.bids ) {
-			bids[obj[0]] = obj[1];
+			bids[obj[0]] = parseFloat(obj[1]);
 		}
 		for ( obj of data.asks ) {
-			asks[obj[0]] = obj[1];
+			asks[obj[0]] = parseFloat(obj[1]);
 		}
 		return {bids:bids, asks:asks};
 	}
@@ -159,17 +159,32 @@ module.exports = function() {
 		let symbol = depth.s, obj;
 		if ( depth.u <= firstUpdateId ) return;
 		for ( obj of depth.b ) { //bids
-			depthCache[symbol].bids[obj[0]] = obj[1];
+			depthCache[symbol].bids[obj[0]] = parseFloat(obj[1]);
 			if ( obj[1] == '0.00000000' ) {
 				delete depthCache[symbol].bids[obj[0]];
 			}
 		}
 		for ( obj of depth.a ) { //asks
-			depthCache[symbol].asks[obj[0]] = obj[1];
+			depthCache[symbol].asks[obj[0]] = parseFloat(obj[1]);
 			if ( obj[1] == '0.00000000' ) {
 				delete depthCache[symbol].asks[obj[0]];
 			}
 		}
+	};
+	const depthVolume = function(symbol) {
+		let cache = getDepthCache(symbol), quantity, price;
+		let bidbase = 0, askbase = 0, bidqty = 0, askqty = 0;
+		for ( price in cache.bids ) {
+			quantity = cache.bids[price];
+			bidbase+= parseFloat((quantity * parseFloat(price)).toFixed(8));
+			bidqty+= quantity;
+		}
+		for ( price in cache.asks ) {
+			quantity = cache.asks[price];
+			askbase+= parseFloat((quantity * parseFloat(price)).toFixed(8));
+			askqty+= quantity;
+		}
+		return {bids: bidbase, asks: askbase, bidQty: bidqty, askQty: askqty};
 	};
 	const getDepthCache = function(symbol) {
 		if ( typeof depthCache[symbol] == "undefined" ) return {bids: {}, asks: {}};
@@ -180,24 +195,29 @@ module.exports = function() {
 		depthCache: function(symbol) {
 			return getDepthCache(symbol);
 		},
-		sortBids: function(symbol, max = Infinity) {
+		depthVolume: function(symbol) {
+			return depthVolume(symbol);
+		},
+		sortBids: function(symbol, max = Infinity, baseValue = false) {
 			let object = {}, count = 0, cache;
 			if ( typeof symbol == "object" ) cache = symbol;
 			else cache = getDepthCache(symbol).bids;
 			let sorted = Object.keys(cache).sort(function(a, b){return parseFloat(b)-parseFloat(a)});
 			for ( let price of sorted ) {
-				object[price] = cache[price];
+				if ( !baseValue ) object[price] = cache[price];
+				else object[price] = parseFloat((cache[price] * parseFloat(price)).toFixed(8));
 				if ( ++count > max ) break;
 			}
 			return object;
 		},
-		sortAsks: function(symbol, max = Infinity) {
+		sortAsks: function(symbol, max = Infinity, baseValue = false) {
 			let object = {}, count = 0, cache;
 			if ( typeof symbol == "object" ) cache = symbol;
-			else cache = getDepthCache(symbol).asks;
+			else cache = getDepthCache(sparseFloatymbol).asks;
 			let sorted = Object.keys(cache).sort(function(a, b){return parseFloat(a)-parseFloat(b)});
 			for ( let price of sorted ) {
-				object[price] = cache[price];
+				if ( !baseValue ) object[price] = cache[price];
+				else object[price] = parseFloat((cache[price] * parseFloat(price)).toFixed(8));
 				if ( ++count > max ) break;
 			}
 			return object;
