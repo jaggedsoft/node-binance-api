@@ -15,8 +15,11 @@ module.exports = function() {
 	const websocket_base = 'wss://stream.binance.com:9443/ws/';
 	let messageQueue = {};
 	let depthCache = {};
+	let ohlcLatest = {};
+	let klineQueue = {};
 	let options = {};
 	let info = {};
+	let ohlc = {};
 	
 	const publicRequest = function(url, data, callback, method = "GET") {
 		if ( !data ) data = {};
@@ -86,7 +89,7 @@ module.exports = function() {
 			timeInForce: "GTC",
 			recvWindow: 60000
 		};
-		if ( typeof flags.type !== "undefined" ) opt.tye = flags.type;
+		if ( typeof flags.type !== "undefined" ) opt.type = flags.type;
 		if ( typeof flags.icebergQty !== "undefined" ) opt.icebergQty = flags.icebergQty;
 		if ( typeof flags.stopPrice !== "undefined" ) opt.stopPrice = flags.stopPrice;
 		signedRequest(base+"v3/order", opt, function(response) {
@@ -145,7 +148,45 @@ module.exports = function() {
 		}
 		return balances;
 	};
-	const depthData = function(data) {
+	const klineData = function(symbol, interval, ticks) { // Used for /depth
+		let last_time = 0;
+		for ( let tick of ticks ) {
+			let [time, open, high, low, close, volume, closeTime, assetVolume, trades, buyBaseVolume, buyAssetVolume, ignored] = tick;
+			ohlc[symbol][interval][time] = {open:open, high:high, low:low, close:close, volume:volume};
+			last_time = time;
+		}
+		info[symbol][interval].timestamp = last_time;
+	};
+	const klineConcat = function(symbol, interval) { // Combine all OHLC data with latest update
+		let output = ohlc[symbol][interval];
+		if ( typeof ohlcLatest[symbol][interval].time == "undefined" ) return output;
+		const time = ohlcLatest[symbol][interval].time;
+		const last_updated = Object.keys(ohlc[symbol][interval]).pop();
+		if ( time >= last_updated ) {
+			output[time] = ohlcLatest[symbol][interval];
+			delete output[time].time;
+			output[time].isFinal = false;
+		}
+		return output;
+	};
+	const klineHandler = function(symbol, kline, firstTime = 0) { // Used for websocket @kline
+		//TODO: add Taker buy base asset volume
+		let { e:eventType, E:eventTime, k:ticks } = kline;
+		let { o:open, h:high, l:low, c:close, v:volume, i:interval, x:isFinal, q:quoteVolume, t:time } = ticks; //n:trades, V:buyVolume, Q:quoteBuyVolume
+		if ( time <= firstTime ) return;
+		if ( !isFinal ) {
+			if ( typeof ohlcLatest[symbol][interval].time !== "undefined" ) {
+				if ( ohlcLatest[symbol][interval].time > time ) return;
+			}
+			ohlcLatest[symbol][interval] = {open:open, high:high, low:low, close:close, volume:volume, time:time};
+			return;
+		}
+		// Delete an element from the beginning so we don't run out of memory
+		const first_updated = Object.keys(ohlc[symbol][interval]).shift();
+		if ( first_updated ) delete ohlc[symbol][interval][first_updated];
+		ohlc[symbol][interval][time] = {open:open, high:high, low:low, close:close, volume:volume};
+	};
+	const depthData = function(data) { // Used for /depth endpoint
 		let bids = {}, asks = {}, obj;
 		for ( obj of data.bids ) {
 			bids[obj[0]] = parseFloat(obj[1]);
@@ -155,7 +196,7 @@ module.exports = function() {
 		}
 		return {bids:bids, asks:asks};
 	}
-	const depthHandler = function(depth, firstUpdateId = 0) {
+	const depthHandler = function(depth, firstUpdateId = 0) { // Used for websocket @depth
 		let symbol = depth.s, obj;
 		if ( depth.u <= firstUpdateId ) return;
 		for ( obj of depth.b ) { //bids
@@ -171,7 +212,7 @@ module.exports = function() {
 			}
 		}
 	};
-	const depthVolume = function(symbol) {
+	const depthVolume = function(symbol) { // Calculate Buy/Sell volume from DepthCache
 		let cache = getDepthCache(symbol), quantity, price;
 		let bidbase = 0, askbase = 0, bidqty = 0, askqty = 0;
 		for ( price in cache.bids ) {
@@ -198,6 +239,19 @@ module.exports = function() {
 		depthVolume: function(symbol) {
 			return depthVolume(symbol);
 		},
+		percent: function(min, max, width = 100) {
+    		return ( min * 0.01 ) / ( max * 0.01 ) * width;
+		},
+		sum: function(array) {
+			return array.reduce((a, b) => a + b, 0);
+		},
+		reverse: function(object) {
+			let range = Object.keys(object).reverse(), output = {};
+			for ( let price of range ) {
+				output[price] = object[price];
+			}
+			return output;
+		},
 		sortBids: function(symbol, max = Infinity, baseValue = false) {
 			let object = {}, count = 0, cache;
 			if ( typeof symbol == "object" ) cache = symbol;
@@ -223,7 +277,13 @@ module.exports = function() {
 			return object;
 		},
 		first: function(object) {
-			return Object.keys(object)[0];
+			return Object.keys(object).shift();
+		},
+		last: function(object) {
+			return Object.keys(object).pop();
+		},
+		slice: function(object, start = 0) {
+			return Object.entries(object).slice(start).map(entry => entry[0]);
 		},
 		options: function(opt) {
 			options = opt;
@@ -276,6 +336,18 @@ module.exports = function() {
 		},
 		trades: function(symbol,callback) {
 			signedRequest(base+"v3/myTrades", {symbol:symbol}, callback);
+		},
+		ohlc: function(chart) {
+			let open = [], high = [], low = [], close = [], volume = [];
+			for ( let timestamp in chart ) { //ohlc[symbol][interval]
+				let obj = chart[timestamp];
+				open.push(parseFloat(obj.open));
+				high.push(parseFloat(obj.high));
+				low.push(parseFloat(obj.low));
+				close.push(parseFloat(obj.close));
+				volume.push(parseFloat(obj.volume));
+			}
+			return {open:open, high:high, low:low, close:close, volume:volume};
 		},
 		candlesticks: function(symbol, interval = "5m", callback) { //1m,3m,5m,15m,30m,1h,2h,4h,6h,8h,12h,1d,3d,1w,1M
 			publicRequest(base+"v1/klines", {symbol:symbol, interval:interval}, callback);
@@ -338,6 +410,37 @@ module.exports = function() {
 			trades: function(symbols, callback) {
 				for ( let symbol of symbols ) {
 					subscribe(symbol.toLowerCase()+"@aggTrade", callback);
+				}
+			},
+			chart: function(symbols, interval, callback) {
+				for ( let symbol of symbols ) {
+					if ( typeof info[symbol] == "undefined" ) info[symbol] = {};
+					if ( typeof info[symbol][interval] == "undefined" ) info[symbol][interval] = {};
+					if ( typeof ohlc[symbol] == "undefined" ) ohlc[symbol] = {};
+					if ( typeof ohlc[symbol][interval] == "undefined" ) ohlc[symbol][interval] = {};
+					if ( typeof ohlcLatest[symbol] == "undefined" ) ohlcLatest[symbol] = {};
+					if ( typeof ohlcLatest[symbol][interval] == "undefined" ) ohlcLatest[symbol][interval] = {};
+					if ( typeof klineQueue[symbol] == "undefined" ) klineQueue[symbol] = {};
+					if ( typeof klineQueue[symbol][interval] == "undefined" ) klineQueue[symbol][interval] = [];
+					info[symbol][interval].timestamp = 0;
+					subscribe(symbol.toLowerCase()+"@kline_"+interval, function(kline) {
+						if ( !info[symbol][interval].timestamp ) {
+							klineQueue[symbol][interval].push(kline);
+							return;
+						}
+						//console.log("@klines at " + kline.k.t);
+						klineHandler(symbol, kline);
+						if ( callback ) callback(symbol, interval, klineConcat(symbol, interval));
+					});
+					publicRequest(base+"v1/klines", {symbol:symbol, interval:interval}, function(data) {
+						klineData(symbol, interval, data);
+						//console.log("/klines at " + info[symbol][interval].timestamp);
+						for ( let kline of klineQueue[symbol][interval] ) {
+							klineHandler(symbol, kline, info[symbol][interval].timestamp);
+						}
+						delete klineQueue[symbol][interval];
+						if ( callback ) callback(symbol, interval, klineConcat(symbol, interval));
+					});
 				}
 			},
 			candlesticks: function(symbols, interval, callback) {
