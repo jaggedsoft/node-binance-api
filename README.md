@@ -1,3 +1,5 @@
+Visit https://github.com/binance-exchange/node-binance-api for updates.
+
 [![Latest node](https://img.shields.io/node/v/v.svg)](#)
 [![Complete coverage](https://camo.githubusercontent.com/f52b6b64144aedecb7596469a608ddf7982a5b01/68747470733a2f2f696d672e736869656c64732e696f2f636f766572616c6c732f726571756573742f726571756573742d70726f6d6973652e7376673f7374796c653d666c61742d737175617265266d61784167653d32353932303030)](#)
 [![Build passing](https://camo.githubusercontent.com/16cf66fb5419c83391ce98044e110bc0d4ca1a46/68747470733a2f2f696d672e736869656c64732e696f2f7472617669732f726571756573742f726571756573742f6d61737465722e7376673f7374796c653d666c61742d737175617265)](#)
@@ -6,7 +8,7 @@
 [![npm downloads](https://img.shields.io/npm/dt/node-binance-api.svg)](https://www.npmjs.com/package/node-binance-api)
 
 # Node Binance API
-This project is designed to help you make your own projects that interact with the [Binance API](https://www.binance.com/restapipub.html). You can stream candlestick chart data, market depth, or use other advanced features such as setting stop losses and iceberg orders. This project seeks to have complete API coverage including WebSockets and will be updated regularly.
+This project is designed to help you make your own projects that interact with the [Binance API](https://www.binance.com/restapipub.html). You can stream candlestick chart data, market depth, or use other advanced features such as setting stop losses and iceberg orders. This project seeks to have complete API coverage including WebSockets.
 
 #### Installation
 ```
