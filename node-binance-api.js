@@ -86,11 +86,13 @@ module.exports = function() {
 			side: side,
 			type: "LIMIT",
 			quantity: quantity,
-			timeInForce: "GTC",
 			recvWindow: 60000
 		};
 		if ( typeof flags.type !== "undefined" ) opt.type = flags.type;
-		if ( opt.type == "LIMIT" ) opt.price = price;
+		if ( opt.type == "LIMIT" ) {
+			opt.price = price;
+			opt.timeInForce = "GTC";
+		}
 		if ( typeof flags.icebergQty !== "undefined" ) opt.icebergQty = flags.icebergQty;
 		if ( typeof flags.stopPrice !== "undefined" ) opt.stopPrice = flags.stopPrice;
 		signedRequest(base+"v3/order", opt, function(response) {
