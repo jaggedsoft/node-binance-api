@@ -20,6 +20,7 @@ module.exports = function() {
 	let options = {};
 	let info = {};
 	let ohlc = {};
+	let btcValue = 0.00;
 	
 	const publicRequest = function(url, data, callback, method = "GET") {
 		if ( !data ) data = {};
@@ -84,12 +85,12 @@ module.exports = function() {
 			symbol: symbol,
 			side: side,
 			type: "LIMIT",
-			price: price,
 			quantity: quantity,
 			timeInForce: "GTC",
 			recvWindow: 60000
 		};
 		if ( typeof flags.type !== "undefined" ) opt.type = flags.type;
+		if ( opt.type == "LIMIT" ) opt.price = price;
 		if ( typeof flags.icebergQty !== "undefined" ) opt.icebergQty = flags.icebergQty;
 		if ( typeof flags.stopPrice !== "undefined" ) opt.stopPrice = flags.stopPrice;
 		signedRequest(base+"v3/order", opt, function(response) {
