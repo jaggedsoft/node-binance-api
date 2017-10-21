@@ -1039,8 +1039,17 @@ binance.sell("ETHBTC", quantity, price);
 ```javascript
 // These orders will be executed at current market price.
 var quantity = 1;
-binance.buy("BNBBTC", quantity, 0, {type:"MARKET"})
-binance.sell("ETHBTC", quantity, 0, {type:"MARKET"});
+binance.marketBuy("BNBBTC", quantity);
+binance.marketSell("ETHBTC", quantity);
+```
+
+#### Chaining orders together
+```javascript
+var quantity = 1;
+binance.marketBuy("BNBBTC", quantity, function(response) {
+	console.log("Market Buy response", response);
+	// Now you can limit sell with a stop loss, etc.
+});
 ```
 
 #### Placing a STOP LOSS order
