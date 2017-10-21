@@ -80,7 +80,7 @@ module.exports = function() {
 		});
 	};
 	
-	const order = function(side, symbol, quantity, price, flags = {}) {
+	const order = function(side, symbol, quantity, price, flags = {}, callback = false) {
 		let opt = {
 			symbol: symbol,
 			side: side,
@@ -97,6 +97,7 @@ module.exports = function() {
 		if ( typeof flags.stopPrice !== "undefined" ) opt.stopPrice = flags.stopPrice;
 		signedRequest(base+"v3/order", opt, function(response) {
 			console.log(side+"("+symbol+","+quantity+","+price+") ",response);
+			if ( callback ) callback(response);
 		}, "POST");
 	};
 	////////////////////////////
@@ -291,11 +292,17 @@ module.exports = function() {
 		options: function(opt) {
 			options = opt;
 		},
-		buy: function(symbol, quantity, price, flags = {}) {
-			order("BUY", symbol, quantity, price, flags);
+		buy: function(symbol, quantity, price, flags = {}, callback = false) {
+			order("BUY", symbol, quantity, price, flags, callback);
 		},
-		sell: function(symbol, quantity, price, flags = {}) {
-			order("SELL", symbol, quantity, price, flags);
+		sell: function(symbol, quantity, price, flags = {}, callback = false) {
+			order("SELL", symbol, quantity, price, flags, callback);
+		},
+		marketBuy: function(symbol, quantity, callback = false) {
+			order("BUY", symbol, quantity, 0, {type:"MARKET"}, callback);
+		},
+		marketSell: function(symbol, quantity, callback = false) {
+			order("SELL", symbol, quantity, 0, {type:"MARKET"}, callback);
 		},
 		cancel: function(symbol, orderid, callback) {
 			signedRequest(base+"v3/order", {symbol:symbol, orderId:orderid}, callback, "DELETE");
@@ -451,6 +458,7 @@ module.exports = function() {
 					subscribe(symbol.toLowerCase()+"@kline_"+interval, callback);
 				}
 			}
+			// deposit withdraw depositHistory withdrawHistory
 		}
 	};
 }();
