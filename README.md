@@ -1074,7 +1074,7 @@ Limit Buy response {
 </details>
 
 #### Chaining orders together
-```
+```js
 var quantity = 1;
 binance.marketBuy("BNBBTC", quantity, function(response) {
 	console.log("Market Buy response", response);
