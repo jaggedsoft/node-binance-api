@@ -12,6 +12,7 @@ module.exports = function() {
 	const request = require('request');
 	const crypto = require('crypto');
 	const base = 'https://www.binance.com/api/';
+	const wapi = 'https://www.binance.com/wapi/';
 	const websocket_base = 'wss://stream.binance.com:9443/ws/';
 	let messageQueue = {};
 	let depthCache = {};
@@ -96,8 +97,11 @@ module.exports = function() {
 		if ( typeof flags.icebergQty !== "undefined" ) opt.icebergQty = flags.icebergQty;
 		if ( typeof flags.stopPrice !== "undefined" ) opt.stopPrice = flags.stopPrice;
 		signedRequest(base+"v3/order", opt, function(response) {
-			console.log(side+"("+symbol+","+quantity+","+price+") ",response);
+			if ( typeof response.msg !== "undefined" && response.msg == "Filter failure: MIN_NOTIONAL" ) {
+				console.log("Order quantity too small. Must be > 0.01");
+			}
 			if ( callback ) callback(response);
+			else console.log(side+"("+symbol+","+quantity+","+price+") ",response);
 		}, "POST");
 	};
 	////////////////////////////
@@ -289,6 +293,12 @@ module.exports = function() {
 		slice: function(object, start = 0) {
 			return Object.entries(object).slice(start).map(entry => entry[0]);
 		},
+		min: function(object) {
+			return Math.min.apply(Math, Object.keys(object));
+		},
+		max: function(object) {
+			return Math.max.apply(Math, Object.keys(object));
+		},
 		options: function(opt) {
 			options = opt;
 		},
@@ -311,7 +321,7 @@ module.exports = function() {
 			signedRequest(base+"v3/order", {symbol:symbol, orderId:orderid}, callback);
 		},
 		openOrders: function(symbol, callback) {
-			signedRequest(base+"v3/openOrders", {symbol:symbol}, callback);
+			signedRequest(base+"v3/openOrders", {symbol:symbol, recvWindow: 16000}, callback);
 		},
 		allOrders: function(symbol, callback) {
 			signedRequest(base+"v3/allOrders", {symbol:symbol, limit:500}, callback);
