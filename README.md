@@ -1043,8 +1043,38 @@ binance.marketBuy("BNBBTC", quantity);
 binance.marketSell("ETHBTC", quantity);
 ```
 
-#### Chaining orders together
+#### LIMIT order with callback
 ```javascript
+var quantity = 5, price = 0.00402030;
+binance.buy("BNBETH", quantity, price, {}, function(response) {
+	console.log("Limit Buy response", response);
+	console.log("order id: " + response.orderId);
+});
+```
+
+<details>
+ <summary>View Response</summary>
+
+```
+Limit Buy response {
+  symbol: 'BNBETH',
+  orderId: 4480717,
+  clientOrderId: 'te38xGILZUXrPZHnTQPH6h',
+  transactTime: 1509049732437,
+  price: '0.00402030',
+  origQty: '5.00000000',
+  executedQty: '5.00000000',
+  status: 'FILLED',
+  timeInForce: 'GTC',
+  type: 'LIMIT',
+  side: 'BUY' }
+//order id: 4480717
+```
+
+</details>
+
+#### Chaining orders together
+```
 var quantity = 1;
 binance.marketBuy("BNBBTC", quantity, function(response) {
 	console.log("Market Buy response", response);
@@ -1055,6 +1085,7 @@ binance.marketBuy("BNBBTC", quantity, function(response) {
 
 <details>
  <summary>View Response</summary>
+
 ```
 Market Buy response {
   symbol: 'BNBETH',
@@ -1070,6 +1101,7 @@ Market Buy response {
   side: 'BUY' }
 //order id: 4480553
 ```
+
 </details>
 
 #### Placing a STOP LOSS order
