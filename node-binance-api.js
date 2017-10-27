@@ -12,6 +12,7 @@ module.exports = function() {
 	const request = require('request');
 	const crypto = require('crypto');
 	const base = 'https://www.binance.com/api/';
+	const wapi = 'https://www.binance.com/wapi/';
 	const websocket_base = 'wss://stream.binance.com:9443/ws/';
 	let messageQueue = {};
 	let depthCache = {};
@@ -61,7 +62,7 @@ module.exports = function() {
 		if ( !data ) data = {};
 		data.timestamp = new Date().getTime();
 		if ( typeof data.symbol !== "undefined" ) data.symbol = data.symbol.replace('_','');
-		if ( typeof data.recvWindow == "undefined" ) data.recvWindow = 6500;
+		if ( typeof data.recvWindow == "undefined" ) data.recvWindow = options.recvWindow;
 		let query = Object.keys(data).reduce(function(a,k){a.push(k+'='+encodeURIComponent(data[k]));return a},[]).join('&');
 		let signature = crypto.createHmac("sha256", options.APISECRET).update(query).digest("hex"); // set the HMAC hash header
 		let opt = {
@@ -96,8 +97,11 @@ module.exports = function() {
 		if ( typeof flags.icebergQty !== "undefined" ) opt.icebergQty = flags.icebergQty;
 		if ( typeof flags.stopPrice !== "undefined" ) opt.stopPrice = flags.stopPrice;
 		signedRequest(base+"v3/order", opt, function(response) {
-			console.log(side+"("+symbol+","+quantity+","+price+") ",response);
+			if ( typeof response.msg !== "undefined" && response.msg == "Filter failure: MIN_NOTIONAL" ) {
+				console.log("Order quantity too small. Must be > 0.01");
+			}
 			if ( callback ) callback(response);
+			else console.log(side+"("+symbol+","+quantity+","+price+") ",response);
 		}, "POST");
 	};
 	////////////////////////////
@@ -289,7 +293,14 @@ module.exports = function() {
 		slice: function(object, start = 0) {
 			return Object.entries(object).slice(start).map(entry => entry[0]);
 		},
+		min: function(object) {
+			return Math.min.apply(Math, Object.keys(object));
+		},
+		max: function(object) {
+			return Math.max.apply(Math, Object.keys(object));
+		},
 		options: function(opt) {
+			if ( typeof opt.recvWindow == "undefined" ) opt.recvWindow = 16000;
 			options = opt;
 		},
 		buy: function(symbol, quantity, price, flags = {}, callback = false) {
