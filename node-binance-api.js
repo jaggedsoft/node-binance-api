@@ -62,7 +62,7 @@ module.exports = function() {
 		if ( !data ) data = {};
 		data.timestamp = new Date().getTime();
 		if ( typeof data.symbol !== "undefined" ) data.symbol = data.symbol.replace('_','');
-		if ( typeof data.recvWindow == "undefined" ) data.recvWindow = 6500;
+		if ( typeof data.recvWindow == "undefined" ) data.recvWindow = options.recvWindow;
 		let query = Object.keys(data).reduce(function(a,k){a.push(k+'='+encodeURIComponent(data[k]));return a},[]).join('&');
 		let signature = crypto.createHmac("sha256", options.APISECRET).update(query).digest("hex"); // set the HMAC hash header
 		let opt = {
@@ -300,6 +300,7 @@ module.exports = function() {
 			return Math.max.apply(Math, Object.keys(object));
 		},
 		options: function(opt) {
+			if ( typeof opt.recvWindow == "undefined" ) opt.recvWindow = 16000;
 			options = opt;
 		},
 		buy: function(symbol, quantity, price, flags = {}, callback = false) {
@@ -321,7 +322,7 @@ module.exports = function() {
 			signedRequest(base+"v3/order", {symbol:symbol, orderId:orderid}, callback);
 		},
 		openOrders: function(symbol, callback) {
-			signedRequest(base+"v3/openOrders", {symbol:symbol, recvWindow: 16000}, callback);
+			signedRequest(base+"v3/openOrders", {symbol:symbol}, callback);
 		},
 		allOrders: function(symbol, callback) {
 			signedRequest(base+"v3/allOrders", {symbol:symbol, limit:500}, callback);
