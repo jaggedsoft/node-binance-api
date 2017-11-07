@@ -1,6 +1,4 @@
 [![Latest node](https://img.shields.io/node/v/v.svg)](#)
-[![Complete coverage](https://camo.githubusercontent.com/f52b6b64144aedecb7596469a608ddf7982a5b01/68747470733a2f2f696d672e736869656c64732e696f2f636f766572616c6c732f726571756573742f726571756573742d70726f6d6973652e7376673f7374796c653d666c61742d737175617265266d61784167653d32353932303030)](#)
-[![Dependencies up to date](https://camo.githubusercontent.com/895093f8ef43722ff6c4bd61cd720199e76de812/68747470733a2f2f696d672e736869656c64732e696f2f64617669642f726571756573742f726571756573742e7376673f7374796c653d666c61742d737175617265)](#)
 [![GitHub last commit](https://img.shields.io/github/last-commit/jaggedsoft/node-binance-api.svg)](#)
 [![npm downloads](https://img.shields.io/npm/dt/node-binance-api.svg)](https://www.npmjs.com/package/node-binance-api)
 
