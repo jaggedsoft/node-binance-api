@@ -1327,3 +1327,15 @@ bids { '0.00025203': 0.201624,
 //bid: 0.00025203
 ```
 </details>
+
+#### Troubleshooting
+Verify that your system time is correct. If you have any suggestions don't hestitate to file an issue.
+
+Having problems? Try adding `recvWindow` to your options:
+```js
+binance.options({
+	'APIKEY': 'xxx',
+	'APISECRET': 'xxx',
+	'recvWindow': 60000
+});
+```
