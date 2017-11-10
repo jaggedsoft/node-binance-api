@@ -86,8 +86,7 @@ module.exports = function() {
 			symbol: symbol,
 			side: side,
 			type: "LIMIT",
-			quantity: quantity,
-			recvWindow: 60000
+			quantity: quantity
 		};
 		if ( typeof flags.type !== "undefined" ) opt.type = flags.type;
 		if ( opt.type == "LIMIT" ) {
@@ -105,13 +104,14 @@ module.exports = function() {
 		}, "POST");
 	};
 	////////////////////////////
-	const subscribe = function(endpoint, callback) {
+	const subscribe = function(endpoint, callback, reconnect = false) {
 		const ws = new WebSocket(websocket_base+endpoint);
 	    ws.on('open', function() {
 			//console.log("subscribe("+endpoint+")");
 		});
 		ws.on('close', function() {
 			console.log("WebSocket connection closed");
+			if ( reconnect ) reconnect();
 		});
 		
 		ws.on('message', function(data) {
@@ -300,8 +300,8 @@ module.exports = function() {
 			return Math.max.apply(Math, Object.keys(object));
 		},
 		options: function(opt) {
-			if ( typeof opt.recvWindow == "undefined" ) opt.recvWindow = 16000;
 			options = opt;
+			if ( typeof options.recvWindow == "undefined" ) options.recvWindow = 60000;
 		},
 		buy: function(symbol, quantity, price, flags = {}, callback = false) {
 			order("BUY", symbol, quantity, price, flags, callback);
@@ -371,7 +371,9 @@ module.exports = function() {
 			return {open:open, high:high, low:low, close:close, volume:volume};
 		},
 		candlesticks: function(symbol, interval = "5m", callback) { //1m,3m,5m,15m,30m,1h,2h,4h,6h,8h,12h,1d,3d,1w,1M
-			publicRequest(base+"v1/klines", {symbol:symbol, interval:interval}, callback);
+			publicRequest(base+"v1/klines", {symbol:symbol, interval:interval}, function(data) {
+				return callback.call(this, data, symbol);
+			});
 		},
 		publicRequest: function(url, data, callback, method = "GET") {
 			publicRequest(url, data, callback, method)
@@ -380,35 +382,41 @@ module.exports = function() {
 			signedRequest(url, data, callback, method);
 		},
 		websockets: {
-			userData: function(callback, execution_callback = null) {
+			userData: function userData(callback, execution_callback = null) {
+				let reconnect = function() {
+					userData(callback, execution_callback);
+				};
 				apiRequest(base+"v1/userDataStream", function(response) {
 					options.listenKey = response.listenKey;
 					setInterval(function() { // keepalive
 						apiRequest(base+"v1/userDataStream", false, "PUT");
-					},30000);
+					},60000);
 					if ( typeof execution_callback == "function" ) {
 						options.balance_callback = callback;
 						options.execution_callback = execution_callback;
-						subscribe(options.listenKey, userDataHandler);
+						subscribe(options.listenKey, userDataHandler, reconnect);
 						return;
 					}
-					subscribe(options.listenKey, callback);
+					subscribe(options.listenKey, callback, reconnect);
 				},"POST");
 			},
-			subscribe: function(url, callback) {
-				subscribe(url, callback);
+			subscribe: function(url, callback, reconnect = false) {
+				subscribe(url, callback, reconnect);
 			},
-			depth: function(symbols, callback) {
+			depth: function depth(symbols, callback) {
 				for ( let symbol of symbols ) {
 					subscribe(symbol.toLowerCase()+"@depth", callback);
 				}
 			},
-			depthCache: function(symbols, callback) {
+			depthCache: function depthCacheFunction(symbols, callback) {
 				for ( let symbol of symbols ) {
 					if ( typeof info[symbol] == "undefined" ) info[symbol] = {};
 					info[symbol].firstUpdateId = 0;
 					depthCache[symbol] = {bids: {}, asks: {}};
 					messageQueue[symbol] = [];
+					let reconnect = function() {
+						depthCacheFunction(symbols, callback);
+					};
 					subscribe(symbol.toLowerCase()+"@depth", function(depth) {
 						if ( !info[symbol].firstUpdateId ) {
 							messageQueue[symbol].push(depth);
@@ -416,7 +424,7 @@ module.exports = function() {
 						}
 						depthHandler(depth);
 						if ( callback ) callback(symbol, depthCache[symbol]);
-					});
+					}, reconnect);
 					publicRequest(base+"v1/depth", {symbol:symbol}, function(json) {
 						info[symbol].firstUpdateId = json.lastUpdateId;
 						depthCache[symbol] = depthData(json);
@@ -433,7 +441,8 @@ module.exports = function() {
 					subscribe(symbol.toLowerCase()+"@aggTrade", callback);
 				}
 			},
-			chart: function(symbols, interval, callback) {
+			chart: function chart(symbols, interval, callback) {
+				if ( typeof symbols == "string" ) symbols = [symbols]; // accept both strings and arrays
 				for ( let symbol of symbols ) {
 					if ( typeof info[symbol] == "undefined" ) info[symbol] = {};
 					if ( typeof info[symbol][interval] == "undefined" ) info[symbol][interval] = {};
@@ -444,6 +453,9 @@ module.exports = function() {
 					if ( typeof klineQueue[symbol] == "undefined" ) klineQueue[symbol] = {};
 					if ( typeof klineQueue[symbol][interval] == "undefined" ) klineQueue[symbol][interval] = [];
 					info[symbol][interval].timestamp = 0;
+					let reconnect = function() {
+						chart(symbols, interval, callback);
+					};
 					subscribe(symbol.toLowerCase()+"@kline_"+interval, function(kline) {
 						if ( !info[symbol][interval].timestamp ) {
 							klineQueue[symbol][interval].push(kline);
@@ -452,7 +464,7 @@ module.exports = function() {
 						//console.log("@klines at " + kline.k.t);
 						klineHandler(symbol, kline);
 						if ( callback ) callback(symbol, interval, klineConcat(symbol, interval));
-					});
+					}, reconnect);
 					publicRequest(base+"v1/klines", {symbol:symbol, interval:interval}, function(data) {
 						klineData(symbol, interval, data);
 						//console.log("/klines at " + info[symbol][interval].timestamp);
@@ -464,12 +476,14 @@ module.exports = function() {
 					});
 				}
 			},
-			candlesticks: function(symbols, interval, callback) {
+			candlesticks: function candlesticks(symbols, interval, callback) {
+				let reconnect = function() {
+					candlesticks(symbols, interval, callback);
+				};
 				for ( let symbol of symbols ) {
-					subscribe(symbol.toLowerCase()+"@kline_"+interval, callback);
+					subscribe(symbol.toLowerCase()+"@kline_"+interval, callback, reconnect);
 				}
 			}
-			// deposit withdraw depositHistory withdrawHistory
 		}
 	};
 }();
