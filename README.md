@@ -1,6 +1,7 @@
-[![Latest node](https://img.shields.io/node/v/v.svg)](#)
-[![GitHub last commit](https://img.shields.io/github/last-commit/jaggedsoft/node-binance-api.svg)](#)
 [![npm downloads](https://img.shields.io/npm/dt/node-binance-api.svg)](https://www.npmjs.com/package/node-binance-api)
+[![GitHub last commit](https://img.shields.io/github/last-commit/jaggedsoft/node-binance-api.svg)](#)
+
+[![NPM](https://nodei.co/npm/node-binance-api.png)](https://npmjs.org/package/node-binance-api)
 
 # Node Binance API
 This project is designed to help you make your own projects that interact with the [Binance API](https://www.binance.com/restapipub.html). You can stream candlestick chart data, market depth, or use other advanced features such as setting stop losses and iceberg orders. This project seeks to have complete API coverage including WebSockets.
@@ -812,8 +813,8 @@ binance.bookTickers(function(ticker) {
 
 #### Get market depth for a symbol
 ```javascript
-binance.depth("BNBBTC", function(depth) {
-	console.log("market depth", depth);
+binance.depth("BNBBTC", function(depth, symbol) {
+	console.log(symbol+" market depth", depth);
 });
 ```
 <details>
@@ -1105,7 +1106,6 @@ Market Buy response {
 #### Placing a STOP LOSS order
 ```javascript
 // When the stop is reached, a stop order becomes a market order
-let symbol = "ETHBTC";
 let quantity = 1;
 let price = 0.069;
 let stopPrice = 0.068;
@@ -1115,7 +1115,6 @@ binance.sell("ETHBTC", quantity, price, {stopPrice: stopPrice});
 #### Placing an ICEBERG order
 ```javascript
 // Iceberg orders are intended to conceal the order quantity.
-var symbol = "ETHBTC";
 var quantity = 1;
 var price = 0.069;
 binance.sell("ETHBTC", quantity, price, {icebergQty: 10});
@@ -1201,11 +1200,11 @@ binance.prevDay("BNBBTC", function(prevDay) {
 #### Get Kline/candlestick data for a symbol
 ```javascript
 // Periods: 1m,3m,5m,15m,30m,1h,2h,4h,6h,8h,12h,1d,3d,1w,1M
-binance.candlesticks("BNBBTC", "5m", function(ticks) {
+binance.candlesticks("BNBBTC", "5m", function(ticks, symbol) {
 	console.log("candlesticks()", ticks);
 	let last_tick = ticks[ticks.length - 1];
 	let [time, open, high, low, close, volume, closeTime, assetVolume, trades, buyBaseVolume, buyAssetVolume, ignored] = last_tick;
-	console.log("BNBBTC last close: "+close);
+	console.log(symbol+" last close: "+close);
 });
 ```
 
