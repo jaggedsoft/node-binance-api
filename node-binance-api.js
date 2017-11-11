@@ -110,8 +110,11 @@ module.exports = function() {
 			//console.log("subscribe("+endpoint+")");
 		});
 		ws.on('close', function() {
-			console.log("WebSocket connection closed");
-			if ( reconnect ) reconnect();
+			if ( reconnect ) {
+				console.log("WebSocket reconnecting: "+endpoint);
+				reconnect();
+			}
+			console.log("WebSocket connection closed! "+endpoint);
 		});
 		
 		ws.on('message', function(data) {
@@ -260,13 +263,22 @@ module.exports = function() {
 			}
 			return output;
 		},
+		array: function(obj) {
+			return Object.keys(obj).map(function(key) {
+			  return [Number(key), obj[key]];
+			});
+		},
 		sortBids: function(symbol, max = Infinity, baseValue = false) {
 			let object = {}, count = 0, cache;
 			if ( typeof symbol == "object" ) cache = symbol;
 			else cache = getDepthCache(symbol).bids;
 			let sorted = Object.keys(cache).sort(function(a, b){return parseFloat(b)-parseFloat(a)});
+			let cumulative = 0;
 			for ( let price of sorted ) {
-				if ( !baseValue ) object[price] = cache[price];
+				if ( baseValue == "cumulative" ) {
+					cumulative+= cache[price];
+					object[price] = cumulative.toFixed(8);
+				} else if ( !baseValue ) object[price] = cache[price];
 				else object[price] = parseFloat((cache[price] * parseFloat(price)).toFixed(8));
 				if ( ++count > max ) break;
 			}
@@ -277,8 +289,12 @@ module.exports = function() {
 			if ( typeof symbol == "object" ) cache = symbol;
 			else cache = getDepthCache(sparseFloatymbol).asks;
 			let sorted = Object.keys(cache).sort(function(a, b){return parseFloat(a)-parseFloat(b)});
+			let cumulative = 0;
 			for ( let price of sorted ) {
-				if ( !baseValue ) object[price] = cache[price];
+				if ( baseValue == "cumulative" ) {
+					cumulative+= cache[price];
+					object[price] = cumulative.toFixed(8);
+				} else if ( !baseValue ) object[price] = cache[price];
 				else object[price] = parseFloat((cache[price] * parseFloat(price)).toFixed(8));
 				if ( ++count > max ) break;
 			}
@@ -329,7 +345,7 @@ module.exports = function() {
 		},
 		depth: function(symbol, callback) {
 			publicRequest(base+"v1/depth", {symbol:symbol}, function(data) {
-				return callback(depthData(data));
+				return callback.call(this, depthData(data), symbol);
 			});
 		},
 		prices: function(callback) {
@@ -484,7 +500,6 @@ module.exports = function() {
 					subscribe(symbol.toLowerCase()+"@kline_"+interval, callback, reconnect);
 				}
 			}
-			// deposit withdraw depositHistory withdrawHistory
 		}
 	};
 }();
