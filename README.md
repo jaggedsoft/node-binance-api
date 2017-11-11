@@ -1,7 +1,7 @@
-[![npm downloads](https://img.shields.io/npm/dt/node-binance-api.svg)](https://www.npmjs.com/package/node-binance-api)
 [![GitHub last commit](https://img.shields.io/github/last-commit/jaggedsoft/node-binance-api.svg)](#)
+[![npm downloads](https://img.shields.io/npm/dt/node-binance-api.svg)](https://www.npmjs.com/package/node-binance-api)
 
-[![NPM](https://nodei.co/npm/node-binance-api.png)](https://npmjs.org/package/node-binance-api)
+[![NPM](https://nodei.co/npm/node-binance-api.png?compact=true)](https://npmjs.org/package/node-binance-api)
 
 # Node Binance API
 This project is designed to help you make your own projects that interact with the [Binance API](https://www.binance.com/restapipub.html). You can stream candlestick chart data, market depth, or use other advanced features such as setting stop losses and iceberg orders. This project seeks to have complete API coverage including WebSockets.
