@@ -1122,8 +1122,15 @@ binance.sell("ETHBTC", quantity, price, {icebergQty: 10});
 
 #### Cancel an order
 ```javascript
-binance.cancel("ETHBTC", orderid, function(response) {
-	console.log("cancel()", response);
+binance.cancel("ETHBTC", orderid, function(response, symbol) {
+	console.log(symbol+" cancel response:", response);
+});
+```
+
+#### Cancel all open orders
+```js
+binance.cancelOrders("XMRBTC", function(response, symbol) {
+	console.log(symbol+" cancel response:", response);
 });
 ```
 
@@ -1139,13 +1146,6 @@ binance.openOrders("ETHBTC", function(openOrders) {
 let orderid = "7610385";
 binance.orderStatus("ETHBTC", orderid, function(orderStatus) {
 	console.log("orderStatus()", orderStatus);
-});
-```
-
-#### Cancel an order
-```javascript
-binance.cancel("ETHBTC", orderid, function(response) {
-	console.log("cancel()", response);
 });
 ```
 
