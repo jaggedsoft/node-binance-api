@@ -1122,14 +1122,21 @@ binance.sell("ETHBTC", quantity, price, {icebergQty: 10});
 
 #### Cancel an order
 ```javascript
-binance.cancel("ETHBTC", orderid, function(response) {
-	console.log("cancel()", response);
+binance.cancel("ETHBTC", orderid, function(response, symbol) {
+	console.log(symbol+" cancel response:", response);
+});
+```
+
+#### Cancel all open orders
+```js
+binance.cancelOrders("XMRBTC", function(response, symbol) {
+	console.log(symbol+" cancel response:", response);
 });
 ```
 
 #### Getting list of open orders
 ```javascript
-binance.openOrders("ETHBTC", function(openOrders) {
+binance.openOrders("ETHBTC", function(openOrders, symbol) {
 	console.log("openOrders()", openOrders);
 });
 ```
@@ -1137,22 +1144,15 @@ binance.openOrders("ETHBTC", function(openOrders) {
 #### Check an order's status
 ```javascript
 let orderid = "7610385";
-binance.orderStatus("ETHBTC", orderid, function(orderStatus) {
-	console.log("orderStatus()", orderStatus);
-});
-```
-
-#### Cancel an order
-```javascript
-binance.cancel("ETHBTC", orderid, function(response) {
-	console.log("cancel()", response);
+binance.orderStatus("ETHBTC", orderid, function(orderStatus, symbol) {
+	console.log(symbol+" order status:", orderStatus);
 });
 ```
 
 #### Trade history
 ```javascript
-binance.trades("SNMBTC", function(trades) {
-	console.log("trade history", trades);
+binance.trades("SNMBTC", function(trades, symbol) {
+	console.log(symbol+" trade history", trades);
 });
 ```
 <details>
@@ -1184,15 +1184,15 @@ binance.trades("SNMBTC", function(trades) {
 
 #### Get all account orders; active, canceled, or filled.
 ```javascript
-binance.allOrders("ETHBTC", function(orders) {
-	console.log(orders);
+binance.allOrders("ETHBTC", function(orders, symbol) {
+	console.log(symbol+" orders:", orders);
 });
 ```
 
 #### Getting 24hr ticker price change statistics for a symbol
 ```javascript
-binance.prevDay("BNBBTC", function(prevDay) {
-	console.log("prevDay()", prevDay);
+binance.prevDay("BNBBTC", function(prevDay, symbol) {
+	console.log(symbol+" previous day:", prevDay);
 	console.log("BNB change since yesterday: "+prevDay.priceChangePercent+"%")
 });
 ```
