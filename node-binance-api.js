@@ -113,8 +113,7 @@ module.exports = function() {
 			if ( reconnect ) {
 				console.log("WebSocket reconnecting: "+endpoint);
 				reconnect();
-			}
-			console.log("WebSocket connection closed! "+endpoint);
+			} else console.log("WebSocket connection closed! "+endpoint);
 		});
 		
 		ws.on('message', function(data) {
@@ -276,9 +275,9 @@ module.exports = function() {
 			let cumulative = 0;
 			for ( let price of sorted ) {
 				if ( baseValue == "cumulative" ) {
-					cumulative+= cache[price];
-					object[price] = cumulative.toFixed(8);
-				} else if ( !baseValue ) object[price] = cache[price];
+					cumulative+= parseFloat(cache[price]);
+					object[price] = cumulative;
+				} else if ( !baseValue ) object[price] = parseFloat(cache[price]);
 				else object[price] = parseFloat((cache[price] * parseFloat(price)).toFixed(8));
 				if ( ++count > max ) break;
 			}
@@ -287,14 +286,14 @@ module.exports = function() {
 		sortAsks: function(symbol, max = Infinity, baseValue = false) {
 			let object = {}, count = 0, cache;
 			if ( typeof symbol == "object" ) cache = symbol;
-			else cache = getDepthCache(sparseFloatymbol).asks;
+			else cache = getDepthCache(symbol).asks;
 			let sorted = Object.keys(cache).sort(function(a, b){return parseFloat(a)-parseFloat(b)});
 			let cumulative = 0;
 			for ( let price of sorted ) {
 				if ( baseValue == "cumulative" ) {
-					cumulative+= cache[price];
-					object[price] = cumulative.toFixed(8);
-				} else if ( !baseValue ) object[price] = cache[price];
+					cumulative+= parseFloat(cache[price]);
+					object[price] = cumulative;
+				} else if ( !baseValue ) object[price] = parseFloat(cache[price]);
 				else object[price] = parseFloat((cache[price] * parseFloat(price)).toFixed(8));
 				if ( ++count > max ) break;
 			}
@@ -331,17 +330,36 @@ module.exports = function() {
 		marketSell: function(symbol, quantity, callback = false) {
 			order("SELL", symbol, quantity, 0, {type:"MARKET"}, callback);
 		},
-		cancel: function(symbol, orderid, callback) {
-			signedRequest(base+"v3/order", {symbol:symbol, orderId:orderid}, callback, "DELETE");
+		cancel: function(symbol, orderid, callback = false) {
+			signedRequest(base+"v3/order", {symbol:symbol, orderId:orderid}, function(data) {
+				if ( callback ) return callback.call(this, data, symbol);
+			}, "DELETE");
 		},
 		orderStatus: function(symbol, orderid, callback) {
-			signedRequest(base+"v3/order", {symbol:symbol, orderId:orderid}, callback);
+			signedRequest(base+"v3/order", {symbol:symbol, orderId:orderid}, function(data) {
+				if ( callback ) return callback.call(this, data, symbol);
+			});
 		},
 		openOrders: function(symbol, callback) {
-			signedRequest(base+"v3/openOrders", {symbol:symbol}, callback);
+			signedRequest(base+"v3/openOrders", {symbol:symbol}, function(data) {
+				return callback.call(this, data, symbol);
+			});
+		},
+		cancelOrders: function(symbol, callback = false) {
+			signedRequest(base+"v3/openOrders", {symbol:symbol}, function(json) {
+				for ( let obj of json ) {
+					let quantity = obj.origQty - obj.executedQty;
+					console.log("cancel order: "+obj.side+" "+symbol+" "+quantity+" @ "+obj.price+" #"+obj.orderId);
+					signedRequest(base+"v3/order", {symbol:symbol, orderId:obj.orderId}, function(data) {
+						if ( callback ) return callback.call(this, data, symbol);
+					}, "DELETE");
+				}
+			});
 		},
 		allOrders: function(symbol, callback) {
-			signedRequest(base+"v3/allOrders", {symbol:symbol, limit:500}, callback);
+			signedRequest(base+"v3/allOrders", {symbol:symbol, limit:500}, function(data) {
+				if ( callback ) return callback.call(this, data, symbol);
+			});
 		},
 		depth: function(symbol, callback) {
 			publicRequest(base+"v1/depth", {symbol:symbol}, function(data) {
@@ -361,7 +379,9 @@ module.exports = function() {
 			});
 		},
 		prevDay: function(symbol, callback) {
-			publicRequest(base+"v1/ticker/24hr", {symbol:symbol}, callback);
+			publicRequest(base+"v1/ticker/24hr", {symbol:symbol}, function(data) {
+				if ( callback ) return callback.call(this, data, symbol);
+			});
 		},
 		account: function(callback) {
 			signedRequest(base+"v3/account", {}, callback);
@@ -371,8 +391,27 @@ module.exports = function() {
 				if ( callback ) callback(balanceData(data));
 			});
 		},
-		trades: function(symbol,callback) {
-			signedRequest(base+"v3/myTrades", {symbol:symbol}, callback);
+		trades: function(symbol, callback) {
+			signedRequest(base+"v3/myTrades", {symbol:symbol}, function(data) {
+				if ( callback ) return callback.call(this, data, symbol);
+			});
+		},
+		// convert chart data to highstock array [timestamp,open,high,low,close] 
+		highstock: function(chart, include_volume = false) {
+			let array = [];
+			for ( let timestamp in chart ) {
+				let obj = chart[timestamp];
+				let line = [
+					Number(timestamp),
+					parseFloat(obj.open),
+					parseFloat(obj.high),
+					parseFloat(obj.low),
+					parseFloat(obj.close)
+				];
+				if ( include_volume ) line.push(parseFloat(obj.volume));
+				array.push(line);
+			}
+			return array;
 		},
 		ohlc: function(chart) {
 			let open = [], high = [], low = [], close = [], volume = [];
