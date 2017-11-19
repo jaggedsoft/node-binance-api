@@ -1327,7 +1327,65 @@ bids { '0.00025203': 0.201624,
 ```
 </details>
 
-#### Troubleshooting
+### Deposit & Withdraw
+
+#### Get Deposit Address
+```js
+binance.depositAddress("XMR", function(response) {
+	console.log(response);
+});
+```
+
+#### Get All Deposit History
+```js
+binance.depositHistory(function(response) {
+	console.log(response);
+});
+```
+
+#### Get Deposit History for a specific symbol
+```js
+binance.depositHistory(function(response) {
+	console.log(response);
+}, "VEN");
+```
+
+#### Get All Withdraw History
+```js
+binance.withdrawHistory(function(response) {
+	console.log(response);
+});
+```
+
+#### Get Withdraw History for a specific symbol
+```js
+binance.withdrawHistory(function(response) {
+	console.log(response);
+}, "BTC");
+```
+
+#### Withdraw with AddressTag
+```js
+// Required for coins like XMR, XRP, etc.
+let address = "44tLjmXrQNrWJ5NBsEj2R77ZBEgDa3fEe9GLpSf2FRmhexPvfYDUAB7EXX1Hdb3aMQ9FLqdJ56yaAhiXoRsceGJCRS3Jxkn";
+let addressTag = "0e5e38a01058dbf64e53a4333a5acf98e0d5feb8e523d32e3186c664a9c762c1";
+let amount = 0.1;
+binance.withdraw("XMR", address, amount, addressTag);
+```
+
+#### Withdraw with Callback
+```js
+binance.withdraw("ETH", "0x1d2034348c851ea29c7d03731c7968a5bcc91564", 1, false, function(response) {
+	console.log(response);
+});
+```
+
+#### Withdraw
+```js
+binance.withdraw("BTC", "1C5gqLRs96Xq4V2ZZAR1347yUCpHie7sa", 0.2);
+```
+
+### Troubleshooting
 Verify that your system time is correct. If you have any suggestions don't hestitate to file an issue.
 
 Having problems? Try adding `recvWindow` to your options:
