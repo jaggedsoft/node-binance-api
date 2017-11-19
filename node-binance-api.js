@@ -11,8 +11,8 @@ module.exports = function() {
 	const WebSocket = require('ws');
 	const request = require('request');
 	const crypto = require('crypto');
-	const base = 'https://www.binance.com/api/';
-	const wapi = 'https://www.binance.com/wapi/';
+	const base = 'https://api.binance.com/api/';
+	const wapi = 'https://api.binance.com/wapi/';
 	const websocket_base = 'wss://stream.binance.com:9443/ws/';
 	let messageQueue = {};
 	let depthCache = {};
@@ -382,6 +382,22 @@ module.exports = function() {
 			publicRequest(base+"v1/ticker/24hr", {symbol:symbol}, function(data) {
 				if ( callback ) return callback.call(this, data, symbol);
 			});
+		},
+		withdraw: function(asset, address, amount, addressTag = false, callback = false) {
+			let params = {asset, address, amount};
+			if ( addressTag ) params.addressTag = addressTag;
+			signedRequest(wapi+"v3/withdraw.html", params, callback, "POST");
+		},
+		withdrawHistory: function(callback, asset = false) {
+			let params = asset ? {asset:asset} : {};
+			signedRequest(wapi+"v3/withdrawHistory.html", params, callback);
+		},
+		depositHistory: function(callback, asset = false) {
+			let params = asset ? {asset:asset} : {};
+			signedRequest(wapi+"v3/depositHistory.html", params, callback);
+		},
+		depositAddress: function(asset, callback) {
+			signedRequest(wapi+"v3/depositAddress.html", {asset:asset}, callback);
 		},
 		account: function(callback) {
 			signedRequest(base+"v3/account", {}, callback);
