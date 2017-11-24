@@ -29,6 +29,7 @@ module.exports = function() {
 			url: url,
 			qs: data,
 			method: method,
+			timeout: options.recvWindow,
 			agent: false,
 			headers: {
 				'User-Agent': 'Mozilla/4.0 (compatible; Node Binance API)',
@@ -42,9 +43,11 @@ module.exports = function() {
 	};
 	
 	const apiRequest = function(url, callback, method = "GET") {
+		if ( !options.APIKEY ) throw "apiRequest: Invalid API Key";
 		let opt = {
 			url: url,
 			method: method,
+			timeout: options.recvWindow,
 			agent: false,
 			headers: {
 				'User-Agent': 'Mozilla/4.0 (compatible; Node Binance API)',
@@ -59,6 +62,7 @@ module.exports = function() {
 	};
 		
 	const signedRequest = function(url, data, callback, method = "GET") {
+		if ( !options.APISECRET ) throw "signedRequest: Invalid API Secret";
 		if ( !data ) data = {};
 		data.timestamp = new Date().getTime();
 		if ( typeof data.symbol !== "undefined" ) data.symbol = data.symbol.replace('_','');
@@ -68,6 +72,7 @@ module.exports = function() {
 		let opt = {
 			url: url+'?'+query+'&signature='+signature,
 			method: method,
+			timeout: options.recvWindow,
 			agent: false,
 			headers: {
 				'User-Agent': 'Mozilla/4.0 (compatible; Node Binance API)',
@@ -106,16 +111,17 @@ module.exports = function() {
 	////////////////////////////
 	const subscribe = function(endpoint, callback, reconnect = false) {
 		const ws = new WebSocket(websocket_base+endpoint);
+		ws.endpoint = endpoint;
 	    ws.on('open', function() {
-			//console.log("subscribe("+endpoint+")");
+			//console.log("subscribe("+this.endpoint+")");
 		});
 		ws.on('close', function() {
 			if ( reconnect ) {
-				console.log("WebSocket reconnecting: "+endpoint);
+				if ( this.endpoint && this.endpoint.length == 60 ) console.log("Account data WebSocket reconnecting..");
+				else console.log("WebSocket reconnecting: "+this.endpoint);
 				reconnect();
-			} else console.log("WebSocket connection closed! "+endpoint);
+			} else console.log("WebSocket connection closed! "+this.endpoint);
 		});
-		
 		ws.on('message', function(data) {
 			//console.log(data);
             callback(JSON.parse(data));
@@ -126,9 +132,9 @@ module.exports = function() {
 		if ( type == "outboundAccountInfo" ) {
 			options.balance_callback(data);
 		} else if ( type == "executionReport" ) {
-			options.execution_callback(data);
+			if ( options.execution_callback ) options.execution_callback(data);
 		} else {
-			console.log("Unexpected data: "+type);
+			console.log("Unexpected userData: "+type);
 		}
 	};
 	////////////////////////////
@@ -452,8 +458,15 @@ module.exports = function() {
 		signedRequest: function(url, data, callback, method = "GET") {
 			signedRequest(url, data, callback, method);
 		},
+		getMarket: function(symbol) {
+			const substring = symbol.substr(-3);
+			if ( substring == "BTC" ) return "BTC";
+			else if ( substring == "ETH" ) return "ETH";
+			else if ( substring == "BNB" ) return "BNB";
+			else if ( symbol.substr(-4) == "USDT" ) return "USDT";
+		},
 		websockets: {
-			userData: function userData(callback, execution_callback = null) {
+			userData: function userData(callback, execution_callback = false) {
 				let reconnect = function() {
 					userData(callback, execution_callback);
 				};
@@ -461,14 +474,10 @@ module.exports = function() {
 					options.listenKey = response.listenKey;
 					setInterval(function() { // keepalive
 						apiRequest(base+"v1/userDataStream", false, "PUT");
-					},60000);
-					if ( typeof execution_callback == "function" ) {
-						options.balance_callback = callback;
-						options.execution_callback = execution_callback;
-						subscribe(options.listenKey, userDataHandler, reconnect);
-						return;
-					}
-					subscribe(options.listenKey, callback, reconnect);
+					},30000);
+					options.balance_callback = callback;
+					options.execution_callback = execution_callback;
+					subscribe(options.listenKey, userDataHandler, reconnect);
 				},"POST");
 			},
 			subscribe: function(url, callback, reconnect = false) {
