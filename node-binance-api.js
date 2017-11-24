@@ -18,10 +18,9 @@ module.exports = function() {
 	let depthCache = {};
 	let ohlcLatest = {};
 	let klineQueue = {};
-	let options = {};
 	let info = {};
 	let ohlc = {};
-	let btcValue = 0.00;
+	let options = {recvWindow:60000};
 	
 	const publicRequest = function(url, data, callback, method = "GET") {
 		if ( !data ) data = {};
