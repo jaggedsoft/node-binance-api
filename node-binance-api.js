@@ -14,13 +14,14 @@ module.exports = function() {
 	const base = 'https://api.binance.com/api/';
 	const wapi = 'https://api.binance.com/wapi/';
 	const websocket_base = 'wss://stream.binance.com:9443/ws/';
+	let subscriptions = {};
 	let messageQueue = {};
 	let depthCache = {};
 	let ohlcLatest = {};
 	let klineQueue = {};
 	let info = {};
 	let ohlc = {};
-	let options = {recvWindow:60000};
+	let options = {recvWindow:60000, reconnect:true};
 	
 	const publicRequest = function(url, data, callback, method = "GET") {
 		if ( !data ) data = {};
@@ -115,7 +116,7 @@ module.exports = function() {
 			//console.log("subscribe("+this.endpoint+")");
 		});
 		ws.on('close', function() {
-			if ( reconnect ) {
+			if ( reconnect && options.reconnect ) {
 				if ( this.endpoint && this.endpoint.length == 60 ) console.log("Account data WebSocket reconnecting..");
 				else console.log("WebSocket reconnecting: "+this.endpoint);
 				reconnect();
@@ -125,6 +126,8 @@ module.exports = function() {
 			//console.log(data);
             callback(JSON.parse(data));
 		});
+		subscriptions[endpoint] = ws;
+		return ws;
 	};
 	const userDataHandler = function(data) {
 		let type = data.e;
@@ -322,6 +325,7 @@ module.exports = function() {
 		options: function(opt) {
 			options = opt;
 			if ( typeof options.recvWindow == "undefined" ) options.recvWindow = 60000;
+			if ( typeof options.reconnect == "undefined" ) options.reconnect = true;
 		},
 		buy: function(symbol, quantity, price, flags = {}, callback = false) {
 			order("BUY", symbol, quantity, price, flags, callback);
@@ -467,12 +471,12 @@ module.exports = function() {
 		websockets: {
 			userData: function userData(callback, execution_callback = false) {
 				let reconnect = function() {
-					userData(callback, execution_callback);
+					if ( options.reconnect ) userData(callback, execution_callback);
 				};
 				apiRequest(base+"v1/userDataStream", function(response) {
 					options.listenKey = response.listenKey;
 					setInterval(function() { // keepalive
-						apiRequest(base+"v1/userDataStream", false, "PUT");
+						apiRequest(base+"v1/userDataStream?listenKey="+options.listenKey, false, "PUT");
 					},30000);
 					options.balance_callback = callback;
 					options.execution_callback = execution_callback;
@@ -480,7 +484,17 @@ module.exports = function() {
 				},"POST");
 			},
 			subscribe: function(url, callback, reconnect = false) {
-				subscribe(url, callback, reconnect);
+				return subscribe(url, callback, reconnect);
+			},
+			subscriptions: function() {
+				return subscriptions;
+			},
+			terminate: function(endpoint) {
+				let ws = subscriptions[endpoint];
+				if ( !ws ) return;
+				console.log("WebSocket terminated:", endpoint);
+				ws.terminate();
+				delete subscriptions[endpoint];
 			},
 			depth: function depth(symbols, callback) {
 				for ( let symbol of symbols ) {
@@ -494,7 +508,7 @@ module.exports = function() {
 					depthCache[symbol] = {bids: {}, asks: {}};
 					messageQueue[symbol] = [];
 					let reconnect = function() {
-						depthCacheFunction(symbols, callback);
+						if ( options.reconnect ) depthCacheFunction(symbols, callback);
 					};
 					subscribe(symbol.toLowerCase()+"@depth", function(depth) {
 						if ( !info[symbol].firstUpdateId ) {
@@ -533,7 +547,7 @@ module.exports = function() {
 					if ( typeof klineQueue[symbol][interval] == "undefined" ) klineQueue[symbol][interval] = [];
 					info[symbol][interval].timestamp = 0;
 					let reconnect = function() {
-						chart(symbols, interval, callback);
+						if ( options.reconnect ) chart(symbols, interval, callback);
 					};
 					subscribe(symbol.toLowerCase()+"@kline_"+interval, function(kline) {
 						if ( !info[symbol][interval].timestamp ) {
@@ -557,7 +571,7 @@ module.exports = function() {
 			},
 			candlesticks: function candlesticks(symbols, interval, callback) {
 				let reconnect = function() {
-					candlesticks(symbols, interval, callback);
+					if ( options.reconnect ) candlesticks(symbols, interval, callback);
 				};
 				for ( let symbol of symbols ) {
 					subscribe(symbol.toLowerCase()+"@kline_"+interval, callback, reconnect);
