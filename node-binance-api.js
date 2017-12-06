@@ -522,7 +522,7 @@ module.exports = function() {
 					subscribe(symbol.toLowerCase()+"@depth", callback);
 				}
 			},
-			depthCache: function depthCacheFunction(symbols, callbac, limit = 100) {
+			depthCache: function depthCacheFunction(symbols, callback, limit = 100) {
 				for ( let symbol of symbols ) {
 					if ( typeof info[symbol] == "undefined" ) info[symbol] = {};
 					info[symbol].firstUpdateId = 0;
