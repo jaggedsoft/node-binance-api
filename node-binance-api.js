@@ -119,7 +119,11 @@ module.exports = function() {
 			if ( reconnect && options.reconnect ) {
 				if ( this.endpoint && this.endpoint.length == 60 ) console.log("Account data WebSocket reconnecting..");
 				else console.log("WebSocket reconnecting: "+this.endpoint);
-				reconnect();
+				try {
+					reconnect();
+				} catch ( error ) {
+					console.log("WebSocket reconnect error: "+error.message);
+				}
 			} else console.log("WebSocket connection closed! "+this.endpoint);
 		});
 		ws.on('message', function(data) {
@@ -370,8 +374,8 @@ module.exports = function() {
 				if ( callback ) return callback.call(this, data, symbol);
 			});
 		},
-		depth: function(symbol, callback) {
-			publicRequest(base+"v1/depth", {symbol:symbol}, function(data) {
+		depth: function(symbol, callback, depth = 100) {
+			publicRequest(base+"v1/depth", {symbol:symbol, depth:depth}, function(data) {
 				return callback.call(this, depthData(data), symbol);
 			});
 		},
@@ -388,9 +392,13 @@ module.exports = function() {
 			});
 		},
 		prevDay: function(symbol, callback) {
-			publicRequest(base+"v1/ticker/24hr", {symbol:symbol}, function(data) {
+			let input = symbol ? {symbol:symbol} : {};
+			publicRequest(base+"v1/ticker/24hr", input, function(data) {
 				if ( callback ) return callback.call(this, data, symbol);
 			});
+		},
+		exchangeInfo: function(callback) {
+			publicRequest(base+"v1/exchangeInfo", {}, callback);
 		},
 		withdraw: function(asset, address, amount, addressTag = false, callback = false) {
 			let params = {asset, address, amount};
@@ -408,6 +416,9 @@ module.exports = function() {
 		depositAddress: function(asset, callback) {
 			signedRequest(wapi+"v3/depositAddress.html", {asset:asset}, callback);
 		},
+		accountStatus: function(callback) {
+			signedRequest(wapi+"v3/accountStatus.html", {}, callback);
+		},
 		account: function(callback) {
 			signedRequest(base+"v3/account", {}, callback);
 		},
@@ -420,6 +431,12 @@ module.exports = function() {
 			signedRequest(base+"v3/myTrades", {symbol:symbol}, function(data) {
 				if ( callback ) return callback.call(this, data, symbol);
 			});
+		},
+		recentTrades: function(symbol, callback, limit = 500) {
+			signedRequest(base+"v1/trades", {symbol:symbol, limit:limit}, callback);
+		},
+		historicalTrades: function(symbol, callback, limit = 500) {
+			signedRequest(base+"v1/historicalTrades", {symbol:symbol, limit:limit}, callback);
 		},
 		// convert chart data to highstock array [timestamp,open,high,low,close] 
 		highstock: function(chart, include_volume = false) {
@@ -476,8 +493,12 @@ module.exports = function() {
 				apiRequest(base+"v1/userDataStream", function(response) {
 					options.listenKey = response.listenKey;
 					setInterval(function() { // keepalive
-						apiRequest(base+"v1/userDataStream?listenKey="+options.listenKey, false, "PUT");
-					},30000);
+						try {
+							apiRequest(base+"v1/userDataStream?listenKey="+options.listenKey, false, "PUT");
+						} catch ( error ) {
+							//error.message
+						}
+					}, 60 * 30 * 1000); // 30 minute keepalive
 					options.balance_callback = callback;
 					options.execution_callback = execution_callback;
 					subscribe(options.listenKey, userDataHandler, reconnect);
@@ -501,7 +522,7 @@ module.exports = function() {
 					subscribe(symbol.toLowerCase()+"@depth", callback);
 				}
 			},
-			depthCache: function depthCacheFunction(symbols, callback) {
+			depthCache: function depthCacheFunction(symbols, callbac, limit = 100) {
 				for ( let symbol of symbols ) {
 					if ( typeof info[symbol] == "undefined" ) info[symbol] = {};
 					info[symbol].firstUpdateId = 0;
@@ -518,7 +539,7 @@ module.exports = function() {
 						depthHandler(depth);
 						if ( callback ) callback(symbol, depthCache[symbol]);
 					}, reconnect);
-					publicRequest(base+"v1/depth", {symbol:symbol}, function(json) {
+					publicRequest(base+"v1/depth", {symbol:symbol, limit:limit}, function(json) {
 						info[symbol].firstUpdateId = json.lastUpdateId;
 						depthCache[symbol] = depthData(json);
 						for ( let depth of messageQueue[symbol] ) {
@@ -580,3 +601,4 @@ module.exports = function() {
 		}
 	};
 }();
+//https://github.com/binance-exchange/binance-official-api-docs
