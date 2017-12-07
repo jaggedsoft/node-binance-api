@@ -14,13 +14,14 @@ module.exports = function() {
 	const base = 'https://api.binance.com/api/';
 	const wapi = 'https://api.binance.com/wapi/';
 	const websocket_base = 'wss://stream.binance.com:9443/ws/';
+	let subscriptions = {};
 	let messageQueue = {};
 	let depthCache = {};
 	let ohlcLatest = {};
 	let klineQueue = {};
 	let info = {};
 	let ohlc = {};
-	let options = {recvWindow:60000};
+	let options = {recvWindow:60000, reconnect:true};
 	
 	const publicRequest = function(url, data, callback, method = "GET") {
 		if ( !data ) data = {};
@@ -115,16 +116,22 @@ module.exports = function() {
 			//console.log("subscribe("+this.endpoint+")");
 		});
 		ws.on('close', function() {
-			if ( reconnect ) {
+			if ( reconnect && options.reconnect ) {
 				if ( this.endpoint && this.endpoint.length == 60 ) console.log("Account data WebSocket reconnecting..");
 				else console.log("WebSocket reconnecting: "+this.endpoint);
-				reconnect();
+				try {
+					reconnect();
+				} catch ( error ) {
+					console.log("WebSocket reconnect error: "+error.message);
+				}
 			} else console.log("WebSocket connection closed! "+this.endpoint);
 		});
 		ws.on('message', function(data) {
 			//console.log(data);
             callback(JSON.parse(data));
 		});
+		subscriptions[endpoint] = ws;
+		return ws;
 	};
 	const userDataHandler = function(data) {
 		let type = data.e;
@@ -135,6 +142,58 @@ module.exports = function() {
 		} else {
 			console.log("Unexpected userData: "+type);
 		}
+	};
+	const prevDayStreamHandler = function(data, callback) {
+		let {
+			e:eventType,
+			E:eventTime,
+			s:symbol,
+			p:priceChange,
+			P:percentChange,
+			w:averagePrice,
+			x:prevClose,
+			c:close,
+			Q:closeQty,
+			b:bestBid,
+			B:bestBidQty,
+			a:bestAsk,
+			A:bestAskQty,
+			o:open,
+			h:high,
+			l:low,
+			v:volume,
+			q:quoteVolume,
+			O:openTime,
+			C:closeTime,
+			F:firstTradeId,
+			L:lastTradeId,
+			n:numTrades
+		} = data;
+		callback({
+			eventType,
+			eventTime,
+			symbol,
+			priceChange,
+			percentChange,
+			averagePrice,
+			prevClose,
+			close,
+			closeQty,
+			bestBid,
+			bestBidQty,
+			bestAsk,
+			bestAskQty,
+			open,
+			high,
+			low,
+			volume,
+			quoteVolume,
+			openTime,
+			closeTime,
+			firstTradeId,
+			lastTradeId,
+			numTrades
+		});
 	};
 	////////////////////////////
 	const priceData = function(data) {
@@ -322,6 +381,7 @@ module.exports = function() {
 		options: function(opt) {
 			options = opt;
 			if ( typeof options.recvWindow == "undefined" ) options.recvWindow = 60000;
+			if ( typeof options.reconnect == "undefined" ) options.reconnect = true;
 		},
 		buy: function(symbol, quantity, price, flags = {}, callback = false) {
 			order("BUY", symbol, quantity, price, flags, callback);
@@ -366,8 +426,8 @@ module.exports = function() {
 				if ( callback ) return callback.call(this, data, symbol);
 			});
 		},
-		depth: function(symbol, callback) {
-			publicRequest(base+"v1/depth", {symbol:symbol}, function(data) {
+		depth: function(symbol, callback, depth = 100) {
+			publicRequest(base+"v1/depth", {symbol:symbol, depth:depth}, function(data) {
 				return callback.call(this, depthData(data), symbol);
 			});
 		},
@@ -384,9 +444,13 @@ module.exports = function() {
 			});
 		},
 		prevDay: function(symbol, callback) {
-			publicRequest(base+"v1/ticker/24hr", {symbol:symbol}, function(data) {
+			let input = symbol ? {symbol:symbol} : {};
+			publicRequest(base+"v1/ticker/24hr", input, function(data) {
 				if ( callback ) return callback.call(this, data, symbol);
 			});
+		},
+		exchangeInfo: function(callback) {
+			publicRequest(base+"v1/exchangeInfo", {}, callback);
 		},
 		withdraw: function(asset, address, amount, addressTag = false, callback = false) {
 			let params = {asset, address, amount};
@@ -404,6 +468,9 @@ module.exports = function() {
 		depositAddress: function(asset, callback) {
 			signedRequest(wapi+"v3/depositAddress.html", {asset:asset}, callback);
 		},
+		accountStatus: function(callback) {
+			signedRequest(wapi+"v3/accountStatus.html", {}, callback);
+		},
 		account: function(callback) {
 			signedRequest(base+"v3/account", {}, callback);
 		},
@@ -416,6 +483,12 @@ module.exports = function() {
 			signedRequest(base+"v3/myTrades", {symbol:symbol}, function(data) {
 				if ( callback ) return callback.call(this, data, symbol);
 			});
+		},
+		recentTrades: function(symbol, callback, limit = 500) {
+			signedRequest(base+"v1/trades", {symbol:symbol, limit:limit}, callback);
+		},
+		historicalTrades: function(symbol, callback, limit = 500) {
+			signedRequest(base+"v1/historicalTrades", {symbol:symbol, limit:limit}, callback);
 		},
 		// convert chart data to highstock array [timestamp,open,high,low,close] 
 		highstock: function(chart, include_volume = false) {
@@ -467,34 +540,48 @@ module.exports = function() {
 		websockets: {
 			userData: function userData(callback, execution_callback = false) {
 				let reconnect = function() {
-					userData(callback, execution_callback);
+					if ( options.reconnect ) userData(callback, execution_callback);
 				};
 				apiRequest(base+"v1/userDataStream", function(response) {
 					options.listenKey = response.listenKey;
 					setInterval(function() { // keepalive
-						apiRequest(base+"v1/userDataStream", false, "PUT");
-					},30000);
+						try {
+							apiRequest(base+"v1/userDataStream?listenKey="+options.listenKey, false, "PUT");
+						} catch ( error ) {
+							//error.message
+						}
+					}, 60 * 30 * 1000); // 30 minute keepalive
 					options.balance_callback = callback;
 					options.execution_callback = execution_callback;
 					subscribe(options.listenKey, userDataHandler, reconnect);
 				},"POST");
 			},
 			subscribe: function(url, callback, reconnect = false) {
-				subscribe(url, callback, reconnect);
+				return subscribe(url, callback, reconnect);
+			},
+			subscriptions: function() {
+				return subscriptions;
+			},
+			terminate: function(endpoint) {
+				let ws = subscriptions[endpoint];
+				if ( !ws ) return;
+				console.log("WebSocket terminated:", endpoint);
+				ws.terminate();
+				delete subscriptions[endpoint];
 			},
 			depth: function depth(symbols, callback) {
 				for ( let symbol of symbols ) {
 					subscribe(symbol.toLowerCase()+"@depth", callback);
 				}
 			},
-			depthCache: function depthCacheFunction(symbols, callback) {
+			depthCache: function depthCacheFunction(symbols, callback, limit = 500) {
 				for ( let symbol of symbols ) {
 					if ( typeof info[symbol] == "undefined" ) info[symbol] = {};
 					info[symbol].firstUpdateId = 0;
 					depthCache[symbol] = {bids: {}, asks: {}};
 					messageQueue[symbol] = [];
 					let reconnect = function() {
-						depthCacheFunction(symbols, callback);
+						if ( options.reconnect ) depthCacheFunction(symbols, callback);
 					};
 					subscribe(symbol.toLowerCase()+"@depth", function(depth) {
 						if ( !info[symbol].firstUpdateId ) {
@@ -504,7 +591,7 @@ module.exports = function() {
 						depthHandler(depth);
 						if ( callback ) callback(symbol, depthCache[symbol]);
 					}, reconnect);
-					publicRequest(base+"v1/depth", {symbol:symbol}, function(json) {
+					publicRequest(base+"v1/depth", {symbol:symbol, limit:limit}, function(json) {
 						info[symbol].firstUpdateId = json.lastUpdateId;
 						depthCache[symbol] = depthData(json);
 						for ( let depth of messageQueue[symbol] ) {
@@ -533,7 +620,7 @@ module.exports = function() {
 					if ( typeof klineQueue[symbol][interval] == "undefined" ) klineQueue[symbol][interval] = [];
 					info[symbol][interval].timestamp = 0;
 					let reconnect = function() {
-						chart(symbols, interval, callback);
+						if ( options.reconnect ) chart(symbols, interval, callback);
 					};
 					subscribe(symbol.toLowerCase()+"@kline_"+interval, function(kline) {
 						if ( !info[symbol][interval].timestamp ) {
@@ -557,12 +644,28 @@ module.exports = function() {
 			},
 			candlesticks: function candlesticks(symbols, interval, callback) {
 				let reconnect = function() {
-					candlesticks(symbols, interval, callback);
+					if ( options.reconnect ) candlesticks(symbols, interval, callback);
 				};
 				for ( let symbol of symbols ) {
 					subscribe(symbol.toLowerCase()+"@kline_"+interval, callback, reconnect);
 				}
+			},
+			prevDay: function prevDay(symbol, callback) {
+				let streamName = symbol ? symbol.toLowerCase()+"@ticker" : "!ticker@arr";
+				let reconnect = function() {
+					if ( options.reconnect ) prevDay(symbol, callback);
+				};
+				subscribe(streamName, function(data) {
+					if ( data instanceof Array ) {
+						for ( let line of data ) {
+							prevDayStreamHandler(line, callback);
+						}
+						return;
+					}
+					prevDayStreamHandler(data, callback);
+				}, reconnect);
 			}
 		}
 	};
 }();
+//https://github.com/binance-exchange/binance-official-api-docs

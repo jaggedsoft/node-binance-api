@@ -1273,6 +1273,49 @@ SNM     available: 0.76352833 (0.00000000 on order)
 ```
 </details>
 
+#### Get 24h Price Change Statistics via WebSocket
+```js
+// For all symbols:
+binance.websockets.prevDay(false, function(response) {
+	console.log(response);
+});
+
+// For a specific symbol:
+binance.websockets.prevDay('BNBBTC', function(response) {
+	console.log(response);
+});
+```
+
+<details>
+ <summary>View Response</summary>
+
+```
+{ eventType: '24hrTicker',
+  eventTime: 1512629577435,
+  symbol: 'BNBBTC',
+  priceChange: '-0.00002671',
+  percentChange: '-12.844',
+  averagePrice: '0.00019282',
+  prevClose: '0.00020796',
+  close: '0.00018125',
+  closeQty: '55.00000000',
+  bestBid: '0.00018038',
+  bestBidQty: '580.00000000',
+  bestAsk: '0.00018125',
+  bestAskQty: '144.00000000',
+  open: '0.00020796',
+  high: '0.00021300',
+  low: '0.00017555',
+  volume: '3731915.00000000',
+  quoteVolume: '719.59011818',
+  openTime: 1512543177433,
+  closeTime: 1512629577433,
+  firstTradeId: 2248079,
+  lastTradeId: 2284725,
+  numTrades: 36647 }
+```
+</details>
+
 #### Get Market Depth via WebSocket
 ```javascript
 binance.websockets.depth(['BNBBTC'], function(depth) {
