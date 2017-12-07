@@ -143,6 +143,58 @@ module.exports = function() {
 			console.log("Unexpected userData: "+type);
 		}
 	};
+	const prevDayStreamHandler = function(data, callback) {
+		let {
+			e:eventType,
+			E:eventTime,
+			s:symbol,
+			p:priceChange,
+			P:percentChange,
+			w:averagePrice,
+			x:prevClose,
+			c:close,
+			Q:closeQty,
+			b:bestBid,
+			B:bestBidQty,
+			a:bestAsk,
+			A:bestAskQty,
+			o:open,
+			h:high,
+			l:low,
+			v:volume,
+			q:quoteVolume,
+			O:openTime,
+			C:closeTime,
+			F:firstTradeId,
+			L:lastTradeId,
+			n:numTrades
+		} = data;
+		callback({
+			eventType,
+			eventTime,
+			symbol,
+			priceChange,
+			percentChange,
+			averagePrice,
+			prevClose,
+			close,
+			closeQty,
+			bestBid,
+			bestBidQty,
+			bestAsk,
+			bestAskQty,
+			open,
+			high,
+			low,
+			volume,
+			quoteVolume,
+			openTime,
+			closeTime,
+			firstTradeId,
+			lastTradeId,
+			numTrades
+		});
+	};
 	////////////////////////////
 	const priceData = function(data) {
 		let prices = {};
@@ -522,7 +574,7 @@ module.exports = function() {
 					subscribe(symbol.toLowerCase()+"@depth", callback);
 				}
 			},
-			depthCache: function depthCacheFunction(symbols, callback, limit = 100) {
+			depthCache: function depthCacheFunction(symbols, callback, limit = 500) {
 				for ( let symbol of symbols ) {
 					if ( typeof info[symbol] == "undefined" ) info[symbol] = {};
 					info[symbol].firstUpdateId = 0;
@@ -597,6 +649,21 @@ module.exports = function() {
 				for ( let symbol of symbols ) {
 					subscribe(symbol.toLowerCase()+"@kline_"+interval, callback, reconnect);
 				}
+			},
+			prevDay: function prevDay(symbol, callback) {
+				let streamName = symbol ? symbol.toLowerCase()+"@ticker" : "!ticker@arr";
+				let reconnect = function() {
+					if ( options.reconnect ) prevDay(symbol, callback);
+				};
+				subscribe(streamName, function(data) {
+					if ( data instanceof Array ) {
+						for ( let line of data ) {
+							prevDayStreamHandler(line, callback);
+						}
+						return;
+					}
+					prevDayStreamHandler(data, callback);
+				}, reconnect);
 			}
 		}
 	};
