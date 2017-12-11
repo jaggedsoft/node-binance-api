@@ -1134,9 +1134,16 @@ binance.cancelOrders("XMRBTC", function(response, symbol) {
 });
 ```
 
-#### Getting list of open orders
+#### Get open orders for a symbol
 ```javascript
 binance.openOrders("ETHBTC", function(openOrders, symbol) {
+	console.log("openOrders("+symbol+")", openOrders);
+});
+```
+
+#### Get list of all open orders
+```javascript
+binance.openOrders(false, function(openOrders) {
 	console.log("openOrders()", openOrders);
 });
 ```
