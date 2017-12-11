@@ -406,7 +406,9 @@ module.exports = function() {
 			});
 		},
 		openOrders: function(symbol, callback) {
-			signedRequest(base+"v3/openOrders", {symbol:symbol}, function(data) {
+			let data = symbol ? {symbol:symbol} : {};
+			
+			signedRequest(base+"v3/openOrders", data, function(data) {
 				return callback.call(this, data, symbol);
 			});
 		},
