@@ -406,7 +406,8 @@ module.exports = function() {
 			});
 		},
 		openOrders: function(symbol, callback) {
-			signedRequest(base+"v3/openOrders", {symbol:symbol}, function(data) {
+			let postData = symbol ? {symbol:symbol} : {};
+			signedRequest(base+"v3/openOrders", postData, function(data) {
 				return callback.call(this, data, symbol);
 			});
 		},
@@ -426,8 +427,8 @@ module.exports = function() {
 				if ( callback ) return callback.call(this, data, symbol);
 			});
 		},
-		depth: function(symbol, callback, depth = 100) {
-			publicRequest(base+"v1/depth", {symbol:symbol, depth:depth}, function(data) {
+		depth: function(symbol, callback, limit = 100) {
+			publicRequest(base+"v1/depth", {symbol:symbol, limit:limit}, function(data) {
 				return callback.call(this, depthData(data), symbol);
 			});
 		},
