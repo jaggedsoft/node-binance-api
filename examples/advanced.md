@@ -25,3 +25,4 @@ binance.exchangeInfo(function(data) {
 	fs.writeFile("minimums.json", JSON.stringify(minimums, null, 4), function(err){});
 });
 ```
+![example](https://image.ibb.co/bz5KAG/notationals.png)
