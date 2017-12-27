@@ -611,7 +611,7 @@ module.exports = function() {
 			trades: function(symbols, callback) {
 				for ( let symbol of symbols ) {
 					let reconnect = function() {
-						if ( options.reconnect ) subscribe(symbol.toLowerCase()+"@aggTrade", callback, reconnect);
+						if ( options.reconnect ) subscribe(symbol.toLowerCase()+"@aggTrade", callback);
 					};
 					subscribe(symbol.toLowerCase()+"@aggTrade", callback, reconnect);
 				}
