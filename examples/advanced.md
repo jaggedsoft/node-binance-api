@@ -1,7 +1,8 @@
 ## Advanced Examples
 
-#### exchangeInfo(): Pull minimum notational order size, quantity, etc.
+#### exchangeInfo(): Pull minimum order size, quantity, etc.
 ```js
+//minQty = minimum order quantity
 //minNotional = minimum order value (price * quantity)
 binance.exchangeInfo(function(data) {
 	let minimums = {};
@@ -25,3 +26,4 @@ binance.exchangeInfo(function(data) {
 	fs.writeFile("minimums.json", JSON.stringify(minimums, null, 4), function(err){});
 });
 ```
+![example](https://image.ibb.co/bz5KAG/notationals.png)

@@ -262,11 +262,15 @@ module.exports = function() {
 	};
 	const depthData = function(data) { // Used for /depth endpoint
 		let bids = {}, asks = {}, obj;
-		for ( obj of data.bids ) {
-			bids[obj[0]] = parseFloat(obj[1]);
+		if ( typeof data.bids !== "undefined" ) {
+			for ( obj of data.bids ) {
+				bids[obj[0]] = parseFloat(obj[1]);
+			}
 		}
-		for ( obj of data.asks ) {
-			asks[obj[0]] = parseFloat(obj[1]);
+		if ( typeof data.asks !== "undefined" ) {
+			for ( obj of data.asks ) {
+				asks[obj[0]] = parseFloat(obj[1]);
+			}
 		}
 		return {bids:bids, asks:asks};
 	}
@@ -606,7 +610,10 @@ module.exports = function() {
 			},
 			trades: function(symbols, callback) {
 				for ( let symbol of symbols ) {
-					subscribe(symbol.toLowerCase()+"@aggTrade", callback);
+					let reconnect = function() {
+						if ( options.reconnect ) subscribe(symbol.toLowerCase()+"@aggTrade", callback);
+					};
+					subscribe(symbol.toLowerCase()+"@aggTrade", callback, reconnect);
 				}
 			},
 			chart: function chart(symbols, interval, callback) {
