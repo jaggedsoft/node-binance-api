@@ -38,7 +38,13 @@ module.exports = function() {
 		};
 		request(opt, function(error, response, body) {
 			if ( !response || !body ) throw "publicRequest error: "+error;
-			if ( callback ) callback(JSON.parse(body));
+			if ( callback ) {
+				try {
+					callback(JSON.parse(body));
+				} catch (error) {
+					console.log("Parse error: "+error.message);
+				}
+			}
 		});
 	};
 	
@@ -57,7 +63,13 @@ module.exports = function() {
 		};
 		request(opt, function(error, response, body) {
 			if ( !response || !body ) throw "apiRequest error: "+error;
-			if ( callback ) callback(JSON.parse(body));
+			if ( callback ) {
+				try {
+					callback(JSON.parse(body));
+				} catch (error) {
+					console.log("Parse error: "+error.message);
+				}
+			}
 		});
 	};
 		
@@ -82,7 +94,13 @@ module.exports = function() {
 		};
 		request(opt, function(error, response, body) {
 			if ( !response || !body ) throw "signedRequest error: "+error;
-			if ( callback ) callback(JSON.parse(body));
+			if ( callback ) {
+				try {
+					callback(JSON.parse(body));
+				} catch (error) {
+					console.log("Parse error: "+error.message);
+				}
+			}
 		});
 	};
 	
@@ -112,7 +130,7 @@ module.exports = function() {
 	const subscribe = function(endpoint, callback, reconnect = false) {
 		const ws = new WebSocket(websocket_base+endpoint);
 		ws.endpoint = endpoint;
-	    ws.on('open', function() {
+	    	ws.on('open', function() {
 			//console.log("subscribe("+this.endpoint+")");
 		});
 		ws.on('close', function() {
@@ -128,7 +146,11 @@ module.exports = function() {
 		});
 		ws.on('message', function(data) {
 			//console.log(data);
-            callback(JSON.parse(data));
+			try {
+				callback(JSON.parse(data));
+			} catch (error) {
+				console.log("Parse error: "+error.message);
+			}
 		});
 		subscriptions[endpoint] = ws;
 		return ws;
@@ -439,13 +461,25 @@ module.exports = function() {
 		prices: function(callback) {
 			request(base+"v1/ticker/allPrices", function(error, response, body) {
 				if ( !response || !body ) throw "allPrices error: "+error;
-				if ( callback ) callback(priceData(JSON.parse(body)));
+				if ( callback ) {
+					try {
+						callback(priceData(JSON.parse(body)));
+					} catch (error) {
+						console.log("Parse error: "+error.message);
+					}
+				}
 			});
 		},
 		bookTickers: function(callback) {
 			request(base+"v1/ticker/allBookTickers", function(error, response, body) {
 				if ( !response || !body ) throw "allBookTickers error: "+error;
-				if ( callback ) callback(bookPriceData(JSON.parse(body)));
+				if ( callback ) {
+					try {
+						callback(bookPriceData(JSON.parse(body)));
+					} catch (error) {
+						console.log("Parse error: "+error.message);
+					}
+				}
 			});
 		},
 		prevDay: function(symbol, callback) {
