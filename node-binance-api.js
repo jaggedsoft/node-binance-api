@@ -94,7 +94,7 @@ module.exports = function() {
 			quantity: quantity
 		};
 		if ( typeof flags.type !== "undefined" ) opt.type = flags.type;
-		if ( opt.type == "LIMIT" ) {
+		if ( opt.type.includes("LIMIT") ) {
 			opt.price = price;
 			opt.timeInForce = "GTC";
 		}
