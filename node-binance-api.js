@@ -239,6 +239,10 @@ module.exports = function() {
 	};
 	const balanceData = function(data) {
 		let balances = {};
+		if ( typeof data.balances == "undefined" ) {
+			console.log("balanceData error", data);
+			return {};
+		}
 		for ( let obj of data.balances ) {
 			balances[obj.asset] = {available:obj.free, onOrder:obj.locked};
 		}
@@ -632,13 +636,15 @@ module.exports = function() {
 						if ( callback ) callback(symbol, depthCache[symbol]);
 					}, reconnect);
 					publicRequest(base+"v1/depth", {symbol:symbol, limit:limit}, function(json) {
-						info[symbol].firstUpdateId = json.lastUpdateId;
-						depthCache[symbol] = depthData(json);
-						for ( let depth of messageQueue[symbol] ) {
-							depthHandler(depth, json.lastUpdateId);
+						if ( messageQueue && typeof messageQueue[symbol] === 'object' ) {
+							info[symbol].firstUpdateId = json.lastUpdateId;
+							depthCache[symbol] = depthData(json);
+							for ( let depth of messageQueue[symbol] ) {
+								depthHandler(depth, json.lastUpdateId);
+							}
+							delete messageQueue[symbol];
+							if ( callback ) callback(symbol, depthCache[symbol]);
 						}
-						delete messageQueue[symbol];
-						if ( callback ) callback(symbol, depthCache[symbol]);
 					});
 				}
 			},
