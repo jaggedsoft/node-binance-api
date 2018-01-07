@@ -38,7 +38,13 @@ module.exports = function() {
 		};
 		request(opt, function(error, response, body) {
 			if ( !response || !body ) throw "publicRequest error: "+error;
-			if ( callback ) callback(JSON.parse(body));
+			if ( callback ) {
+				try {
+					callback(JSON.parse(body));
+				} catch (error) {
+					console.log("Parse error: "+error.message);
+				}
+			}
 		});
 	};
 	
@@ -57,7 +63,13 @@ module.exports = function() {
 		};
 		request(opt, function(error, response, body) {
 			if ( !response || !body ) throw "apiRequest error: "+error;
-			if ( callback ) callback(JSON.parse(body));
+			if ( callback ) {
+				try {
+					callback(JSON.parse(body));
+				} catch (error) {
+					console.log("Parse error: "+error.message);
+				}
+			}
 		});
 	};
 		
@@ -82,7 +94,13 @@ module.exports = function() {
 		};
 		request(opt, function(error, response, body) {
 			if ( !response || !body ) throw "signedRequest error: "+error;
-			if ( callback ) callback(JSON.parse(body));
+			if ( callback ) {
+				try {
+					callback(JSON.parse(body));
+				} catch (error) {
+					console.log("Parse error: "+error.message);
+				}
+			}
 		});
 	};
 	
@@ -94,12 +112,23 @@ module.exports = function() {
 			quantity: quantity
 		};
 		if ( typeof flags.type !== "undefined" ) opt.type = flags.type;
+		if ( typeof flags.timeInForce !== "undefined" ) opt.timeInForce = flags.timeInForce;
 		if ( opt.type.includes("LIMIT") ) {
 			opt.price = price;
 			opt.timeInForce = "GTC";
 		}
+		/*
+STOP_LOSS
+STOP_LOSS_LIMIT
+TAKE_PROFIT
+TAKE_PROFIT_LIMIT
+LIMIT_MAKER
+		*/
 		if ( typeof flags.icebergQty !== "undefined" ) opt.icebergQty = flags.icebergQty;
-		if ( typeof flags.stopPrice !== "undefined" ) opt.stopPrice = flags.stopPrice;
+		if ( typeof flags.stopPrice !== "undefined" ) {
+			opt.stopPrice = flags.stopPrice;
+			if ( opt.type == "LIMIT" ) throw "Error: stopPrice: Must set 'type' to one of the following: STOP_LOSS, STOP_LOSS_LIMIT, TAKE_PROFIT, TAKE_PROFIT_LIMIT";
+		}
 		signedRequest(base+"v3/order", opt, function(response) {
 			if ( typeof response.msg !== "undefined" && response.msg == "Filter failure: MIN_NOTIONAL" ) {
 				console.log("Order quantity too small. Must be > 0.01");
@@ -112,7 +141,7 @@ module.exports = function() {
 	const subscribe = function(endpoint, callback, reconnect = false) {
 		const ws = new WebSocket(websocket_base+endpoint);
 		ws.endpoint = endpoint;
-	    ws.on('open', function() {
+	    	ws.on('open', function() {
 			//console.log("subscribe("+this.endpoint+")");
 		});
 		ws.on('close', function() {
@@ -128,7 +157,11 @@ module.exports = function() {
 		});
 		ws.on('message', function(data) {
 			//console.log(data);
-            callback(JSON.parse(data));
+			try {
+				callback(JSON.parse(data));
+			} catch (error) {
+				console.log("Parse error: "+error.message);
+			}
 		});
 		subscriptions[endpoint] = ws;
 		return ws;
@@ -217,6 +250,10 @@ module.exports = function() {
 	};
 	const balanceData = function(data) {
 		let balances = {};
+		if ( typeof data.balances == "undefined" ) {
+			console.log("balanceData error", data);
+			return {};
+		}
 		for ( let obj of data.balances ) {
 			balances[obj.asset] = {available:obj.free, onOrder:obj.locked};
 		}
@@ -439,13 +476,25 @@ module.exports = function() {
 		prices: function(callback) {
 			request(base+"v1/ticker/allPrices", function(error, response, body) {
 				if ( !response || !body ) throw "allPrices error: "+error;
-				if ( callback ) callback(priceData(JSON.parse(body)));
+				if ( callback ) {
+					try {
+						callback(priceData(JSON.parse(body)));
+					} catch (error) {
+						console.log("Parse error: "+error.message);
+					}
+				}
 			});
 		},
 		bookTickers: function(callback) {
 			request(base+"v1/ticker/allBookTickers", function(error, response, body) {
 				if ( !response || !body ) throw "allBookTickers error: "+error;
-				if ( callback ) callback(bookPriceData(JSON.parse(body)));
+				if ( callback ) {
+					try {
+						callback(bookPriceData(JSON.parse(body)));
+					} catch (error) {
+						console.log("Parse error: "+error.message);
+					}
+				}
 			});
 		},
 		prevDay: function(symbol, callback) {
@@ -598,13 +647,15 @@ module.exports = function() {
 						if ( callback ) callback(symbol, depthCache[symbol]);
 					}, reconnect);
 					publicRequest(base+"v1/depth", {symbol:symbol, limit:limit}, function(json) {
-						info[symbol].firstUpdateId = json.lastUpdateId;
-						depthCache[symbol] = depthData(json);
-						for ( let depth of messageQueue[symbol] ) {
-							depthHandler(depth, json.lastUpdateId);
+						if ( messageQueue && typeof messageQueue[symbol] === 'object' ) {
+							info[symbol].firstUpdateId = json.lastUpdateId;
+							depthCache[symbol] = depthData(json);
+							for ( let depth of messageQueue[symbol] ) {
+								depthHandler(depth, json.lastUpdateId);
+							}
+							delete messageQueue[symbol];
+							if ( callback ) callback(symbol, depthCache[symbol]);
 						}
-						delete messageQueue[symbol];
-						if ( callback ) callback(symbol, depthCache[symbol]);
 					});
 				}
 			},
