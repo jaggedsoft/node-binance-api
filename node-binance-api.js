@@ -112,12 +112,23 @@ module.exports = function() {
 			quantity: quantity
 		};
 		if ( typeof flags.type !== "undefined" ) opt.type = flags.type;
+		if ( typeof flags.timeInForce !== "undefined" ) opt.timeInForce = flags.timeInForce;
 		if ( opt.type.includes("LIMIT") ) {
 			opt.price = price;
 			opt.timeInForce = "GTC";
 		}
+		/*
+STOP_LOSS
+STOP_LOSS_LIMIT
+TAKE_PROFIT
+TAKE_PROFIT_LIMIT
+LIMIT_MAKER
+		*/
 		if ( typeof flags.icebergQty !== "undefined" ) opt.icebergQty = flags.icebergQty;
-		if ( typeof flags.stopPrice !== "undefined" ) opt.stopPrice = flags.stopPrice;
+		if ( typeof flags.stopPrice !== "undefined" ) {
+			opt.stopPrice = flags.stopPrice;
+			if ( opt.type == "LIMIT" ) throw "Error: stopPrice: Must set 'type' to one of the following: STOP_LOSS, STOP_LOSS_LIMIT, TAKE_PROFIT, TAKE_PROFIT_LIMIT";
+		}
 		signedRequest(base+"v3/order", opt, function(response) {
 			if ( typeof response.msg !== "undefined" && response.msg == "Filter failure: MIN_NOTIONAL" ) {
 				console.log("Order quantity too small. Must be > 0.01");
