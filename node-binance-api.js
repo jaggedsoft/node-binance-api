@@ -23,7 +23,7 @@ module.exports = function() {
 	let klineQueue = {};
 	let info = {};
 	let ohlc = {};
-	let options = {recvWindow:60000, reconnect:true};
+	let options = {recvWindow:60000, reconnect:true, test: false};
 
 	const publicRequest = function(url, data, callback, method = 'GET') {
 		if ( !data ) data = {};
@@ -107,6 +107,8 @@ module.exports = function() {
 	};
 
 	const order = function(side, symbol, quantity, price, flags = {}, callback = false) {
+		let endpoint = 'v3/order';
+		if ( options.test ) endpoint+='/test';
 		let opt = {
 			symbol: symbol,
 			side: side,
@@ -120,7 +122,7 @@ module.exports = function() {
 		}
 		if ( typeof flags.icebergQty !== 'undefined' ) opt.icebergQty = flags.icebergQty;
 		if ( typeof flags.stopPrice !== 'undefined' ) opt.stopPrice = flags.stopPrice;
-		signedRequest(base+'v3/order', opt, function(response) {
+		signedRequest(base+endpoint, opt, function(response) {
 			if ( typeof response.msg !== 'undefined' && response.msg == 'Filter failure: MIN_NOTIONAL' ) {
 				console.warn('Order quantity too small. Must be > 0.01');
 			}
@@ -413,6 +415,7 @@ module.exports = function() {
 			options = opt;
 			if ( typeof options.recvWindow == 'undefined' ) options.recvWindow = 60000;
 			if ( typeof options.reconnect == 'undefined' ) options.reconnect = true;
+			if ( typeof options.test == 'undefined' ) options.test = false;
 		},
 		buy: function(symbol, quantity, price, flags = {}, callback = false) {
 			order('BUY', symbol, quantity, price, flags, callback);
