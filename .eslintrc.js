@@ -64,7 +64,10 @@ module.exports = {
         "dot-location": "error",
         "dot-notation": "error",
         "eol-last": "error",
-        "eqeqeq": "off",
+        "eqeqeq": [
+            "error",
+            "always"
+        ],
         "for-direction": "error",
         "func-call-spacing": "error",
         "func-name-matching": "off",
