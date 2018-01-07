@@ -27,3 +27,42 @@ binance.exchangeInfo(function(data) {
 });
 ```
 ![example](https://image.ibb.co/bz5KAG/notationals.png)
+
+
+#### Enable Test Mode for orders
+```js
+const binance = require('node-binance-api');
+binance.options({
+  'APIKEY':'<key>',
+  'APISECRET':'<secret>',
+  'test':true
+});```
+
+
+#### Terminate WebSocket connections
+First disable automatic reconnection of websockets
+
+```js
+binance.options({
+	'APIKEY': '<your key>',
+	'APISECRET': '<your secret>',
+	'reconnect': false
+});
+```
+
+Now you can terminate each websocket endpoint by the id:
+```js
+binance.websockets.terminate('ethbtc@ticker'); // for prevday
+binance.websockets.terminate('ethbtc@kline_1m'); // for candlestick charts
+```
+
+You can store a reference to each `ws` object or view a list of all of them:
+```js
+// List all endpoints
+let endpoints = binance.websockets.subscriptions();
+for ( let endpoint in endpoints ) {
+	console.log(endpoint);
+	//binance.websockets.terminate(endpoint);
+}
+```
+  
