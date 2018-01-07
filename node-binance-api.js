@@ -14,6 +14,8 @@ module.exports = function() {
 	const base = 'https://api.binance.com/api/';
 	const wapi = 'https://api.binance.com/wapi/';
 	const websocket_base = 'wss://stream.binance.com:9443/ws/';
+	const userAgent = 'Mozilla/4.0 (compatible; Node Binance API)';
+	const contentType = 'application/x-www-form-urlencoded';
 	let subscriptions = {};
 	let messageQueue = {};
 	let depthCache = {};
@@ -32,8 +34,8 @@ module.exports = function() {
 			timeout: options.recvWindow,
 			agent: false,
 			headers: {
-				'User-Agent': 'Mozilla/4.0 (compatible; Node Binance API)',
-				'Content-type': 'application/x-www-form-urlencoded'
+				'User-Agent': userAgent,
+				'Content-type': contentType
 			}
 		};
 		request(opt, function(error, response, body) {
@@ -56,8 +58,8 @@ module.exports = function() {
 			timeout: options.recvWindow,
 			agent: false,
 			headers: {
-				'User-Agent': 'Mozilla/4.0 (compatible; Node Binance API)',
-				'Content-type': 'application/x-www-form-urlencoded',
+				'User-Agent': userAgent,
+				'Content-type': contentType,
 				'X-MBX-APIKEY': options.APIKEY
 			}
 		};
@@ -87,8 +89,8 @@ module.exports = function() {
 			timeout: options.recvWindow,
 			agent: false,
 			headers: {
-				'User-Agent': 'Mozilla/4.0 (compatible; Node Binance API)',
-				'Content-type': 'application/x-www-form-urlencoded',
+				'User-Agent': userAgent,
+				'Content-type': contentType,
 				'X-MBX-APIKEY': options.APIKEY
 			}
 		};
