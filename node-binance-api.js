@@ -24,7 +24,7 @@ module.exports = function() {
 	let info = {};
 	let ohlc = {};
 	let options = {recvWindow:60000, reconnect:true};
-	
+
 	const publicRequest = function(url, data, callback, method = "GET") {
 		if ( !data ) data = {};
 		let opt = {
@@ -49,7 +49,7 @@ module.exports = function() {
 			}
 		});
 	};
-	
+
 	const apiRequest = function(url, callback, method = "GET") {
 		if ( !options.APIKEY ) throw "apiRequest: Invalid API Key";
 		let opt = {
@@ -74,7 +74,7 @@ module.exports = function() {
 			}
 		});
 	};
-		
+
 	const signedRequest = function(url, data, callback, method = "GET") {
 		if ( !options.APISECRET ) throw "signedRequest: Invalid API Secret";
 		if ( !data ) data = {};
@@ -105,7 +105,7 @@ module.exports = function() {
 			}
 		});
 	};
-	
+
 	const order = function(side, symbol, quantity, price, flags = {}, callback = false) {
 		let opt = {
 			symbol: symbol,
@@ -532,7 +532,7 @@ module.exports = function() {
 		historicalTrades: function(symbol, callback, limit = 500) {
 			signedRequest(base+"v1/historicalTrades", {symbol:symbol, limit:limit}, callback);
 		},
-		// convert chart data to highstock array [timestamp,open,high,low,close] 
+		// convert chart data to highstock array [timestamp,open,high,low,close]
 		highstock: function(chart, include_volume = false) {
 			let array = [];
 			for ( let timestamp in chart ) {
