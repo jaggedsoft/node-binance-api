@@ -1106,10 +1106,13 @@ Market Buy response {
 #### Placing a STOP LOSS order
 ```javascript
 // When the stop is reached, a stop order becomes a market order
+// Note: You must also pass one of these type parameters:
+// STOP_LOSS, STOP_LOSS_LIMIT, TAKE_PROFIT, TAKE_PROFIT_LIMIT
+let type = "STOP_LOSS";
 let quantity = 1;
 let price = 0.069;
 let stopPrice = 0.068;
-binance.sell("ETHBTC", quantity, price, {stopPrice: stopPrice});
+binance.sell("ETHBTC", quantity, price, {stopPrice: stopPrice, type: type});
 ```
 
 #### Placing an ICEBERG order
