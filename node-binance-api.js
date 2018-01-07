@@ -116,15 +116,27 @@ module.exports = function() {
 			quantity: quantity
 		};
 		if ( typeof flags.type !== 'undefined' ) opt.type = flags.type;
+		if ( typeof flags.timeInForce !== 'undefined' ) opt.timeInForce = flags.timeInForce;
 		if ( opt.type.includes('LIMIT') ) {
 			opt.price = price;
 			opt.timeInForce = 'GTC';
 		}
+
+		/*
+STOP_LOSS
+STOP_LOSS_LIMIT
+TAKE_PROFIT
+TAKE_PROFIT_LIMIT
+LIMIT_MAKER
+		*/
 		if ( typeof flags.icebergQty !== 'undefined' ) opt.icebergQty = flags.icebergQty;
-		if ( typeof flags.stopPrice !== 'undefined' ) opt.stopPrice = flags.stopPrice;
+		if ( typeof flags.stopPrice !== 'undefined' ) {
+			opt.stopPrice = flags.stopPrice;
+			if ( opt.type == 'LIMIT' ) throw 'Error: stopPrice: Must set "type" to one of the following: STOP_LOSS, STOP_LOSS_LIMIT, TAKE_PROFIT, TAKE_PROFIT_LIMIT';
+		}
 		signedRequest(base+endpoint, opt, function(response) {
 			if ( typeof response.msg !== 'undefined' && response.msg == 'Filter failure: MIN_NOTIONAL' ) {
-				console.warn('Order quantity too small. Must be > 0.01');
+				console.error('Order quantity too small. Must be > 0.01');
 			}
 			if ( callback ) callback(response);
 			else console.log(side+'('+symbol+','+quantity+','+price+') ',response);
@@ -243,6 +255,10 @@ module.exports = function() {
 	};
 	const balanceData = function(data) {
 		let balances = {};
+		if ( typeof data.balances == 'undefined' ) {
+			console.log('balanceData error', data);
+			return {};
+		}
 		for ( let obj of data.balances ) {
 			balances[obj.asset] = {available:obj.free, onOrder:obj.locked};
 		}
@@ -640,13 +656,15 @@ module.exports = function() {
 						if ( callback ) callback(symbol, depthCache[symbol]);
 					}, reconnect);
 					publicRequest(base+'v1/depth', {symbol:symbol, limit:limit}, function(json) {
-						info[symbol].firstUpdateId = json.lastUpdateId;
-						depthCache[symbol] = depthData(json);
-						for ( let depth of messageQueue[symbol] ) {
-							depthHandler(depth, json.lastUpdateId);
+						if ( messageQueue && typeof messageQueue[symbol] === 'object' ) {
+							info[symbol].firstUpdateId = json.lastUpdateId;
+							depthCache[symbol] = depthData(json);
+							for ( let depth of messageQueue[symbol] ) {
+								depthHandler(depth, json.lastUpdateId);
+							}
+							delete messageQueue[symbol];
+							if ( callback ) callback(symbol, depthCache[symbol]);
 						}
-						delete messageQueue[symbol];
-						if ( callback ) callback(symbol, depthCache[symbol]);
 					});
 				}
 			},
