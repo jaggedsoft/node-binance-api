@@ -36,7 +36,8 @@ binance.options({
   'APIKEY':'<key>',
   'APISECRET':'<secret>',
   'test':true
-});```
+});
+```
 
 
 #### Terminate WebSocket connections
