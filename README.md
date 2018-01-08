@@ -1104,7 +1104,8 @@ Market Buy response {
   transactTime: 1509049376261,
   price: '0.00000000',
   origQty: '1.00000000',
-  executedQty: '1.00000000',
+  
+  utedQty: '1.00000000',
   status: 'FILLED',
   timeInForce: 'GTC',
   type: 'MARKET',
@@ -1254,45 +1255,6 @@ binance.websockets.trades(['BNBBTC', 'ETHBTC'], function(trades) {
 	console.log(symbol+" trade update. price: "+price+", quantity: "+quantity+", maker: "+maker);
 });
 ```
-
-#### User Data: Account Balance Updates, Trade Updates, New Orders, Filled Orders, Cancelled Orders via WebSocket
-```javascript
-function balance_update(data) {
-	console.log("Balance Update");
-	for ( let obj of data.B ) {
-		let { a:asset, f:available, l:onOrder } = obj;
-		if ( available == "0.00000000" ) continue;
-		console.log(asset+"\tavailable: "+available+" ("+onOrder+" on order)");
-	}
-}
-function execution_update(data) {
-	let { x:executionType, s:symbol, p:price, q:quantity, S:side, o:orderType, i:orderId, X:orderStatus } = data;
-	if ( executionType == "NEW" ) {
-		if ( orderStatus == "REJECTED" ) {
-			console.log("Order Failed! Reason: "+data.r);
-		}
-		console.log(symbol+" "+side+" "+orderType+" ORDER #"+orderId+" ("+orderStatus+")");
-		console.log("..price: "+price+", quantity: "+quantity);
-		return;
-	}
-	//NEW, CANCELED, REPLACED, REJECTED, TRADE, EXPIRED
-	console.log(symbol+"\t"+side+" "+executionType+" "+orderType+" ORDER #"+orderId);
-}
-binance.websockets.userData(balance_update, execution_update);
-```
-<details>
- <summary>View Response</summary>
-
-```
-BNBBTC  NEW BUY LIMIT ORDER #6407865 (NEW)
-..price: 0.00035595, quantity: 5.00000000
-Balance Update
-BTC     available: 0.77206464 (0.00177975 on order)
-ETH     available: 1.14109900 (0.00000000 on order)
-BNB     available: 41.33761879 (0.00000000 on order)
-SNM     available: 0.76352833 (0.00000000 on order)
-```
-</details>
 
 #### Get 24h Price Change Statistics via WebSocket
 ```js
@@ -1448,6 +1410,8 @@ binance.withdraw("ETH", "0x1d2034348c851ea29c7d03731c7968a5bcc91564", 1, false, 
 ```js
 binance.withdraw("BTC", "1C5gqLRs96Xq4V2ZZAR1347yUCpHie7sa", 0.2);
 ```
+
+#### [Advanced examples (exchangeInfo, websocket balance updates, websocket order execution updates)](https://github.com/jaggedsoft/node-binance-api/blob/master/examples/advanced.md)
 
 ### Troubleshooting
 Verify that your system time is correct. If you have any suggestions don't hestitate to file an issue.

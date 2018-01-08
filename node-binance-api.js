@@ -335,6 +335,10 @@ LIMIT_MAKER
 			}
 		}
 	};
+	const getDepthCache = function(symbol) {
+		if ( typeof depthCache[symbol] === 'undefined' ) return {bids: {}, asks: {}};
+		return depthCache[symbol];
+	};
 	const depthVolume = function(symbol) { // Calculate Buy/Sell volume from DepthCache
 		let cache = getDepthCache(symbol), quantity, price;
 		let bidbase = 0, askbase = 0, bidqty = 0, askqty = 0;
@@ -349,10 +353,6 @@ LIMIT_MAKER
 			askqty+= quantity;
 		}
 		return {bids: bidbase, asks: askbase, bidQty: bidqty, askQty: askqty};
-	};
-	const getDepthCache = function(symbol) {
-		if ( typeof depthCache[symbol] === 'undefined' ) return {bids: {}, asks: {}};
-		return depthCache[symbol];
 	};
 	////////////////////////////
 	return {
@@ -639,13 +639,14 @@ LIMIT_MAKER
 				}
 			},
 			depthCache: function depthCacheFunction(symbols, callback, limit = 500) {
+				if ( typeof symbols === 'string' ) symbols = [symbols]; // accept both strings and arrays
 				for ( let symbol of symbols ) {
 					if ( typeof info[symbol] === 'undefined' ) info[symbol] = {};
 					info[symbol].firstUpdateId = 0;
 					depthCache[symbol] = {bids: {}, asks: {}};
 					messageQueue[symbol] = [];
 					let reconnect = function() {
-						if ( options.reconnect ) depthCacheFunction(symbols, callback);
+						if ( options.reconnect ) depthCacheFunction([symbol], callback);
 					};
 					subscribe(symbol.toLowerCase()+'@depth', function(depth) {
 						if ( !info[symbol].firstUpdateId ) {
