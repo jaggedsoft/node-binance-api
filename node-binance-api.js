@@ -543,11 +543,11 @@ LIMIT_MAKER
 				if ( callback ) callback(balanceData(data));
 			});
 		},
-		trades: function(symbol, callback) {
-			signedRequest(base+'v3/myTrades', {symbol:symbol}, function(data) {
-				if ( callback ) return callback.call(this, data, symbol);
-			});
-		},
+        trades: function(symbol, callback, options) {
+            signedRequest(base+"v3/myTrades", {symbol:symbol, ...options}, function(data) {
+                if ( callback ) return callback.call(this, data, symbol);
+            });
+        },
 		recentTrades: function(symbol, callback, limit = 500) {
 			signedRequest(base+'v1/trades', {symbol:symbol, limit:limit}, callback);
 		},
