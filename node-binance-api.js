@@ -645,7 +645,7 @@ LIMIT_MAKER
 					depthCache[symbol] = {bids: {}, asks: {}};
 					messageQueue[symbol] = [];
 					let reconnect = function() {
-						if ( options.reconnect ) depthCacheFunction(symbol, callback);
+						if ( options.reconnect ) depthCacheFunction([symbol], callback);
 					};
 					subscribe(symbol.toLowerCase()+'@depth', function(depth) {
 						if ( !info[symbol].firstUpdateId ) {
