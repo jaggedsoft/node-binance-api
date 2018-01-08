@@ -80,7 +80,7 @@ module.exports = function() {
 		if ( !data ) data = {};
 		data.timestamp = new Date().getTime();
 		if ( typeof data.symbol !== 'undefined' ) data.symbol = data.symbol.replace('_','');
-		if ( typeof data.recvWindow == 'undefined' ) data.recvWindow = options.recvWindow;
+		if ( typeof data.recvWindow === 'undefined' ) data.recvWindow = options.recvWindow;
 		let query = Object.keys(data).reduce(function(a,k){a.push(k+'='+encodeURIComponent(data[k]));return a},[]).join('&');
 		let signature = crypto.createHmac('sha256', options.APISECRET).update(query).digest('hex'); // set the HMAC hash header
 		let opt = {
@@ -108,7 +108,7 @@ module.exports = function() {
 
 	const order = function(side, symbol, quantity, price, flags = {}, callback = false) {
 		let endpoint = 'v3/order';
-		if ( options.test ) endpoint+='/test';
+		if ( options.test ) endpoint += '/test';
 		let opt = {
 			symbol: symbol,
 			side: side,
@@ -132,10 +132,10 @@ LIMIT_MAKER
 		if ( typeof flags.icebergQty !== 'undefined' ) opt.icebergQty = flags.icebergQty;
 		if ( typeof flags.stopPrice !== 'undefined' ) {
 			opt.stopPrice = flags.stopPrice;
-			if ( opt.type == 'LIMIT' ) throw 'Error: stopPrice: Must set "type" to one of the following: STOP_LOSS, STOP_LOSS_LIMIT, TAKE_PROFIT, TAKE_PROFIT_LIMIT';
+			if ( opt.type === 'LIMIT' ) throw 'Error: stopPrice: Must set "type" to one of the following: STOP_LOSS, STOP_LOSS_LIMIT, TAKE_PROFIT, TAKE_PROFIT_LIMIT';
 		}
 		signedRequest(base+endpoint, opt, function(response) {
-			if ( typeof response.msg !== 'undefined' && response.msg == 'Filter failure: MIN_NOTIONAL' ) {
+			if ( typeof response.msg !== 'undefined' && response.msg === 'Filter failure: MIN_NOTIONAL' ) {
 				console.error('Order quantity too small. Must be > 0.01');
 			}
 			if ( callback ) callback(response);
@@ -151,7 +151,7 @@ LIMIT_MAKER
 		});
 		ws.on('close', function() {
 			if ( reconnect && options.reconnect ) {
-				if ( this.endpoint && this.endpoint.length == 60 ) console.log('Account data WebSocket reconnecting..');
+				if ( this.endpoint && parseInt(this.endpoint.length, 10) === 60 ) console.log('Account data WebSocket reconnecting..');
 				else console.log('WebSocket reconnecting: '+this.endpoint);
 				try {
 					reconnect();
@@ -173,9 +173,9 @@ LIMIT_MAKER
 	};
 	const userDataHandler = function(data) {
 		let type = data.e;
-		if ( type == 'outboundAccountInfo' ) {
+		if ( type === 'outboundAccountInfo' ) {
 			options.balance_callback(data);
-		} else if ( type == 'executionReport' ) {
+		} else if ( type === 'executionReport' ) {
 			if ( options.execution_callback ) options.execution_callback(data);
 		} else {
 			console.error('Unexpected userData: '+type);
@@ -255,7 +255,7 @@ LIMIT_MAKER
 	};
 	const balanceData = function(data) {
 		let balances = {};
-		if ( typeof data.balances == 'undefined' ) {
+		if ( typeof data.balances === 'undefined' ) {
 			console.log('balanceData error', data);
 			return {};
 		}
@@ -276,7 +276,7 @@ LIMIT_MAKER
 	};
 	const klineConcat = function(symbol, interval) { // Combine all OHLC data with latest update
 		let output = ohlc[symbol][interval];
-		if ( typeof ohlcLatest[symbol][interval].time == 'undefined' ) return output;
+		if ( typeof ohlcLatest[symbol][interval].time === 'undefined' ) return output;
 		const time = ohlcLatest[symbol][interval].time;
 		const last_updated = Object.keys(ohlc[symbol][interval]).pop();
 		if ( time >= last_updated ) {
@@ -324,16 +324,20 @@ LIMIT_MAKER
 		if ( depth.u <= firstUpdateId ) return;
 		for ( obj of depth.b ) { //bids
 			depthCache[symbol].bids[obj[0]] = parseFloat(obj[1]);
-			if ( obj[1] == '0.00000000' ) {
+			if ( obj[1] === '0.00000000' ) {
 				delete depthCache[symbol].bids[obj[0]];
 			}
 		}
 		for ( obj of depth.a ) { //asks
 			depthCache[symbol].asks[obj[0]] = parseFloat(obj[1]);
-			if ( obj[1] == '0.00000000' ) {
+			if ( obj[1] === '0.00000000' ) {
 				delete depthCache[symbol].asks[obj[0]];
 			}
 		}
+	};
+	const getDepthCache = function(symbol) {
+		if ( typeof depthCache[symbol] === 'undefined' ) return {bids: {}, asks: {}};
+		return depthCache[symbol];
 	};
 	const depthVolume = function(symbol) { // Calculate Buy/Sell volume from DepthCache
 		let cache = getDepthCache(symbol), quantity, price;
@@ -349,10 +353,6 @@ LIMIT_MAKER
 			askqty+= quantity;
 		}
 		return {bids: bidbase, asks: askbase, bidQty: bidqty, askQty: askqty};
-	};
-	const getDepthCache = function(symbol) {
-		if ( typeof depthCache[symbol] == 'undefined' ) return {bids: {}, asks: {}};
-		return depthCache[symbol];
 	};
 	////////////////////////////
 	return {
@@ -382,12 +382,12 @@ LIMIT_MAKER
 		},
 		sortBids: function(symbol, max = Infinity, baseValue = false) {
 			let object = {}, count = 0, cache;
-			if ( typeof symbol == 'object' ) cache = symbol;
+			if ( typeof symbol === 'object' ) cache = symbol;
 			else cache = getDepthCache(symbol).bids;
 			let sorted = Object.keys(cache).sort(function(a, b){return parseFloat(b)-parseFloat(a)});
 			let cumulative = 0;
 			for ( let price of sorted ) {
-				if ( baseValue == 'cumulative' ) {
+				if ( baseValue === 'cumulative' ) {
 					cumulative+= parseFloat(cache[price]);
 					object[price] = cumulative;
 				} else if ( !baseValue ) object[price] = parseFloat(cache[price]);
@@ -398,12 +398,12 @@ LIMIT_MAKER
 		},
 		sortAsks: function(symbol, max = Infinity, baseValue = false) {
 			let object = {}, count = 0, cache;
-			if ( typeof symbol == 'object' ) cache = symbol;
+			if ( typeof symbol === 'object' ) cache = symbol;
 			else cache = getDepthCache(symbol).asks;
 			let sorted = Object.keys(cache).sort(function(a, b){return parseFloat(a)-parseFloat(b)});
 			let cumulative = 0;
 			for ( let price of sorted ) {
-				if ( baseValue == 'cumulative' ) {
+				if ( baseValue === 'cumulative' ) {
 					cumulative+= parseFloat(cache[price]);
 					object[price] = cumulative;
 				} else if ( !baseValue ) object[price] = parseFloat(cache[price]);
@@ -429,9 +429,9 @@ LIMIT_MAKER
 		},
 		options: function(opt) {
 			options = opt;
-			if ( typeof options.recvWindow == 'undefined' ) options.recvWindow = 60000;
-			if ( typeof options.reconnect == 'undefined' ) options.reconnect = true;
-			if ( typeof options.test == 'undefined' ) options.test = false;
+			if ( typeof options.recvWindow === 'undefined' ) options.recvWindow = 60000;
+			if ( typeof options.reconnect === 'undefined' ) options.reconnect = true;
+			if ( typeof options.test === 'undefined' ) options.test = false;
 		},
 		buy: function(symbol, quantity, price, flags = {}, callback = false) {
 			order('BUY', symbol, quantity, price, flags, callback);
@@ -596,10 +596,10 @@ LIMIT_MAKER
 		},
 		getMarket: function(symbol) {
 			const substring = symbol.substr(-3);
-			if ( substring == 'BTC' ) return 'BTC';
-			else if ( substring == 'ETH' ) return 'ETH';
-			else if ( substring == 'BNB' ) return 'BNB';
-			else if ( symbol.substr(-4) == 'USDT' ) return 'USDT';
+			if ( substring === 'BTC' ) return 'BTC';
+			else if ( substring === 'ETH' ) return 'ETH';
+			else if ( substring === 'BNB' ) return 'BNB';
+			else if ( symbol.substr(-4) === 'USDT' ) return 'USDT';
 		},
 		websockets: {
 			userData: function userData(callback, execution_callback = false) {
@@ -640,12 +640,12 @@ LIMIT_MAKER
 			},
 			depthCache: function depthCacheFunction(symbols, callback, limit = 500) {
 				for ( let symbol of symbols ) {
-					if ( typeof info[symbol] == 'undefined' ) info[symbol] = {};
+					if ( typeof info[symbol] === 'undefined' ) info[symbol] = {};
 					info[symbol].firstUpdateId = 0;
 					depthCache[symbol] = {bids: {}, asks: {}};
 					messageQueue[symbol] = [];
 					let reconnect = function() {
-						if ( options.reconnect ) depthCacheFunction(symbols, callback);
+						if ( options.reconnect ) depthCacheFunction(symbol, callback);
 					};
 					subscribe(symbol.toLowerCase()+'@depth', function(depth) {
 						if ( !info[symbol].firstUpdateId ) {
@@ -677,16 +677,16 @@ LIMIT_MAKER
 				}
 			},
 			chart: function chart(symbols, interval, callback) {
-				if ( typeof symbols == 'string' ) symbols = [symbols]; // accept both strings and arrays
+				if ( typeof symbols === 'string' ) symbols = [symbols]; // accept both strings and arrays
 				for ( let symbol of symbols ) {
-					if ( typeof info[symbol] == 'undefined' ) info[symbol] = {};
-					if ( typeof info[symbol][interval] == 'undefined' ) info[symbol][interval] = {};
-					if ( typeof ohlc[symbol] == 'undefined' ) ohlc[symbol] = {};
-					if ( typeof ohlc[symbol][interval] == 'undefined' ) ohlc[symbol][interval] = {};
-					if ( typeof ohlcLatest[symbol] == 'undefined' ) ohlcLatest[symbol] = {};
-					if ( typeof ohlcLatest[symbol][interval] == 'undefined' ) ohlcLatest[symbol][interval] = {};
-					if ( typeof klineQueue[symbol] == 'undefined' ) klineQueue[symbol] = {};
-					if ( typeof klineQueue[symbol][interval] == 'undefined' ) klineQueue[symbol][interval] = [];
+					if ( typeof info[symbol] === 'undefined' ) info[symbol] = {};
+					if ( typeof info[symbol][interval] === 'undefined' ) info[symbol][interval] = {};
+					if ( typeof ohlc[symbol] === 'undefined' ) ohlc[symbol] = {};
+					if ( typeof ohlc[symbol][interval] === 'undefined' ) ohlc[symbol][interval] = {};
+					if ( typeof ohlcLatest[symbol] === 'undefined' ) ohlcLatest[symbol] = {};
+					if ( typeof ohlcLatest[symbol][interval] === 'undefined' ) ohlcLatest[symbol][interval] = {};
+					if ( typeof klineQueue[symbol] === 'undefined' ) klineQueue[symbol] = {};
+					if ( typeof klineQueue[symbol][interval] === 'undefined' ) klineQueue[symbol][interval] = [];
 					info[symbol][interval].timestamp = 0;
 					let reconnect = function() {
 						if ( options.reconnect ) chart(symbols, interval, callback);
