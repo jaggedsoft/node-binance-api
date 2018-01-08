@@ -78,8 +78,7 @@ function balance_update(data) {
 		console.log(asset+"\tavailable: "+available+" ("+onOrder+" on order)");
 	}
 }
-function 
-ution_update(data) {
+function execution_update(data) {
 	let { x:executionType, s:symbol, p:price, q:quantity, S:side, o:orderType, i:orderId, X:orderStatus } = data;
 	if ( executionType == "NEW" ) {
 		if ( orderStatus == "REJECTED" ) {
