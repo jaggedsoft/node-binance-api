@@ -639,6 +639,7 @@ LIMIT_MAKER
 				}
 			},
 			depthCache: function depthCacheFunction(symbols, callback, limit = 500) {
+				if ( typeof symbols === 'string' ) symbols = [symbols]; // accept both strings and arrays
 				for ( let symbol of symbols ) {
 					if ( typeof info[symbol] === 'undefined' ) info[symbol] = {};
 					info[symbol].firstUpdateId = 0;
