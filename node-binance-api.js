@@ -39,14 +39,9 @@ module.exports = function() {
 			}
 		};
 		request(opt, function(error, response, body) {
-			if ( !response || !body ) throw 'publicRequest error: '+error;
-			if ( callback ) {
-				try {
-					callback(JSON.parse(body));
-				} catch (error) {
-					console.error('Parse error: '+error.message);
-				}
-			}
+			if ( error ) throw error;
+			if ( response && response.statusCode !== 200 ) throw response;
+			if ( callback ) callback(JSON.parse(body));
 		});
 	};
 
