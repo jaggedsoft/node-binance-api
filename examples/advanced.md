@@ -28,6 +28,15 @@ binance.exchangeInfo(function(data) {
 ```
 ![example](https://image.ibb.co/bz5KAG/notationals.png)
 
+#### Show API Rate limits
+```js
+binance.exchangeInfo(function(response) {
+	console.log(response);
+});
+```
+![example](http://image.ibb.co/gA2gXR/Untitled.png)
+
+
 
 #### Enable Test Mode for orders
 ```js
