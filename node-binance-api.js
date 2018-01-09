@@ -39,14 +39,9 @@ module.exports = function() {
 			}
 		};
 		request(opt, function(error, response, body) {
-			if ( !response || !body ) throw 'publicRequest error: '+error;
-			if ( callback ) {
-				try {
-					callback(JSON.parse(body));
-				} catch (error) {
-					console.error('Parse error: '+error.message);
-				}
-			}
+			if ( error ) throw error;
+			if ( response && response.statusCode !== 200 ) throw response;
+			if ( callback ) callback(JSON.parse(body));
 		});
 	};
 
@@ -64,14 +59,9 @@ module.exports = function() {
 			}
 		};
 		request(opt, function(error, response, body) {
-			if ( !response || !body ) throw 'apiRequest error: '+error;
-			if ( callback ) {
-				try {
-					callback(JSON.parse(body));
-				} catch (error) {
-					console.error('Parse error: '+error.message);
-				}
-			}
+			if ( error ) throw error;
+			if ( response && response.statusCode !== 200 ) throw response;
+			if ( callback ) callback(JSON.parse(body));
 		});
 	};
 
@@ -95,14 +85,9 @@ module.exports = function() {
 			}
 		};
 		request(opt, function(error, response, body) {
-			if ( !response || !body ) throw 'signedRequest error: '+error;
-			if ( callback ) {
-				try {
-					callback(JSON.parse(body));
-				} catch (error) {
-					console.error('Parse error: '+error.message);
-				}
-			}
+			if ( error ) throw error;
+			if ( response && response.statusCode !== 200 ) throw response;
+			if ( callback ) callback(JSON.parse(body));
 		});
 	};
 
@@ -543,11 +528,11 @@ LIMIT_MAKER
 				if ( callback ) callback(balanceData(data));
 			});
 		},
-        trades: function(symbol, callback, options) {
-            signedRequest(base+"v3/myTrades", {symbol:symbol, ...options}, function(data) {
-                if ( callback ) return callback.call(this, data, symbol);
-            });
-        },
+		trades: function(symbol, callback, options) {
+			signedRequest(base+'v3/myTrades', {symbol:symbol, ...options}, function(data) {
+				if ( callback ) return callback.call(this, data, symbol);
+			});
+		},
 		recentTrades: function(symbol, callback, limit = 500) {
 			signedRequest(base+'v1/trades', {symbol:symbol, limit:limit}, callback);
 		},
@@ -650,6 +635,7 @@ LIMIT_MAKER
 					};
 					subscribe(symbol.toLowerCase()+'@depth', function(depth) {
 						if ( !info[symbol].firstUpdateId ) {
+							if ( typeof messageQueue[symbol] === 'undefined' ) messageQueue[symbol] = [];
 							messageQueue[symbol].push(depth);
 							return;
 						}
