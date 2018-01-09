@@ -530,15 +530,16 @@ LIMIT_MAKER
 		},
 /*
 Breaking change: Spread operator is unsupported by Electron
-Move this to a future release
+Move this to a future release v0.4.0
 		trades: function(symbol, callback, options) {
 			signedRequest(base+'v3/myTrades', {symbol:symbol, ...options}, function(data) {
 				if ( callback ) return callback.call(this, data, symbol);
 			});
 		},
 */
-		trades: function(symbol, callback) {
-			signedRequest(base+'v3/myTrades', {symbol:symbol}, function(data) {
+		trades: function(symbol, callback, options = {}) {
+			let parameters = Object.assign({symbol:symbol}, options);
+			signedRequest(base+'v3/myTrades', parameters, function(data) {
 				if ( callback ) return callback.call(this, data, symbol);
 			});
 		},
