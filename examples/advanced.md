@@ -79,6 +79,7 @@ for ( let endpoint in endpoints ) {
 
 #### User Data: Account Balance Updates, Trade Updates, New Orders, Filled Orders, Cancelled Orders via WebSocket
 ```javascript
+// The only time the user data (account balances) and order execution websockets will fire, is if you create or cancel an order, or an order gets filled or partially filled
 function balance_update(data) {
 	console.log("Balance Update");
 	for ( let obj of data.B ) {
