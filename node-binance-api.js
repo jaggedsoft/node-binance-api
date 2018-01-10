@@ -102,6 +102,7 @@ module.exports = function() {
 		};
 		if ( typeof flags.type !== 'undefined' ) opt.type = flags.type;
 		if ( typeof flags.timeInForce !== 'undefined' ) opt.timeInForce = flags.timeInForce;
+		if ( typeof flags.newOrderRespType !== "undefined") opt.newOrderRespType = flags.newOrderRespType;
 		if ( opt.type.includes('LIMIT') ) {
 			opt.price = price;
 			opt.timeInForce = 'GTC';
@@ -424,11 +425,11 @@ LIMIT_MAKER
 		sell: function(symbol, quantity, price, flags = {}, callback = false) {
 			order('SELL', symbol, quantity, price, flags, callback);
 		},
-		marketBuy: function(symbol, quantity, callback = false) {
-			order('BUY', symbol, quantity, 0, {type:'MARKET'}, callback);
+		marketBuy: function(symbol, quantity, flags = {type: 'MARKET'}, callback = false) {
+			order('BUY', symbol, quantity, 0, flags, callback);
 		},
-		marketSell: function(symbol, quantity, callback = false) {
-			order('SELL', symbol, quantity, 0, {type:'MARKET'}, callback);
+		marketSell: function(symbol, quantity, flags = {type: 'MARKET'} callback = false) {
+			order('SELL', symbol, quantity, 0, flags, callback);
 		},
 		cancel: function(symbol, orderid, callback = false) {
 			signedRequest(base+'v3/order', {symbol:symbol, orderId:orderid}, function(data) {
