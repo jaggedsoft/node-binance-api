@@ -425,10 +425,10 @@ LIMIT_MAKER
 		sell: function(symbol, quantity, price, flags = {}, callback = false) {
 			order('SELL', symbol, quantity, price, flags, callback);
 		},
-		marketBuy: function(symbol, quantity, flags = {type: 'MARKET'}, callback = false) {
+		marketBuy: function(symbol, quantity, flags = {type:'MARKET'}, callback = false) {
 			order('BUY', symbol, quantity, 0, flags, callback);
 		},
-		marketSell: function(symbol, quantity, flags = {type: 'MARKET'} callback = false) {
+		marketSell: function(symbol, quantity, flags = {type:'MARKET'}, callback = false) {
 			order('SELL', symbol, quantity, 0, flags, callback);
 		},
 		cancel: function(symbol, orderid, callback = false) {
