@@ -122,6 +122,7 @@ module.exports = function() {
 		}
 		if ( typeof flags.timeInForce !== 'undefined' ) opt.timeInForce = flags.timeInForce;
 		if ( typeof flags.newOrderRespType !== "undefined") opt.newOrderRespType = flags.newOrderRespType;
+		if ( typeof flags.newClientOrderId !== "undefined" ) opt.newClientOrderId = flags.newClientOrderId;
 
 		/*
 STOP_LOSS
