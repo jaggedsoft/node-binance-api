@@ -39,9 +39,14 @@ module.exports = function() {
 			}
 		};
 		request(opt, function(error, response, body) {
-			if ( error ) throw error;
-			if ( response && response.statusCode !== 200 ) throw response;
-			if ( callback ) callback(JSON.parse(body));
+			if ( !response || !body ) throw 'publicRequest error: '+error;
+			if ( callback ) {
+				try {
+					callback(JSON.parse(body));
+				} catch (error) {
+					console.error('Parse error: '+error.message);
+				}
+			}
 		});
 	};
 
@@ -59,9 +64,14 @@ module.exports = function() {
 			}
 		};
 		request(opt, function(error, response, body) {
-			if ( error ) throw error;
-			if ( response && response.statusCode !== 200 ) throw response;
-			if ( callback ) callback(JSON.parse(body));
+			if ( !response || !body ) throw 'apiRequest error: '+error;
+			if ( callback ) {
+				try {
+					callback(JSON.parse(body));
+				} catch (error) {
+					console.error('Parse error: '+error.message);
+				}
+			}
 		});
 	};
 
@@ -85,9 +95,14 @@ module.exports = function() {
 			}
 		};
 		request(opt, function(error, response, body) {
-			if ( error ) throw error;
-			if ( response && response.statusCode !== 200 ) throw response;
-			if ( callback ) callback(JSON.parse(body));
+			if ( !response || !body ) throw 'signedRequest error: '+error;
+			if ( callback ) {
+				try {
+					callback(JSON.parse(body));
+				} catch (error) {
+					console.error('Parse error: '+error.message);
+				}
+			}
 		});
 	};
 
@@ -101,12 +116,12 @@ module.exports = function() {
 			quantity: quantity
 		};
 		if ( typeof flags.type !== 'undefined' ) opt.type = flags.type;
-		if ( typeof flags.timeInForce !== 'undefined' ) opt.timeInForce = flags.timeInForce;
-		if ( typeof flags.newOrderRespType !== "undefined") opt.newOrderRespType = flags.newOrderRespType;
 		if ( opt.type.includes('LIMIT') ) {
 			opt.price = price;
 			opt.timeInForce = 'GTC';
 		}
+		if ( typeof flags.timeInForce !== 'undefined' ) opt.timeInForce = flags.timeInForce;
+		if ( typeof flags.newOrderRespType !== "undefined") opt.newOrderRespType = flags.newOrderRespType;
 
 		/*
 STOP_LOSS
@@ -122,7 +137,7 @@ LIMIT_MAKER
 		}
 		signedRequest(base+endpoint, opt, function(response) {
 			if ( typeof response.msg !== 'undefined' && response.msg === 'Filter failure: MIN_NOTIONAL' ) {
-				console.error('Order quantity too small. Must be > 0.01');
+				console.error('Order quantity too small. See exchangeInfo() for minimum amounts');
 			}
 			if ( callback ) callback(response);
 			else console.log(side+'('+symbol+','+quantity+','+price+') ',response);
