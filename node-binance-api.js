@@ -39,9 +39,16 @@ module.exports = function() {
 			}
 		};
 		request(opt, function(error, response, body) {
-			if ( error ) throw error;
-			if ( response && response.statusCode !== 200 ) throw response;
-			if ( callback ) callback(JSON.parse(body));
+			if ( !callback ) return;
+
+			if ( error ) 
+				return callback( error );
+
+			if ( response && response.statusCode !== 200 ) 
+				return callback( response );
+
+			if ( callback ) 
+				return callback( null, JSON.parse(body) );
 		});
 	};
 
@@ -59,9 +66,16 @@ module.exports = function() {
 			}
 		};
 		request(opt, function(error, response, body) {
-			if ( error ) throw error;
-			if ( response && response.statusCode !== 200 ) throw response;
-			if ( callback ) callback(JSON.parse(body));
+			if ( !callback ) return;
+
+			if ( error ) 
+				return callback( error );
+
+			if ( response && response.statusCode !== 200 ) 
+				return callback( response );
+
+			if ( callback ) 
+				return callback( null, JSON.parse(body) );
 		});
 	};
 
@@ -85,9 +99,16 @@ module.exports = function() {
 			}
 		};
 		request(opt, function(error, response, body) {
-			if ( error ) throw error;
-			if ( response && response.statusCode !== 200 ) throw response;
-			if ( callback ) callback(JSON.parse(body));
+			if ( !callback ) return;
+
+			if ( error ) 
+				return callback( error );
+
+			if ( response && response.statusCode !== 200 ) 
+				return callback( response );
+
+			if ( callback ) 
+				return callback( null, JSON.parse(body) );
 		});
 	};
 
