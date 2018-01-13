@@ -122,6 +122,7 @@ module.exports = function() {
 		}
 		if ( typeof flags.timeInForce !== 'undefined' ) opt.timeInForce = flags.timeInForce;
 		if ( typeof flags.newOrderRespType !== "undefined") opt.newOrderRespType = flags.newOrderRespType;
+		if ( typeof flags.newClientOrderId !== "undefined" ) opt.newClientOrderId = flags.newClientOrderId;
 
 		/*
 STOP_LOSS
@@ -441,9 +442,19 @@ LIMIT_MAKER
 			order('SELL', symbol, quantity, price, flags, callback);
 		},
 		marketBuy: function(symbol, quantity, flags = {type:'MARKET'}, callback = false) {
+			if ( typeof flags === 'function' ) { // Accept callback as third parameter
+				callback = flags;
+				flags = {type:'MARKET'};
+			}
+			if ( typeof flags.type == 'undefined' ) flags.type = 'MARKET';
 			order('BUY', symbol, quantity, 0, flags, callback);
 		},
 		marketSell: function(symbol, quantity, flags = {type:'MARKET'}, callback = false) {
+			if ( typeof flags === 'function' ) { // Accept callback as third parameter
+				callback = flags;
+				flags = {type:'MARKET'};
+			}
+			if ( typeof flags.type == 'undefined' ) flags.type = 'MARKET';
 			order('SELL', symbol, quantity, 0, flags, callback);
 		},
 		cancel: function(symbol, orderid, callback = false) {
