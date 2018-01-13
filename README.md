@@ -1220,14 +1220,17 @@ binance.prevDay("BNBBTC", function(prevDay, symbol) {
 ```
 
 #### Get Kline/candlestick data for a symbol
+You can use the optional API parameters for getting historical candlesticks, these are useful if you want to import data from earlier back in time.
+Optional parameters: limit (max/default 500), startTime, endTime.
+
 ```javascript
-// Periods: 1m,3m,5m,15m,30m,1h,2h,4h,6h,8h,12h,1d,3d,1w,1M
+// Intervals: 1m,3m,5m,15m,30m,1h,2h,4h,6h,8h,12h,1d,3d,1w,1M
 binance.candlesticks("BNBBTC", "5m", function(ticks, symbol) {
 	console.log("candlesticks()", ticks);
 	let last_tick = ticks[ticks.length - 1];
 	let [time, open, high, low, close, volume, closeTime, assetVolume, trades, buyBaseVolume, buyAssetVolume, ignored] = last_tick;
 	console.log(symbol+" last close: "+close);
-});
+}, {limit: 500, endTime: 1514764800000});
 ```
 
 # WebSockets Implementation
