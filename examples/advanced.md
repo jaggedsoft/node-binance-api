@@ -27,3 +27,93 @@ binance.exchangeInfo(function(data) {
 });
 ```
 ![example](https://image.ibb.co/bz5KAG/notationals.png)
+
+#### Show API Rate limits
+```js
+binance.exchangeInfo(function(response) {
+	console.log(response);
+});
+```
+![example](http://image.ibb.co/gA2gXR/Untitled.png)
+
+
+
+#### Enable Test Mode for orders
+```js
+const binance = require('node-binance-api');
+binance.options({
+  'APIKEY':'<key>',
+  'APISECRET':'<secret>',
+  'test':true
+});
+```
+
+
+#### Terminate WebSocket connections
+First disable automatic reconnection of websockets
+
+```js
+binance.options({
+	'APIKEY': '<your key>',
+	'APISECRET': '<your secret>',
+	'reconnect': false
+});
+```
+
+Now you can terminate each websocket endpoint by the id:
+```js
+binance.websockets.terminate('ethbtc@ticker'); // for prevday
+binance.websockets.terminate('ethbtc@kline_1m'); // for candlestick charts
+```
+
+You can store a reference to each `ws` object or view a list of all of them:
+```js
+// List all endpoints
+let endpoints = binance.websockets.subscriptions();
+for ( let endpoint in endpoints ) {
+	console.log(endpoint);
+	//binance.websockets.terminate(endpoint);
+}
+```
+
+
+#### User Data: Account Balance Updates, Trade Updates, New Orders, Filled Orders, Cancelled Orders via WebSocket
+```javascript
+// The only time the user data (account balances) and order execution websockets will fire, is if you create or cancel an order, or an order gets filled or partially filled
+function balance_update(data) {
+	console.log("Balance Update");
+	for ( let obj of data.B ) {
+		let { a:asset, f:available, l:onOrder } = obj;
+		if ( available == "0.00000000" ) continue;
+		console.log(asset+"\tavailable: "+available+" ("+onOrder+" on order)");
+	}
+}
+function execution_update(data) {
+	let { x:executionType, s:symbol, p:price, q:quantity, S:side, o:orderType, i:orderId, X:orderStatus } = data;
+	if ( executionType == "NEW" ) {
+		if ( orderStatus == "REJECTED" ) {
+			console.log("Order Failed! Reason: "+data.r);
+		}
+		console.log(symbol+" "+side+" "+orderType+" ORDER #"+orderId+" ("+orderStatus+")");
+		console.log("..price: "+price+", quantity: "+quantity);
+		return;
+	}
+	//NEW, CANCELED, REPLACED, REJECTED, TRADE, EXPIRED
+	console.log(symbol+"\t"+side+" "+executionType+" "+orderType+" ORDER #"+orderId);
+}
+binance.websockets.userData(balance_update, execution_update);
+```
+<details>
+ <summary>View Response</summary>
+
+```
+BNBBTC  NEW BUY LIMIT ORDER #6407865 (NEW)
+..price: 0.00035595, quantity: 5.00000000
+Balance Update
+BTC     available: 0.77206464 (0.00177975 on order)
+ETH     available: 1.14109900 (0.00000000 on order)
+BNB     available: 41.33761879 (0.00000000 on order)
+SNM     available: 0.76352833 (0.00000000 on order)
+```
+</details>
+  
