@@ -1058,7 +1058,7 @@ binance.marketSell("ETHBTC", quantity);
 #### LIMIT order with callback
 ```javascript
 var quantity = 5, price = 0.00402030;
-binance.buy("BNBETH", quantity, price, {}, (response) => {
+binance.buy("BNBETH", quantity, price, {type:'MARKET'}, (response) => {
 	console.log("Limit Buy response", response);
 	console.log("order id: " + response.orderId);
 });
