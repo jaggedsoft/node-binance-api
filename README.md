@@ -33,7 +33,7 @@ binance.options({
 
 #### Getting latest price of a symbol
 ```javascript
-binance.prices(function(ticker) {
+binance.prices(function(error, ticker) {
 	console.log("prices()", ticker);
 	console.log("Price of BNB: ", ticker.BNBBTC);
 });
@@ -107,7 +107,7 @@ binance.prices(function(ticker) {
 
 #### Getting list of current balances
 ```javascript
-binance.balance(function(balances) {
+binance.balance(function(error, balances) {
 	console.log("balances()", balances);
 	console.log("ETH balance: ", balances.ETH.available);
 });
@@ -172,7 +172,7 @@ binance.balance(function(balances) {
 
 #### Getting bid/ask prices for a symbol
 ```javascript
-binance.bookTickers(function(ticker) {
+binance.bookTickers(function(error, ticker) {
 	console.log("bookTickers()", ticker);
 	console.log("Price of BNB: ", ticker.BNBBTC);
 });
@@ -501,7 +501,7 @@ binance.bookTickers(function(ticker) {
 
 #### Get all bid/ask prices
 ```javascript
-binance.bookTickers(function(ticker) {
+binance.bookTickers(function(error, ticker) {
 	console.log("bookTickers", ticker);
 });
 ```
@@ -824,7 +824,7 @@ binance.bookTickers(function(ticker) {
 
 #### Get market depth for a symbol
 ```javascript
-binance.depth("BNBBTC", function(depth, symbol) {
+binance.depth("BNBBTC", function(error, depth, symbol) {
 	console.log(symbol+" market depth", depth);
 });
 ```
@@ -1104,7 +1104,7 @@ Market Buy response {
   transactTime: 1509049376261,
   price: '0.00000000',
   origQty: '1.00000000',
-  
+
   utedQty: '1.00000000',
   status: 'FILLED',
   timeInForce: 'GTC',
@@ -1137,28 +1137,28 @@ binance.sell("ETHBTC", quantity, price, {icebergQty: 10});
 
 #### Cancel an order
 ```javascript
-binance.cancel("ETHBTC", orderid, function(response, symbol) {
+binance.cancel("ETHBTC", orderid, function(error, response, symbol) {
 	console.log(symbol+" cancel response:", response);
 });
 ```
 
 #### Cancel all open orders
 ```js
-binance.cancelOrders("XMRBTC", function(response, symbol) {
+binance.cancelOrders("XMRBTC", function(error, response, symbol) {
 	console.log(symbol+" cancel response:", response);
 });
 ```
 
 #### Get open orders for a symbol
 ```javascript
-binance.openOrders("ETHBTC", function(openOrders, symbol) {
+binance.openOrders("ETHBTC", function(error, openOrders, symbol) {
 	console.log("openOrders("+symbol+")", openOrders);
 });
 ```
 
 #### Get list of all open orders
 ```javascript
-binance.openOrders(false, function(openOrders) {
+binance.openOrders(false, function(error, openOrders) {
 	console.log("openOrders()", openOrders);
 });
 ```
@@ -1166,14 +1166,14 @@ binance.openOrders(false, function(openOrders) {
 #### Check an order's status
 ```javascript
 let orderid = "7610385";
-binance.orderStatus("ETHBTC", orderid, function(orderStatus, symbol) {
+binance.orderStatus("ETHBTC", orderid, function(error, orderStatus, symbol) {
 	console.log(symbol+" order status:", orderStatus);
 });
 ```
 
 #### Trade history
 ```javascript
-binance.trades("SNMBTC", function(trades, symbol) {
+binance.trades("SNMBTC", function(error, trades, symbol) {
 	console.log(symbol+" trade history", trades);
 });
 ```
@@ -1206,14 +1206,14 @@ binance.trades("SNMBTC", function(trades, symbol) {
 
 #### Get all account orders; active, canceled, or filled.
 ```javascript
-binance.allOrders("ETHBTC", function(orders, symbol) {
+binance.allOrders("ETHBTC", function(error, orders, symbol) {
 	console.log(symbol+" orders:", orders);
 });
 ```
 
 #### Getting 24hr ticker price change statistics for a symbol
 ```javascript
-binance.prevDay("BNBBTC", function(prevDay, symbol) {
+binance.prevDay("BNBBTC", function(error, prevDay, symbol) {
 	console.log(symbol+" previous day:", prevDay);
 	console.log("BNB change since yesterday: "+prevDay.priceChangePercent+"%")
 });
@@ -1225,7 +1225,7 @@ Optional parameters: limit (max/default 500), startTime, endTime.
 
 ```javascript
 // Intervals: 1m,3m,5m,15m,30m,1h,2h,4h,6h,8h,12h,1d,3d,1w,1M
-binance.candlesticks("BNBBTC", "5m", function(ticks, symbol) {
+binance.candlesticks("BNBBTC", "5m", function(error, ticks, symbol) {
 	console.log("candlesticks()", ticks);
 	let last_tick = ticks[ticks.length - 1];
 	let [time, open, high, low, close, volume, closeTime, assetVolume, trades, buyBaseVolume, buyAssetVolume, ignored] = last_tick;
