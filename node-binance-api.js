@@ -139,11 +139,11 @@ LIMIT_MAKER
 			opt.stopPrice = flags.stopPrice;
 			if ( opt.type === 'LIMIT' ) throw 'Error: stopPrice: Must set "type" to one of the following: STOP_LOSS, STOP_LOSS_LIMIT, TAKE_PROFIT, TAKE_PROFIT_LIMIT';
 		}
-		signedRequest(base+endpoint, opt, function(response) {
+		signedRequest(base+endpoint, opt, function(error, response) {
 			if ( typeof response.msg !== 'undefined' && response.msg === 'Filter failure: MIN_NOTIONAL' ) {
 				console.error('Order quantity too small. See exchangeInfo() for minimum amounts');
 			}
-			if ( callback ) callback(response);
+			if ( callback ) callback(error, response);
 			else console.log(side+'('+symbol+','+quantity+','+price+') ',response);
 		}, 'POST');
 	};
