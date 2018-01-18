@@ -39,14 +39,16 @@ module.exports = function() {
 			}
 		};
 		request(opt, function(error, response, body) {
-			if ( !response || !body ) throw 'publicRequest error: '+error;
-			if ( callback ) {
-				try {
-					callback(JSON.parse(body));
-				} catch (error) {
-					console.error('Parse error: '+error.message);
-				}
-			}
+			if ( !callback ) return;
+
+			if ( error )
+				return callback( error );
+
+			if ( response && response.statusCode !== 200 )
+				return callback( response );
+
+			if ( callback )
+				return callback( null, JSON.parse(body) );
 		});
 	};
 
@@ -64,14 +66,16 @@ module.exports = function() {
 			}
 		};
 		request(opt, function(error, response, body) {
-			if ( !response || !body ) throw 'apiRequest error: '+error;
-			if ( callback ) {
-				try {
-					callback(JSON.parse(body));
-				} catch (error) {
-					console.error('Parse error: '+error.message);
-				}
-			}
+			if ( !callback ) return;
+
+			if ( error )
+				return callback( error );
+
+			if ( response && response.statusCode !== 200 )
+				return callback( response );
+
+			if ( callback )
+				return callback( null, JSON.parse(body) );
 		});
 	};
 
@@ -95,14 +99,16 @@ module.exports = function() {
 			}
 		};
 		request(opt, function(error, response, body) {
-			if ( !response || !body ) throw 'signedRequest error: '+error;
-			if ( callback ) {
-				try {
-					callback(JSON.parse(body));
-				} catch (error) {
-					console.error('Parse error: '+error.message);
-				}
-			}
+			if ( !callback ) return;
+
+			if ( error )
+				return callback( error );
+
+			if ( response && response.statusCode !== 200 )
+				return callback( response );
+
+			if ( callback )
+				return callback( null, JSON.parse(body) );
 		});
 	};
 

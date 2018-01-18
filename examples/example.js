@@ -5,18 +5,18 @@ binance.options({
 });
 
 // Get bid/ask prices
-//binance.allBookTickers(function(json) {
+//binance.allBookTickers(function(error, json) {
 //  console.log("allBookTickers",json);
 //});
 
 // Getting latest price of a symbol
-binance.prices(function(ticker) {
+binance.prices(function(error, ticker) {
 	console.log("prices()", ticker);
 	console.log("Price of BNB: ", ticker.BNBBTC);
 });
 
 // Getting list of current balances
-binance.balance(function(balances) {
+binance.balance(function(error, balances) {
 	console.log("balances()", balances);
 	if ( typeof balances.ETH !== "undefined" ) {
 		console.log("ETH balance: ", balances.ETH.available);
@@ -24,39 +24,39 @@ binance.balance(function(balances) {
 });
 
 // Getting bid/ask prices for a symbol
-//binance.bookTickers(function(ticker) {
+//binance.bookTickers(function(error, ticker) {
 //	console.log("bookTickers()", ticker);
 //	console.log("Price of BNB: ", ticker.BNBBTC);
 //});
 
 // Get market depth for a symbol
-//binance.depth("SNMBTC", function(json) {
+//binance.depth("SNMBTC", function(error, json) {
 //	console.log("market depth",json);
 //});
 
 // Getting list of open orders
-//binance.openOrders("ETHBTC", function(json) {
+//binance.openOrders("ETHBTC", function(error, json) {
 //	console.log("openOrders()",json);
 //});
 
 // Check an order's status
 //let orderid = "7610385";
-//binance.orderStatus("ETHBTC", orderid, function(json) {
+//binance.orderStatus("ETHBTC", orderid, function(error, json) {
 //	console.log("orderStatus()",json);
 //});
 
 // Cancel an order
-//binance.cancel("ETHBTC", orderid, function(response) {
+//binance.cancel("ETHBTC", orderid, function(error, response) {
 //	console.log("cancel()",response);
 //});
 
 // Trade history
-//binance.trades("SNMBTC", function(json) {
+//binance.trades("SNMBTC", function(error, json) {
 //  console.log("trade history",json);
 //});
 
 // Get all account orders; active, canceled, or filled.
-//binance.allOrders("ETHBTC", function(json) {
+//binance.allOrders("ETHBTC", function(error, json) {
 //	console.log(json);
 //});
 
@@ -71,7 +71,7 @@ binance.balance(function(balances) {
 //binance.sell(symbol, quantity, 0, "MARKET");
 
 // Periods: 1m,3m,5m,15m,30m,1h,2h,4h,6h,8h,12h,1d,3d,1w,1M
-binance.candlesticks("BNBBTC", "5m", function(ticks) {
+binance.candlesticks("BNBBTC", "5m", function(error, ticks) {
 	console.log("candlesticks()", ticks);
 	let last_tick = ticks[ticks.length - 1];
 	let [time, open, high, low, close, volume, closeTime, assetVolume, trades, buyBaseVolume, buyAssetVolume, ignored] = last_tick;
