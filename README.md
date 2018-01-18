@@ -1058,7 +1058,7 @@ binance.marketSell("ETHBTC", quantity);
 #### LIMIT order with callback
 ```javascript
 var quantity = 5, price = 0.00402030;
-binance.buy("BNBETH", quantity, price, {type:'LIMIT'}, (response) => {
+binance.buy("BNBETH", quantity, price, {type:'LIMIT'}, (error, response) => {
 	console.log("Limit Buy response", response);
 	console.log("order id: " + response.orderId);
 });
@@ -1088,7 +1088,7 @@ Limit Buy response {
 #### Chaining orders together
 ```js
 var quantity = 1;
-binance.marketBuy("BNBBTC", quantity, (response) => {
+binance.marketBuy("BNBBTC", quantity, (error, response) => {
 	console.log("Market Buy response", response);
 	console.log("order id: " + response.orderId);
 	// Now you can limit sell with a stop loss, etc.
@@ -1264,12 +1264,12 @@ binance.websockets.trades(['BNBBTC', 'ETHBTC'], (trades) => {
 #### Get 24h Price Change Statistics via WebSocket
 ```js
 // For all symbols:
-binance.websockets.prevDay(false, (response) => {
+binance.websockets.prevDay(false, (error, response) => {
 	console.log(response);
 });
 
 // For a specific symbol:
-binance.websockets.prevDay('BNBBTC', (response) => {
+binance.websockets.prevDay('BNBBTC', (error, response) => {
 	console.log(response);
 });
 ```
@@ -1362,35 +1362,35 @@ bids { '0.00025203': 0.201624,
 
 #### Get Deposit Address
 ```js
-binance.depositAddress("XMR", (response) => {
+binance.depositAddress("XMR", (error, response) => {
 	console.log(response);
 });
 ```
 
 #### Get All Deposit History
 ```js
-binance.depositHistory((response) => {
+binance.depositHistory((error, response) => {
 	console.log(response);
 });
 ```
 
 #### Get Deposit History for a specific symbol
 ```js
-binance.depositHistory((response) => {
+binance.depositHistory((error, response) => {
 	console.log(response);
 }, "VEN");
 ```
 
 #### Get All Withdraw History
 ```js
-binance.withdrawHistory((response) => {
+binance.withdrawHistory((error, response) => {
 	console.log(response);
 });
 ```
 
 #### Get Withdraw History for a specific symbol
 ```js
-binance.withdrawHistory((response) => {
+binance.withdrawHistory((error, response) => {
 	console.log(response);
 }, "BTC");
 ```
@@ -1406,7 +1406,7 @@ binance.withdraw("XMR", address, amount, addressTag);
 
 #### Withdraw with Callback
 ```js
-binance.withdraw("ETH", "0x1d2034348c851ea29c7d03731c7968a5bcc91564", 1, false, (response) => {
+binance.withdraw("ETH", "0x1d2034348c851ea29c7d03731c7968a5bcc91564", 1, false, (error, response) => {
 	console.log(response);
 });
 ```
