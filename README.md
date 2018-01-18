@@ -17,8 +17,8 @@ npm install node-binance-api --save
 ```javascript
 const binance = require('node-binance-api');
 binance.options({
-  'APIKEY':'<key>',
-  'APISECRET':'<secret>'
+	'APIKEY':'<key>',
+	'APISECRET':'<secret>'
 });
 ```
 
@@ -27,15 +27,15 @@ To start playing in test/sandbox mode where orders are **NOT** _"real"_ orders u
 ```javascript
 const binance = require('node-binance-api');
 binance.options({
-  'APIKEY':'<key>',
-  'APISECRET':'<secret>',
-  'test':true
+	'APIKEY':'<key>',
+	'APISECRET':'<secret>',
+	'test':true
 });
 ```
 
 #### Getting latest price of a symbol
 ```javascript
-binance.prices(function(error, ticker) {
+binance.prices((error, ticker) => {
 	console.log("prices()", ticker);
 	console.log("Price of BNB: ", ticker.BNBBTC);
 });
@@ -109,7 +109,7 @@ binance.prices(function(error, ticker) {
 
 #### Getting list of current balances
 ```javascript
-binance.balance(function(error, balances) {
+binance.balance((error, balances) => {
 	console.log("balances()", balances);
 	console.log("ETH balance: ", balances.ETH.available);
 });
@@ -174,7 +174,7 @@ binance.balance(function(error, balances) {
 
 #### Getting bid/ask prices for a symbol
 ```javascript
-binance.bookTickers(function(error, ticker) {
+binance.bookTickers((error, ticker) => {
 	console.log("bookTickers()", ticker);
 	console.log("Price of BNB: ", ticker.BNBBTC);
 });
@@ -503,7 +503,7 @@ binance.bookTickers(function(error, ticker) {
 
 #### Get all bid/ask prices
 ```javascript
-binance.bookTickers(function(error, ticker) {
+binance.bookTickers((error, ticker) => {
 	console.log("bookTickers", ticker);
 });
 ```
@@ -826,7 +826,7 @@ binance.bookTickers(function(error, ticker) {
 
 #### Get market depth for a symbol
 ```javascript
-binance.depth("BNBBTC", function(error, depth, symbol) {
+binance.depth("BNBBTC", (error, depth, symbol) => {
 	console.log(symbol+" market depth", depth);
 });
 ```
@@ -1058,7 +1058,7 @@ binance.marketSell("ETHBTC", quantity);
 #### LIMIT order with callback
 ```javascript
 var quantity = 5, price = 0.00402030;
-binance.buy("BNBETH", quantity, price, {}, function(response) {
+binance.buy("BNBETH", quantity, price, {type:'LIMIT'}, (response) => {
 	console.log("Limit Buy response", response);
 	console.log("order id: " + response.orderId);
 });
@@ -1088,7 +1088,7 @@ Limit Buy response {
 #### Chaining orders together
 ```js
 var quantity = 1;
-binance.marketBuy("BNBBTC", quantity, function(response) {
+binance.marketBuy("BNBBTC", quantity, (response) => {
 	console.log("Market Buy response", response);
 	console.log("order id: " + response.orderId);
 	// Now you can limit sell with a stop loss, etc.
@@ -1139,28 +1139,28 @@ binance.sell("ETHBTC", quantity, price, {icebergQty: 10});
 
 #### Cancel an order
 ```javascript
-binance.cancel("ETHBTC", orderid, function(error, response, symbol) {
+binance.cancel("ETHBTC", orderid, (error, response, symbol) => {
 	console.log(symbol+" cancel response:", response);
 });
 ```
 
 #### Cancel all open orders
 ```js
-binance.cancelOrders("XMRBTC", function(error, response, symbol) {
+binance.cancelOrders("XMRBTC", (error, response, symbol) => {
 	console.log(symbol+" cancel response:", response);
 });
 ```
 
 #### Get open orders for a symbol
 ```javascript
-binance.openOrders("ETHBTC", function(error, openOrders, symbol) {
+binance.openOrders("ETHBTC", (error, openOrders, symbol) => {
 	console.log("openOrders("+symbol+")", openOrders);
 });
 ```
 
 #### Get list of all open orders
 ```javascript
-binance.openOrders(false, function(error, openOrders) {
+binance.openOrders(false, (error, openOrders) => {
 	console.log("openOrders()", openOrders);
 });
 ```
@@ -1168,14 +1168,14 @@ binance.openOrders(false, function(error, openOrders) {
 #### Check an order's status
 ```javascript
 let orderid = "7610385";
-binance.orderStatus("ETHBTC", orderid, function(error, orderStatus, symbol) {
+binance.orderStatus("ETHBTC", orderid, (error, orderStatus, symbol) => {
 	console.log(symbol+" order status:", orderStatus);
 });
 ```
 
 #### Trade history
 ```javascript
-binance.trades("SNMBTC", function(error, trades, symbol) {
+binance.trades("SNMBTC", (error, trades, symbol) => {
 	console.log(symbol+" trade history", trades);
 });
 ```
@@ -1208,14 +1208,14 @@ binance.trades("SNMBTC", function(error, trades, symbol) {
 
 #### Get all account orders; active, canceled, or filled.
 ```javascript
-binance.allOrders("ETHBTC", function(error, orders, symbol) {
+binance.allOrders("ETHBTC", (error, orders, symbol) => {
 	console.log(symbol+" orders:", orders);
 });
 ```
 
 #### Getting 24hr ticker price change statistics for a symbol
 ```javascript
-binance.prevDay("BNBBTC", function(error, prevDay, symbol) {
+binance.prevDay("BNBBTC", (error, prevDay, symbol) => {
 	console.log(symbol+" previous day:", prevDay);
 	console.log("BNB change since yesterday: "+prevDay.priceChangePercent+"%")
 });
@@ -1227,7 +1227,7 @@ Optional parameters: limit (max/default 500), startTime, endTime.
 
 ```javascript
 // Intervals: 1m,3m,5m,15m,30m,1h,2h,4h,6h,8h,12h,1d,3d,1w,1M
-binance.candlesticks("BNBBTC", "5m", function(error, ticks, symbol) {
+binance.candlesticks("BNBBTC", "5m", (error, ticks, symbol) => {
 	console.log("candlesticks()", ticks);
 	let last_tick = ticks[ticks.length - 1];
 	let [time, open, high, low, close, volume, closeTime, assetVolume, trades, buyBaseVolume, buyAssetVolume, ignored] = last_tick;
@@ -1240,7 +1240,7 @@ binance.candlesticks("BNBBTC", "5m", function(error, ticks, symbol) {
 #### Get Candlestick Updates via WebSocket
 ```javascript
 // Periods: 1m,3m,5m,15m,30m,1h,2h,4h,6h,8h,12h,1d,3d,1w,1M
-binance.websockets.candlesticks(['BNBBTC'], "1m", function(candlesticks) {
+binance.websockets.candlesticks(['BNBBTC'], "1m", (candlesticks) => {
 	let { e:eventType, E:eventTime, s:symbol, k:ticks } = candlesticks;
 	let { o:open, h:high, l:low, c:close, v:volume, n:trades, i:interval, x:isFinal, q:quoteVolume, V:buyVolume, Q:quoteBuyVolume } = ticks;
 	console.log(symbol+" "+interval+" candlestick update");
@@ -1255,7 +1255,7 @@ binance.websockets.candlesticks(['BNBBTC'], "1m", function(candlesticks) {
 
 #### Get Trade Updates via WebSocket
 ```javascript
-binance.websockets.trades(['BNBBTC', 'ETHBTC'], function(trades) {
+binance.websockets.trades(['BNBBTC', 'ETHBTC'], (trades) => {
 	let {e:eventType, E:eventTime, s:symbol, p:price, q:quantity, m:maker, a:tradeId} = trades;
 	console.log(symbol+" trade update. price: "+price+", quantity: "+quantity+", maker: "+maker);
 });
@@ -1264,12 +1264,12 @@ binance.websockets.trades(['BNBBTC', 'ETHBTC'], function(trades) {
 #### Get 24h Price Change Statistics via WebSocket
 ```js
 // For all symbols:
-binance.websockets.prevDay(false, function(response) {
+binance.websockets.prevDay(false, (response) => {
 	console.log(response);
 });
 
 // For a specific symbol:
-binance.websockets.prevDay('BNBBTC', function(response) {
+binance.websockets.prevDay('BNBBTC', (response) => {
 	console.log(response);
 });
 ```
@@ -1306,7 +1306,7 @@ binance.websockets.prevDay('BNBBTC', function(response) {
 
 #### Get Market Depth via WebSocket
 ```javascript
-binance.websockets.depth(['BNBBTC'], function(depth) {
+binance.websockets.depth(['BNBBTC'], (depth) => {
 	let {e:eventType, E:eventTime, s:symbol, u:updateId, b:bidDepth, a:askDepth} = depth;
 	console.log(symbol+" market depth update");
 	console.log(bidDepth, askDepth);
@@ -1315,7 +1315,7 @@ binance.websockets.depth(['BNBBTC'], function(depth) {
 
 #### Maintain Market Depth Cache Locally via WebSocket
 ```javascript
-binance.websockets.depthCache(['BNBBTC'], function(symbol, depth) {
+binance.websockets.depthCache(['BNBBTC'], (symbol, depth) => {
 	let bids = binance.sortBids(depth.bids);
 	let asks = binance.sortAsks(depth.asks);
 	console.log(symbol+" depth cache update");
@@ -1362,35 +1362,35 @@ bids { '0.00025203': 0.201624,
 
 #### Get Deposit Address
 ```js
-binance.depositAddress("XMR", function(response) {
+binance.depositAddress("XMR", (response) => {
 	console.log(response);
 });
 ```
 
 #### Get All Deposit History
 ```js
-binance.depositHistory(function(response) {
+binance.depositHistory((response) => {
 	console.log(response);
 });
 ```
 
 #### Get Deposit History for a specific symbol
 ```js
-binance.depositHistory(function(response) {
+binance.depositHistory((response) => {
 	console.log(response);
 }, "VEN");
 ```
 
 #### Get All Withdraw History
 ```js
-binance.withdrawHistory(function(response) {
+binance.withdrawHistory((response) => {
 	console.log(response);
 });
 ```
 
 #### Get Withdraw History for a specific symbol
 ```js
-binance.withdrawHistory(function(response) {
+binance.withdrawHistory((response) => {
 	console.log(response);
 }, "BTC");
 ```
@@ -1406,7 +1406,7 @@ binance.withdraw("XMR", address, amount, addressTag);
 
 #### Withdraw with Callback
 ```js
-binance.withdraw("ETH", "0x1d2034348c851ea29c7d03731c7968a5bcc91564", 1, false, function(response) {
+binance.withdraw("ETH", "0x1d2034348c851ea29c7d03731c7968a5bcc91564", 1, false, (response) => {
 	console.log(response);
 });
 ```
