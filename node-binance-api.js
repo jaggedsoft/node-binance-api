@@ -47,8 +47,7 @@ module.exports = function() {
 			if ( response && response.statusCode !== 200 )
 				return callback( response );
 
-			if ( callback )
-				return callback( null, JSON.parse(body) );
+			return callback( null, JSON.parse(body) );
 		});
 	};
 
@@ -74,8 +73,7 @@ module.exports = function() {
 			if ( response && response.statusCode !== 200 )
 				return callback( response );
 
-			if ( callback )
-				return callback( null, JSON.parse(body) );
+			return callback( null, JSON.parse(body) );
 		});
 	};
 
@@ -107,8 +105,7 @@ module.exports = function() {
 			if ( response && response.statusCode !== 200 )
 				return callback( response );
 
-			if ( callback )
-				return callback( null, JSON.parse(body) );
+			return callback( null, JSON.parse(body) );
 		});
 	};
 
@@ -640,7 +637,7 @@ Move this to a future release v0.4.0
 				let reconnect = function() {
 					if ( options.reconnect ) userData(callback, execution_callback);
 				};
-				apiRequest(base+'v1/userDataStream', function(response) {
+				apiRequest(base+'v1/userDataStream', function(error, response) {
 					options.listenKey = response.listenKey;
 					setInterval(function() { // keepalive
 						try {
@@ -774,3 +771,6 @@ Move this to a future release v0.4.0
 	};
 }();
 //https://github.com/binance-exchange/binance-official-api-docs
+
+//rest /api/v3/ticker/price /api/v3/ticker/bookTicker
+//add rate limit and response status code
