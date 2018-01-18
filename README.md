@@ -17,8 +17,8 @@ npm install node-binance-api --save
 ```javascript
 const binance = require('node-binance-api');
 binance.options({
-  'APIKEY':'<key>',
-  'APISECRET':'<secret>'
+	'APIKEY':'<key>',
+	'APISECRET':'<secret>'
 });
 ```
 
@@ -27,9 +27,9 @@ To start playing in test/sandbox mode where orders are **NOT** _"real"_ orders u
 ```javascript
 const binance = require('node-binance-api');
 binance.options({
-  'APIKEY':'<key>',
-  'APISECRET':'<secret>',
-  'test':true
+	'APIKEY':'<key>',
+	'APISECRET':'<secret>',
+	'test':true
 });
 ```
 
