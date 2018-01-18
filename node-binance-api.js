@@ -477,7 +477,7 @@ LIMIT_MAKER
 			});
 		},
 		cancelOrders: function(symbol, callback = false) {
-			signedRequest(base+'v3/openOrders', {symbol:symbol}, function(json) {
+			signedRequest(base+'v3/openOrders', {symbol:symbol}, function(error, json) {
 				for ( let obj of json ) {
 					let quantity = obj.origQty - obj.executedQty;
 					console.log('cancel order: '+obj.side+' '+symbol+' '+quantity+' @ '+obj.price+' #'+obj.orderId);
