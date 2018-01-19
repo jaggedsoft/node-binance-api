@@ -140,6 +140,11 @@ LIMIT_MAKER
 			if ( opt.type === 'LIMIT' ) throw 'Error: stopPrice: Must set "type" to one of the following: STOP_LOSS, STOP_LOSS_LIMIT, TAKE_PROFIT, TAKE_PROFIT_LIMIT';
 		}
 		signedRequest(base+endpoint, opt, function(error, response) {
+			if ( !response ) {
+				if ( callback ) callback(error, response);
+				else console.error('Order() error:', error);
+				return;
+			}
 			if ( typeof response.msg !== 'undefined' && response.msg === 'Filter failure: MIN_NOTIONAL' ) {
 				console.error('Order quantity too small. See exchangeInfo() for minimum amounts');
 			}
@@ -562,15 +567,6 @@ LIMIT_MAKER
 				if ( callback ) callback( error, balanceData(data) );
 			});
 		},
-/*
-Breaking change: Spread operator is unsupported by Electron
-Move this to a future release v0.4.0
-		trades: function(symbol, callback, options) {
-			signedRequest(base+'v3/myTrades', {symbol:symbol, ...options}, function(data) {
-				if ( callback ) return callback.call(this, data, symbol);
-			});
-		},
-*/
 		trades: function(symbol, callback, options = {}) {
 			let parameters = Object.assign({symbol:symbol}, options);
 			signedRequest(base+'v3/myTrades', parameters, function(error, data) {
