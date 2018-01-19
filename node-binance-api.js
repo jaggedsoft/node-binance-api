@@ -217,7 +217,7 @@ LIMIT_MAKER
 			L:lastTradeId,
 			n:numTrades
 		} = data;
-		callback({
+		callback(null, {
 			eventType,
 			eventTime,
 			symbol,
@@ -316,6 +316,7 @@ LIMIT_MAKER
 		ohlc[symbol][interval][time] = {open:open, high:high, low:low, close:close, volume:volume};
 	};
 	const depthData = function(data) { // Used for /depth endpoint
+		if ( !data ) return {bids:[], asks:[]};
 		let bids = {}, asks = {}, obj;
 		if ( typeof data.bids !== 'undefined' ) {
 			for ( obj of data.bids ) {
@@ -503,7 +504,7 @@ LIMIT_MAKER
 			});
 		},
 		prices: function(callback) {
-			request(base+'v1/ticker/allPrices', function(error, response, body) {
+			request(base+'v3/ticker/price', function(error, response, body) {
 				if ( !callback ) return;
 
 				if ( error )
@@ -517,7 +518,7 @@ LIMIT_MAKER
 			});
 		},
 		bookTickers: function(callback) {
-			request(base+'v1/ticker/allBookTickers', function(error, response, body) {
+			request(base+'v3/ticker/bookTicker', function(error, response, body) {
 				if ( !callback ) return;
 
 				if ( error )
@@ -767,6 +768,4 @@ LIMIT_MAKER
 	};
 }();
 //https://github.com/binance-exchange/binance-official-api-docs
-
-//rest /api/v3/ticker/price /api/v3/ticker/bookTicker
 //add rate limit and response status code
