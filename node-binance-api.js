@@ -42,10 +42,10 @@ module.exports = function() {
 			if ( !callback ) return;
 
 			if ( error )
-				return callback( error );
+				return callback( error, {});
 
 			if ( response && response.statusCode !== 200 )
-				return callback( response );
+				return callback( response, {} );
 
 			return callback( null, JSON.parse(body) );
 		});
@@ -68,10 +68,10 @@ module.exports = function() {
 			if ( !callback ) return;
 
 			if ( error )
-				return callback( error );
+				return callback( error, {} );
 
 			if ( response && response.statusCode !== 200 )
-				return callback( response );
+				return callback( response, {} );
 
 			return callback( null, JSON.parse(body) );
 		});
@@ -100,10 +100,10 @@ module.exports = function() {
 			if ( !callback ) return;
 
 			if ( error )
-				return callback( error );
+				return callback( error, {} );
 
 			if ( response && response.statusCode !== 200 )
-				return callback( response );
+				return callback( response, {} );
 
 			return callback( null, JSON.parse(body) );
 		});
