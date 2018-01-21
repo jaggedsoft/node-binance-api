@@ -4,7 +4,7 @@
 ```js
 //minQty = minimum order quantity
 //minNotional = minimum order value (price * quantity)
-binance.exchangeInfo(function(data) {
+binance.exchangeInfo(function(error, data) {
 	let minimums = {};
 	for ( let obj of data.symbols ) {
 		let filters = {minNotional:0.001,minQty:1,maxQty:10000000,stepSize:1,minPrice:0.00000001,maxPrice:100000};
