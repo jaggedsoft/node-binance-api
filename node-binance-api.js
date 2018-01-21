@@ -13,7 +13,7 @@ module.exports = function() {
 	const crypto = require('crypto');
 	const base = 'https://api.binance.com/api/';
 	const wapi = 'https://api.binance.com/wapi/';
-	const websocket_base = 'wss://stream.binance.com:9443/ws/';
+	const stream = 'wss://stream.binance.com:9443/ws/';
 	const userAgent = 'Mozilla/4.0 (compatible; Node Binance API)';
 	const contentType = 'application/x-www-form-urlencoded';
 	let subscriptions = {};
@@ -21,9 +21,17 @@ module.exports = function() {
 	let depthCache = {};
 	let ohlcLatest = {};
 	let klineQueue = {};
-	let info = {};
 	let ohlc = {};
-	let options = {recvWindow:60000, reconnect:true, test: false};
+	const default_options = {
+		recvWindow: 60000, // to be lowered to 5000 in v0.5
+		useServerTime: false,
+		reconnect: true,
+		test: false
+	};
+	let options = default_options;
+	let info = {
+		timeOffset: 0
+	};
 
 	const publicRequest = function(url, data, callback, method = 'GET') {
 		if ( !data ) data = {};
@@ -80,7 +88,7 @@ module.exports = function() {
 	const signedRequest = function(url, data, callback, method = 'GET') {
 		if ( !options.APISECRET ) throw 'signedRequest: Invalid API Secret';
 		if ( !data ) data = {};
-		data.timestamp = new Date().getTime();
+		data.timestamp = new Date().getTime() + info.timeOffset;
 		if ( typeof data.symbol !== 'undefined' ) data.symbol = data.symbol.replace('_','');
 		if ( typeof data.recvWindow === 'undefined' ) data.recvWindow = options.recvWindow;
 		let query = Object.keys(data).reduce(function(a,k){a.push(k+'='+encodeURIComponent(data[k]));return a},[]).join('&');
@@ -154,7 +162,7 @@ LIMIT_MAKER
 	};
 	////////////////////////////
 	const subscribe = function(endpoint, callback, reconnect = false) {
-		const ws = new WebSocket(websocket_base+endpoint);
+		const ws = new WebSocket(stream+endpoint);
 		ws.endpoint = endpoint;
 		ws.on('open', function() {
 			//console.log('subscribe('+this.endpoint+')');
@@ -438,11 +446,21 @@ LIMIT_MAKER
 		max: function(object) {
 			return Math.max.apply(Math, Object.keys(object));
 		},
-		options: function(opt) {
+		options: function(opt, callback = false) {
 			options = opt;
-			if ( typeof options.recvWindow === 'undefined' ) options.recvWindow = 60000;
-			if ( typeof options.reconnect === 'undefined' ) options.reconnect = true;
-			if ( typeof options.test === 'undefined' ) options.test = false;
+			if ( typeof options.recvWindow === 'undefined' ) options.recvWindow = default_options.recvWindow;
+			if ( typeof options.useServerTime === 'undefined' ) options.useServerTime = default_options.useServerTime;
+			if ( typeof options.reconnect === 'undefined' ) options.reconnect = default_options.reconnect;
+			if ( typeof options.test === 'undefined' ) options.test = default_options.test;
+			if ( options.useServerTime ) {
+				apiRequest(base+'v1/time', function(error, response) {
+					info.timeOffset = response.serverTime - new Date().getTime();
+					//console.info("server time set: ", response.serverTime, info.timeOffset);
+					if ( callback ) callback();
+				});
+			} else {
+				if ( callback ) callback();
+			}
 		},
 		buy: function(symbol, quantity, price, flags = {}, callback = false) {
 			order('BUY', symbol, quantity, price, flags, callback);
@@ -574,6 +592,9 @@ LIMIT_MAKER
 				if ( callback ) return callback.call(this, error, data, symbol);
 			});
 		},
+		time: function(callback) {
+			apiRequest(base+'v1/time', callback);
+		},
 		recentTrades: function(symbol, callback, limit = 500) {
 			signedRequest(base+'v1/trades', {symbol:symbol, limit:limit}, callback);
 		},
@@ -610,7 +631,8 @@ LIMIT_MAKER
 			return {open:open, high:high, low:low, close:close, volume:volume};
 		},
 		// intervals: 1m,3m,5m,15m,30m,1h,2h,4h,6h,8h,12h,1d,3d,1w,1M
-		candlesticks: function(symbol, interval = '5m', callback, options = {limit:500}) {
+		candlesticks: function(symbol, interval = '5m', callback = false, options = {limit:500}) {
+			if ( !callback ) return;
 			let params = Object.assign({symbol:symbol, interval:interval}, options);
 			publicRequest(base+'v1/klines', params, function(error, data) {
 				return callback.call(this, error, data, symbol);
