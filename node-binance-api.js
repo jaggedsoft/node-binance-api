@@ -592,6 +592,13 @@ LIMIT_MAKER
 				if ( callback ) return callback.call(this, error, data, symbol);
 			});
 		},
+		useServerTime: function(callback = false) {
+			apiRequest(base+'v1/time', function(error, response) {
+				info.timeOffset = response.serverTime - new Date().getTime();
+				//console.info("server time set: ", response.serverTime, info.timeOffset);
+				if ( callback ) callback();
+			});
+		},
 		time: function(callback) {
 			apiRequest(base+'v1/time', callback);
 		},
