@@ -84,6 +84,33 @@ module.exports = function() {
 			return callback( null, JSON.parse(body) );
 		});
 	};
+	
+	const marketRequest = function(url, data, callback, method = 'GET') {
+		if ( !data ) data = {};
+		let query = Object.keys(data).reduce(function(a,k){a.push(k+'='+encodeURIComponent(data[k]));return a},[]).join('&');
+		let opt = {
+			url: url+'?'+query,
+			method: method,
+			timeout: options.recvWindow,
+			agent: false,
+			headers: {
+				'User-Agent': userAgent,
+				'Content-type': contentType,
+				'X-MBX-APIKEY': options.APIKEY
+			}
+		};
+		request(opt, function(error, response, body) {
+			if ( !callback ) return;
+
+			if ( error )
+				return callback( error, {} );
+
+			if ( response && response.statusCode !== 200 )
+				return callback( response, {} );
+
+			return callback( null, JSON.parse(body) );
+		});
+	};
 
 	const signedRequest = function(url, data, callback, method = 'GET') {
 		if ( !options.APISECRET ) throw 'signedRequest: Invalid API Secret';
@@ -383,7 +410,7 @@ LIMIT_MAKER
 			return depthVolume(symbol);
 		},
 		roundStep: function roundStep(number, stepSize) {
-			return ((number / stepSize) | 0) * stepSize;
+			return ( (number / stepSize) | 0 ) * stepSize;
 		},
 		percent: function(min, max, width = 100) {
 			return ( min * 0.01 ) / ( max * 0.01 ) * width;
@@ -606,11 +633,15 @@ LIMIT_MAKER
 		time: function(callback) {
 			apiRequest(base+'v1/time', callback);
 		},
+		aggTrades: function(symbol, options = {}, callback = false) { //fromId startTime endTime limit
+			let parameters = Object.assign({symbol}, options);
+			marketRequest(base+'v1/aggTrades', parameters, callback);
+		},
 		recentTrades: function(symbol, callback, limit = 500) {
-			signedRequest(base+'v1/trades', {symbol:symbol, limit:limit}, callback);
+			marketRequest(base+'v1/trades', {symbol:symbol, limit:limit}, callback);
 		},
 		historicalTrades: function(symbol, callback, limit = 500) {
-			signedRequest(base+'v1/historicalTrades', {symbol:symbol, limit:limit}, callback);
+			marketRequest(base+'v1/historicalTrades', {symbol:symbol, limit:limit}, callback);
 		},
 		// convert chart data to highstock array [timestamp,open,high,low,close]
 		highstock: function(chart, include_volume = false) {
