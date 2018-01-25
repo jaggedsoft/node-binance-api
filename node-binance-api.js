@@ -273,6 +273,7 @@ LIMIT_MAKER
 	};
 	const balanceData = function(data) {
 		let balances = {};
+		if ( typeof data === 'undefined' ) return {};
 		if ( typeof data.balances === 'undefined' ) {
 			console.log('balanceData error', data);
 			return {};
@@ -381,6 +382,9 @@ LIMIT_MAKER
 		depthVolume: function(symbol) {
 			return depthVolume(symbol);
 		},
+		roundStep: function roundStep(number, stepSize) {
+			return ((number / stepSize) | 0) * stepSize;
+		},
 		percent: function(min, max, width = 100) {
 			return ( min * 0.01 ) / ( max * 0.01 ) * width;
 		},
@@ -411,7 +415,7 @@ LIMIT_MAKER
 					object[price] = cumulative;
 				} else if ( !baseValue ) object[price] = parseFloat(cache[price]);
 				else object[price] = parseFloat((cache[price] * parseFloat(price)).toFixed(8));
-				if ( ++count > max ) break;
+				if ( ++count >= max ) break;
 			}
 			return object;
 		},
@@ -427,7 +431,7 @@ LIMIT_MAKER
 					object[price] = cumulative;
 				} else if ( !baseValue ) object[price] = parseFloat(cache[price]);
 				else object[price] = parseFloat((cache[price] * parseFloat(price)).toFixed(8));
-				if ( ++count > max ) break;
+				if ( ++count >= max ) break;
 			}
 			return object;
 		},
