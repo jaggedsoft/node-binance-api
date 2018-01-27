@@ -4,7 +4,7 @@
 ```js
 //minQty = minimum order quantity
 //minNotional = minimum order value (price * quantity)
-binance.exchangeInfo(function(data) {
+binance.exchangeInfo(function(error, data) {
 	let minimums = {};
 	for ( let obj of data.symbols ) {
 		let filters = {minNotional:0.001,minQty:1,maxQty:10000000,stepSize:1,minPrice:0.00000001,maxPrice:100000};
@@ -117,3 +117,22 @@ SNM     available: 0.76352833 (0.00000000 on order)
 ```
 </details>
   
+#### Recent Trades (historicalTrades, recentTrades, aggTrades functions)
+
+```js
+binance.aggTrades("BNBBTC", {limit:500}, (error, response)=>{
+	console.log("aggTrades", response);
+});
+```
+
+```js
+binance.recentTrades("BNBBTC", (error, response)=>{
+	console.log("recentTrades", response);
+});
+```
+
+```js
+binance.historicalTrades("BNBBTC", (error, response)=>{
+	console.log("historicalTrades", response);
+});
+```

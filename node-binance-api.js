@@ -13,7 +13,7 @@ module.exports = function() {
 	const crypto = require('crypto');
 	const base = 'https://api.binance.com/api/';
 	const wapi = 'https://api.binance.com/wapi/';
-	const websocket_base = 'wss://stream.binance.com:9443/ws/';
+	const stream = 'wss://stream.binance.com:9443/ws/';
 	const userAgent = 'Mozilla/4.0 (compatible; Node Binance API)';
 	const contentType = 'application/x-www-form-urlencoded';
 	let subscriptions = {};
@@ -21,9 +21,17 @@ module.exports = function() {
 	let depthCache = {};
 	let ohlcLatest = {};
 	let klineQueue = {};
-	let info = {};
 	let ohlc = {};
-	let options = {recvWindow:60000, reconnect:true, test: false};
+	const default_options = {
+		recvWindow: 60000, // to be lowered to 5000 in v0.5
+		useServerTime: false,
+		reconnect: true,
+		test: false
+	};
+	let options = default_options;
+	let info = {
+		timeOffset: 0
+	};
 
 	const publicRequest = function(url, data, callback, method = 'GET') {
 		if ( !data ) data = {};
@@ -39,14 +47,15 @@ module.exports = function() {
 			}
 		};
 		request(opt, function(error, response, body) {
-			if ( !response || !body ) throw 'publicRequest error: '+error;
-			if ( callback ) {
-				try {
-					callback(JSON.parse(body));
-				} catch (error) {
-					console.error('Parse error: '+error.message);
-				}
-			}
+			if ( !callback ) return;
+
+			if ( error )
+				return callback( error, {});
+
+			if ( response && response.statusCode !== 200 )
+				return callback( response, {} );
+
+			return callback( null, JSON.parse(body) );
 		});
 	};
 
@@ -64,21 +73,49 @@ module.exports = function() {
 			}
 		};
 		request(opt, function(error, response, body) {
-			if ( !response || !body ) throw 'apiRequest error: '+error;
-			if ( callback ) {
-				try {
-					callback(JSON.parse(body));
-				} catch (error) {
-					console.error('Parse error: '+error.message);
-				}
+			if ( !callback ) return;
+
+			if ( error )
+				return callback( error, {} );
+
+			if ( response && response.statusCode !== 200 )
+				return callback( response, {} );
+
+			return callback( null, JSON.parse(body) );
+		});
+	};
+	
+	const marketRequest = function(url, data, callback, method = 'GET') {
+		if ( !data ) data = {};
+		let query = Object.keys(data).reduce(function(a,k){a.push(k+'='+encodeURIComponent(data[k]));return a},[]).join('&');
+		let opt = {
+			url: url+'?'+query,
+			method: method,
+			timeout: options.recvWindow,
+			agent: false,
+			headers: {
+				'User-Agent': userAgent,
+				'Content-type': contentType,
+				'X-MBX-APIKEY': options.APIKEY
 			}
+		};
+		request(opt, function(error, response, body) {
+			if ( !callback ) return;
+
+			if ( error )
+				return callback( error, {} );
+
+			if ( response && response.statusCode !== 200 )
+				return callback( response, {} );
+
+			return callback( null, JSON.parse(body) );
 		});
 	};
 
 	const signedRequest = function(url, data, callback, method = 'GET') {
 		if ( !options.APISECRET ) throw 'signedRequest: Invalid API Secret';
 		if ( !data ) data = {};
-		data.timestamp = new Date().getTime();
+		data.timestamp = new Date().getTime() + info.timeOffset;
 		if ( typeof data.symbol !== 'undefined' ) data.symbol = data.symbol.replace('_','');
 		if ( typeof data.recvWindow === 'undefined' ) data.recvWindow = options.recvWindow;
 		let query = Object.keys(data).reduce(function(a,k){a.push(k+'='+encodeURIComponent(data[k]));return a},[]).join('&');
@@ -95,14 +132,15 @@ module.exports = function() {
 			}
 		};
 		request(opt, function(error, response, body) {
-			if ( !response || !body ) throw 'signedRequest error: '+error;
-			if ( callback ) {
-				try {
-					callback(JSON.parse(body));
-				} catch (error) {
-					console.error('Parse error: '+error.message);
-				}
-			}
+			if ( !callback ) return;
+
+			if ( error )
+				return callback( error, {} );
+
+			if ( response && response.statusCode !== 200 )
+				return callback( response, {} );
+
+			return callback( null, JSON.parse(body) );
 		});
 	};
 
@@ -136,17 +174,22 @@ LIMIT_MAKER
 			opt.stopPrice = flags.stopPrice;
 			if ( opt.type === 'LIMIT' ) throw 'Error: stopPrice: Must set "type" to one of the following: STOP_LOSS, STOP_LOSS_LIMIT, TAKE_PROFIT, TAKE_PROFIT_LIMIT';
 		}
-		signedRequest(base+endpoint, opt, function(response) {
+		signedRequest(base+endpoint, opt, function(error, response) {
+			if ( !response ) {
+				if ( callback ) callback(error, response);
+				else console.error('Order() error:', error);
+				return;
+			}
 			if ( typeof response.msg !== 'undefined' && response.msg === 'Filter failure: MIN_NOTIONAL' ) {
 				console.error('Order quantity too small. See exchangeInfo() for minimum amounts');
 			}
-			if ( callback ) callback(response);
+			if ( callback ) callback(error, response);
 			else console.log(side+'('+symbol+','+quantity+','+price+') ',response);
 		}, 'POST');
 	};
 	////////////////////////////
 	const subscribe = function(endpoint, callback, reconnect = false) {
-		const ws = new WebSocket(websocket_base+endpoint);
+		const ws = new WebSocket(stream+endpoint);
 		ws.endpoint = endpoint;
 		ws.on('open', function() {
 			//console.log('subscribe('+this.endpoint+')');
@@ -209,7 +252,7 @@ LIMIT_MAKER
 			L:lastTradeId,
 			n:numTrades
 		} = data;
-		callback({
+		callback(null, {
 			eventType,
 			eventTime,
 			symbol,
@@ -257,6 +300,7 @@ LIMIT_MAKER
 	};
 	const balanceData = function(data) {
 		let balances = {};
+		if ( typeof data === 'undefined' ) return {};
 		if ( typeof data.balances === 'undefined' ) {
 			console.log('balanceData error', data);
 			return {};
@@ -308,6 +352,7 @@ LIMIT_MAKER
 		ohlc[symbol][interval][time] = {open:open, high:high, low:low, close:close, volume:volume};
 	};
 	const depthData = function(data) { // Used for /depth endpoint
+		if ( !data ) return {bids:[], asks:[]};
 		let bids = {}, asks = {}, obj;
 		if ( typeof data.bids !== 'undefined' ) {
 			for ( obj of data.bids ) {
@@ -364,6 +409,9 @@ LIMIT_MAKER
 		depthVolume: function(symbol) {
 			return depthVolume(symbol);
 		},
+		roundStep: function roundStep(number, stepSize) {
+			return ( (number / stepSize) | 0 ) * stepSize;
+		},
 		percent: function(min, max, width = 100) {
 			return ( min * 0.01 ) / ( max * 0.01 ) * width;
 		},
@@ -394,7 +442,7 @@ LIMIT_MAKER
 					object[price] = cumulative;
 				} else if ( !baseValue ) object[price] = parseFloat(cache[price]);
 				else object[price] = parseFloat((cache[price] * parseFloat(price)).toFixed(8));
-				if ( ++count > max ) break;
+				if ( ++count >= max ) break;
 			}
 			return object;
 		},
@@ -410,7 +458,7 @@ LIMIT_MAKER
 					object[price] = cumulative;
 				} else if ( !baseValue ) object[price] = parseFloat(cache[price]);
 				else object[price] = parseFloat((cache[price] * parseFloat(price)).toFixed(8));
-				if ( ++count > max ) break;
+				if ( ++count >= max ) break;
 			}
 			return object;
 		},
@@ -429,11 +477,21 @@ LIMIT_MAKER
 		max: function(object) {
 			return Math.max.apply(Math, Object.keys(object));
 		},
-		options: function(opt) {
+		options: function(opt, callback = false) {
 			options = opt;
-			if ( typeof options.recvWindow === 'undefined' ) options.recvWindow = 60000;
-			if ( typeof options.reconnect === 'undefined' ) options.reconnect = true;
-			if ( typeof options.test === 'undefined' ) options.test = false;
+			if ( typeof options.recvWindow === 'undefined' ) options.recvWindow = default_options.recvWindow;
+			if ( typeof options.useServerTime === 'undefined' ) options.useServerTime = default_options.useServerTime;
+			if ( typeof options.reconnect === 'undefined' ) options.reconnect = default_options.reconnect;
+			if ( typeof options.test === 'undefined' ) options.test = default_options.test;
+			if ( options.useServerTime ) {
+				apiRequest(base+'v1/time', function(error, response) {
+					info.timeOffset = response.serverTime - new Date().getTime();
+					//console.info("server time set: ", response.serverTime, info.timeOffset);
+					if ( callback ) callback();
+				});
+			} else {
+				if ( callback ) callback();
+			}
 		},
 		buy: function(symbol, quantity, price, flags = {}, callback = false) {
 			order('BUY', symbol, quantity, price, flags, callback);
@@ -458,70 +516,74 @@ LIMIT_MAKER
 			order('SELL', symbol, quantity, 0, flags, callback);
 		},
 		cancel: function(symbol, orderid, callback = false) {
-			signedRequest(base+'v3/order', {symbol:symbol, orderId:orderid}, function(data) {
-				if ( callback ) return callback.call(this, data, symbol);
+			signedRequest(base+'v3/order', {symbol:symbol, orderId:orderid}, function(error, data) {
+				if ( callback ) return callback.call(this, error, data, symbol);
 			}, 'DELETE');
 		},
 		orderStatus: function(symbol, orderid, callback) {
-			signedRequest(base+'v3/order', {symbol:symbol, orderId:orderid}, function(data) {
-				if ( callback ) return callback.call(this, data, symbol);
+			signedRequest(base+'v3/order', {symbol:symbol, orderId:orderid}, function(error, data) {
+				if ( callback ) return callback.call(this, error, data, symbol);
 			});
 		},
 		openOrders: function(symbol, callback) {
 			let postData = symbol ? {symbol:symbol} : {};
-			signedRequest(base+'v3/openOrders', postData, function(data) {
-				return callback.call(this, data, symbol);
+			signedRequest(base+'v3/openOrders', postData, function(error, data) {
+				return callback.call(this, error, data, symbol);
 			});
 		},
 		cancelOrders: function(symbol, callback = false) {
-			signedRequest(base+'v3/openOrders', {symbol:symbol}, function(json) {
+			signedRequest(base+'v3/openOrders', {symbol:symbol}, function(error, json) {
 				for ( let obj of json ) {
 					let quantity = obj.origQty - obj.executedQty;
 					console.log('cancel order: '+obj.side+' '+symbol+' '+quantity+' @ '+obj.price+' #'+obj.orderId);
-					signedRequest(base+'v3/order', {symbol:symbol, orderId:obj.orderId}, function(data) {
-						if ( callback ) return callback.call(this, data, symbol);
+					signedRequest(base+'v3/order', {symbol:symbol, orderId:obj.orderId}, function(error, data) {
+						if ( callback ) return callback.call(this, error, data, symbol);
 					}, 'DELETE');
 				}
 			});
 		},
 		allOrders: function(symbol, callback) {
-			signedRequest(base+'v3/allOrders', {symbol:symbol, limit:500}, function(data) {
-				if ( callback ) return callback.call(this, data, symbol);
+			signedRequest(base+'v3/allOrders', {symbol:symbol, limit:500}, function(error, data) {
+				if ( callback ) return callback.call(this, error, data, symbol);
 			});
 		},
 		depth: function(symbol, callback, limit = 100) {
-			publicRequest(base+'v1/depth', {symbol:symbol, limit:limit}, function(data) {
-				return callback.call(this, depthData(data), symbol);
+			publicRequest(base+'v1/depth', {symbol:symbol, limit:limit}, function(error, data) {
+				return callback.call(this, error, depthData(data), symbol);
 			});
 		},
 		prices: function(callback) {
-			request(base+'v1/ticker/allPrices', function(error, response, body) {
-				if ( !response || !body ) throw 'allPrices error: '+error;
-				if ( callback ) {
-					try {
-						callback(priceData(JSON.parse(body)));
-					} catch (error) {
-						console.error('Parse error: '+error.message);
-					}
-				}
+			request(base+'v3/ticker/price', function(error, response, body) {
+				if ( !callback ) return;
+
+				if ( error )
+					return callback( error );
+
+				if ( response && response.statusCode !== 200 )
+					return callback( response );
+
+				if ( callback )
+					return callback( null, priceData(JSON.parse(body)) );
 			});
 		},
 		bookTickers: function(callback) {
-			request(base+'v1/ticker/allBookTickers', function(error, response, body) {
-				if ( !response || !body ) throw 'allBookTickers error: '+error;
-				if ( callback ) {
-					try {
-						callback(bookPriceData(JSON.parse(body)));
-					} catch (error) {
-						console.error('Parse error: '+error.message);
-					}
-				}
+			request(base+'v3/ticker/bookTicker', function(error, response, body) {
+				if ( !callback ) return;
+
+				if ( error )
+					return callback( error );
+
+				if ( response && response.statusCode !== 200 )
+					return callback( response );
+
+				if ( callback )
+					return callback( null, bookPriceData(JSON.parse(body)) );
 			});
 		},
 		prevDay: function(symbol, callback) {
 			let input = symbol ? {symbol:symbol} : {};
-			publicRequest(base+'v1/ticker/24hr', input, function(data) {
-				if ( callback ) return callback.call(this, data, symbol);
+			publicRequest(base+'v1/ticker/24hr', input, function(error, data) {
+				if ( callback ) return callback.call(this, error, data, symbol);
 			});
 		},
 		exchangeInfo: function(callback) {
@@ -551,30 +613,35 @@ LIMIT_MAKER
 			signedRequest(base+'v3/account', {}, callback);
 		},
 		balance: function(callback) {
-			signedRequest(base+'v3/account', {}, function(data) {
-				if ( callback ) callback(balanceData(data));
+			signedRequest(base+'v3/account', {}, function(error, data) {
+				if ( callback ) callback( error, balanceData(data) );
 			});
 		},
-/*
-Breaking change: Spread operator is unsupported by Electron
-Move this to a future release v0.4.0
-		trades: function(symbol, callback, options) {
-			signedRequest(base+'v3/myTrades', {symbol:symbol, ...options}, function(data) {
-				if ( callback ) return callback.call(this, data, symbol);
-			});
-		},
-*/
 		trades: function(symbol, callback, options = {}) {
 			let parameters = Object.assign({symbol:symbol}, options);
-			signedRequest(base+'v3/myTrades', parameters, function(data) {
-				if ( callback ) return callback.call(this, data, symbol);
+			signedRequest(base+'v3/myTrades', parameters, function(error, data) {
+				if ( callback ) return callback.call(this, error, data, symbol);
 			});
 		},
+		useServerTime: function(callback = false) {
+			apiRequest(base+'v1/time', function(error, response) {
+				info.timeOffset = response.serverTime - new Date().getTime();
+				//console.info("server time set: ", response.serverTime, info.timeOffset);
+				if ( callback ) callback();
+			});
+		},
+		time: function(callback) {
+			apiRequest(base+'v1/time', callback);
+		},
+		aggTrades: function(symbol, options = {}, callback = false) { //fromId startTime endTime limit
+			let parameters = Object.assign({symbol}, options);
+			marketRequest(base+'v1/aggTrades', parameters, callback);
+		},
 		recentTrades: function(symbol, callback, limit = 500) {
-			signedRequest(base+'v1/trades', {symbol:symbol, limit:limit}, callback);
+			marketRequest(base+'v1/trades', {symbol:symbol, limit:limit}, callback);
 		},
 		historicalTrades: function(symbol, callback, limit = 500) {
-			signedRequest(base+'v1/historicalTrades', {symbol:symbol, limit:limit}, callback);
+			marketRequest(base+'v1/historicalTrades', {symbol:symbol, limit:limit}, callback);
 		},
 		// convert chart data to highstock array [timestamp,open,high,low,close]
 		highstock: function(chart, include_volume = false) {
@@ -605,10 +672,12 @@ Move this to a future release v0.4.0
 			}
 			return {open:open, high:high, low:low, close:close, volume:volume};
 		},
-		candlesticks: function(symbol, interval, callback, options = {limit:500}) { // additional options: startTime, endTime
-		  let params = Object.assign({symbol:symbol, interval:interval}, options);
-			publicRequest(base+'v1/klines', params, function(data) {
-				return callback.call(this, data, symbol);
+		// intervals: 1m,3m,5m,15m,30m,1h,2h,4h,6h,8h,12h,1d,3d,1w,1M
+		candlesticks: function(symbol, interval = '5m', callback = false, options = {limit:500}) {
+			if ( !callback ) return;
+			let params = Object.assign({symbol:symbol, interval:interval}, options);
+			publicRequest(base+'v1/klines', params, function(error, data) {
+				return callback.call(this, error, data, symbol);
 			});
 		},
 		publicRequest: function(url, data, callback, method = 'GET') {
@@ -629,7 +698,7 @@ Move this to a future release v0.4.0
 				let reconnect = function() {
 					if ( options.reconnect ) userData(callback, execution_callback);
 				};
-				apiRequest(base+'v1/userDataStream', function(response) {
+				apiRequest(base+'v1/userDataStream', function(error, response) {
 					options.listenKey = response.listenKey;
 					setInterval(function() { // keepalive
 						try {
@@ -680,7 +749,7 @@ Move this to a future release v0.4.0
 						depthHandler(depth);
 						if ( callback ) callback(symbol, depthCache[symbol]);
 					}, reconnect);
-					publicRequest(base+'v1/depth', {symbol:symbol, limit:limit}, function(json) {
+					publicRequest(base+'v1/depth', {symbol:symbol, limit:limit}, function(error, json) {
 						if ( messageQueue && typeof messageQueue[symbol] === 'object' ) {
 							info[symbol].firstUpdateId = json.lastUpdateId;
 							depthCache[symbol] = depthData(json);
@@ -725,7 +794,7 @@ Move this to a future release v0.4.0
 						klineHandler(symbol, kline);
 						if ( callback ) callback(symbol, interval, klineConcat(symbol, interval));
 					}, reconnect);
-					publicRequest(base+'v1/klines', {symbol:symbol, interval:interval}, function(data) {
+					publicRequest(base+'v1/klines', {symbol:symbol, interval:interval}, function(error, data) {
 						klineData(symbol, interval, data);
 						//console.log('/klines at ' + info[symbol][interval].timestamp);
 						for ( let kline of klineQueue[symbol][interval] ) {
@@ -763,3 +832,4 @@ Move this to a future release v0.4.0
 	};
 }();
 //https://github.com/binance-exchange/binance-official-api-docs
+//add rate limit and response status code
