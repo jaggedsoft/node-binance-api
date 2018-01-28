@@ -1204,7 +1204,17 @@ binance.allOrders("ETHBTC", (error, orders, symbol) => {
 });
 ```
 
-#### Getting 24hr ticker price change statistics for a symbol
+#### Get 24hr ticker price change statistics for all symbols
+```javascript
+binance.prevDay(false, (error, prevDay, symbol) => {
+	for ( let obj of prevDay ) {
+		let symbol = obj.symbol;
+		console.log(symbol+" volume:"+obj.volume+" change: "+obj.priceChangePercent+"%");
+	}
+});
+```
+
+#### Get 24hr ticker price change statistics for a symbol
 ```javascript
 binance.prevDay("BNBBTC", (error, prevDay, symbol) => {
 	console.log(symbol+" previous day:", prevDay);
@@ -1252,7 +1262,7 @@ binance.websockets.trades(['BNBBTC', 'ETHBTC'], (trades) => {
 });
 ```
 
-#### Get 24h Price Change Statistics via WebSocket
+#### Get 24hr Price Change Statistics via WebSocket
 ```js
 // For all symbols:
 binance.websockets.prevDay(false, (error, response) => {
