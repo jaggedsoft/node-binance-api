@@ -6,7 +6,7 @@
 # Node Binance API
 This project is designed to help you make your own projects that interact with the [Binance API](https://github.com/binance-exchange/binance-official-api-docs). You can stream candlestick chart data, market depth, or use other advanced features such as setting stop losses and iceberg orders. This project seeks to have complete API coverage including WebSockets.
 
-### [Important: Breaking changes: See improvements in `v0.4.0` (Thanks hems and robaleman!)](https://github.com/jaggedsoft/node-binance-api/commit/b5d81071677227ff33041ae6b5e0ed42622f351a)
+[Important: Breaking changes: See improvements in `v0.4.0` (Thanks hems and robaleman!)](https://github.com/jaggedsoft/node-binance-api/commit/b5d81071677227ff33041ae6b5e0ed42622f351a)
 
 #### Installation
 ```
@@ -1206,7 +1206,8 @@ binance.allOrders("ETHBTC", (error, orders, symbol) => {
 
 #### Get 24hr ticker price change statistics for all symbols
 ```javascript
-binance.prevDay(false, (error, prevDay, symbol) => {
+binance.prevDay(false, (error, prevDay) => {
+	// console.log(prevDay); // view all data
 	for ( let obj of prevDay ) {
 		let symbol = obj.symbol;
 		console.log(symbol+" volume:"+obj.volume+" change: "+obj.priceChangePercent+"%");
@@ -1422,11 +1423,11 @@ binance.withdraw("BTC", "1C5gqLRs96Xq4V2ZZAR1347yUCpHie7sa", 0.2);
 ### Troubleshooting
 Verify that your system time is correct. If you have any suggestions don't hestitate to file an issue.
 
-Having problems? Try adding `recvWindow` to your options:
+Having problems? Try adding `useServerTime` to your options:
 ```js
 binance.options({
 	'APIKEY': 'xxx',
 	'APISECRET': 'xxx',
-	'recvWindow': 60000
+	'useServerTime': true
 });
 ```
