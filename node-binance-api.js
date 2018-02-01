@@ -26,7 +26,10 @@ module.exports = function() {
 		recvWindow: 60000, // to be lowered to 5000 in v0.5
 		useServerTime: false,
 		reconnect: true,
-		test: false
+		test: false,
+		log: function() {
+			console.log(Array.prototype.slice.call(arguments));
+		}
 	};
 	let options = default_options;
 	let info = {
@@ -177,14 +180,14 @@ LIMIT_MAKER
 		signedRequest(base+endpoint, opt, function(error, response) {
 			if ( !response ) {
 				if ( callback ) callback(error, response);
-				else console.error('Order() error:', error);
+				else options.log('Order() error:', error);
 				return;
 			}
 			if ( typeof response.msg !== 'undefined' && response.msg === 'Filter failure: MIN_NOTIONAL' ) {
-				console.error('Order quantity too small. See exchangeInfo() for minimum amounts');
+				options.log('Order quantity too small. See exchangeInfo() for minimum amounts');
 			}
 			if ( callback ) callback(error, response);
-			else console.log(side+'('+symbol+','+quantity+','+price+') ',response);
+			else options.log(side+'('+symbol+','+quantity+','+price+') ',response);
 		}, 'POST');
 	};
 	////////////////////////////
@@ -192,25 +195,58 @@ LIMIT_MAKER
 		const ws = new WebSocket(stream+endpoint);
 		ws.endpoint = endpoint;
 		ws.on('open', function() {
-			//console.log('subscribe('+this.endpoint+')');
+			//options.log('subscribe('+this.endpoint+')');
 		});
-		ws.on('close', function() {
+		ws.on('close', function(error) {
+			/*
+			switch ( error ) {
+				case 1000:	// CLOSE_NORMAL
+					options.log("WebSocket: closed");
+					break;
+				default:	// Abnormal closure
+					this.reconnect(error);
+					break;
+			}
+			this.onclose(e);
+			*/
 			if ( reconnect && options.reconnect ) {
-				if ( this.endpoint && parseInt(this.endpoint.length, 10) === 60 ) console.log('Account data WebSocket reconnecting..');
-				else console.log('WebSocket reconnecting: '+this.endpoint);
+				if ( this.endpoint && parseInt(this.endpoint.length, 10) === 60 ) options.log('Account data WebSocket reconnecting..');
+				else options.log('WebSocket reconnecting: '+this.endpoint);
 				try {
 					reconnect();
 				} catch ( error ) {
-					console.error('WebSocket reconnect error: '+error.message);
+					options.log('WebSocket reconnect error: '+error.message);
 				}
-			} else console.log('WebSocket connection closed! '+this.endpoint);
+			} else options.log('WebSocket connection closed! '+this.endpoint);
+		});
+		ws.on('unexpected-response', function(req, res) {
+			//Check if the socket is still up, log the error
+			//Terminate and reconnect?
+			//Thanks vaielab https://github.com/jaggedsoft/node-binance-api/issues/77
+			options.log("WebSocket Unexpected response: "+this.endpoint);
+			return true;
+		});
+		ws.on('error', function(error) {
+			options.log(error);
+			options.log("WebSocket Error: "+this.endpoint, this.error.code);
+			/*
+			switch ( error.code ) {
+				case 'ECONNREFUSED':
+					this.reconnect(error);
+					break;
+				default:
+					this.onerror(error);
+					break;
+				}
+			*/
+			return true;
 		});
 		ws.on('message', function(data) {
-			//console.log(data);
+			//options.log(data);
 			try {
 				callback(JSON.parse(data));
 			} catch (error) {
-				console.error('Parse error: '+error.message);
+				options.log('Parse error: '+error.message);
 			}
 		});
 		subscriptions[endpoint] = ws;
@@ -223,7 +259,7 @@ LIMIT_MAKER
 		} else if ( type === 'executionReport' ) {
 			if ( options.execution_callback ) options.execution_callback(data);
 		} else {
-			console.error('Unexpected userData: '+type);
+			options.log('Unexpected userData: '+type);
 		}
 	};
 	const prevDayStreamHandler = function(data, callback) {
@@ -280,9 +316,13 @@ LIMIT_MAKER
 	};
 	////////////////////////////
 	const priceData = function(data) {
-		let prices = {};
-		for ( let obj of data ) {
-			prices[obj.symbol] = obj.price;
+		const prices = {};
+		if ( Array.isArray(data) ) {
+			for ( let obj of data ) {
+				prices[obj.symbol] = obj.price;
+			}
+		} else { // Single price returned
+			prices[data.symbol] = data.price;
 		}
 		return prices;
 	};
@@ -302,7 +342,7 @@ LIMIT_MAKER
 		let balances = {};
 		if ( typeof data === 'undefined' ) return {};
 		if ( typeof data.balances === 'undefined' ) {
-			console.log('balanceData error', data);
+			options.log('balanceData error', data);
 			return {};
 		}
 		for ( let obj of data.balances ) {
@@ -483,10 +523,11 @@ LIMIT_MAKER
 			if ( typeof options.useServerTime === 'undefined' ) options.useServerTime = default_options.useServerTime;
 			if ( typeof options.reconnect === 'undefined' ) options.reconnect = default_options.reconnect;
 			if ( typeof options.test === 'undefined' ) options.test = default_options.test;
+			if ( typeof options.log === 'undefined' ) options.log = default_options.log;
 			if ( options.useServerTime ) {
 				apiRequest(base+'v1/time', function(error, response) {
 					info.timeOffset = response.serverTime - new Date().getTime();
-					//console.info("server time set: ", response.serverTime, info.timeOffset);
+					//options.log("server time set: ", response.serverTime, info.timeOffset);
 					if ( callback ) callback();
 				});
 			} else {
@@ -535,7 +576,7 @@ LIMIT_MAKER
 			signedRequest(base+'v3/openOrders', {symbol:symbol}, function(error, json) {
 				for ( let obj of json ) {
 					let quantity = obj.origQty - obj.executedQty;
-					console.log('cancel order: '+obj.side+' '+symbol+' '+quantity+' @ '+obj.price+' #'+obj.orderId);
+					options.log('cancel order: '+obj.side+' '+symbol+' '+quantity+' @ '+obj.price+' #'+obj.orderId);
 					signedRequest(base+'v3/order', {symbol:symbol, orderId:obj.orderId}, function(error, data) {
 						if ( callback ) return callback.call(this, error, data, symbol);
 					}, 'DELETE');
@@ -552,8 +593,10 @@ LIMIT_MAKER
 				return callback.call(this, error, depthData(data), symbol);
 			});
 		},
-		prices: function(callback) {
-			request(base+'v3/ticker/price', function(error, response, body) {
+		prices: function(symbol, callback = false) {
+			const params = typeof symbol === 'string' ? '?symbol='+symbol : '';
+			if ( typeof symbol === 'function' ) callback = symbol; // backwards compatibility
+			request(base+'v3/ticker/price'+params, function(error, response, body) {
 				if ( !callback ) return;
 
 				if ( error )
@@ -626,7 +669,7 @@ LIMIT_MAKER
 		useServerTime: function(callback = false) {
 			apiRequest(base+'v1/time', function(error, response) {
 				info.timeOffset = response.serverTime - new Date().getTime();
-				//console.info("server time set: ", response.serverTime, info.timeOffset);
+				//options.log("server time set: ", response.serverTime, info.timeOffset);
 				if ( callback ) callback();
 			});
 		},
@@ -640,8 +683,10 @@ LIMIT_MAKER
 		recentTrades: function(symbol, callback, limit = 500) {
 			marketRequest(base+'v1/trades', {symbol:symbol, limit:limit}, callback);
 		},
-		historicalTrades: function(symbol, callback, limit = 500) {
-			marketRequest(base+'v1/historicalTrades', {symbol:symbol, limit:limit}, callback);
+		historicalTrades: function(symbol, callback, limit = 500, fromId = false) {
+			let parameters = {symbol:symbol, limit:limit};
+			if ( fromId ) parameters.fromId = fromId;
+			marketRequest(base+'v1/historicalTrades', parameters, callback);
 		},
 		// convert chart data to highstock array [timestamp,open,high,low,close]
 		highstock: function(chart, include_volume = false) {
@@ -721,7 +766,7 @@ LIMIT_MAKER
 			terminate: function(endpoint) {
 				let ws = subscriptions[endpoint];
 				if ( !ws ) return;
-				console.log('WebSocket terminated:', endpoint);
+				options.log('WebSocket terminated:', endpoint);
 				ws.terminate();
 				delete subscriptions[endpoint];
 			},
@@ -790,13 +835,13 @@ LIMIT_MAKER
 							klineQueue[symbol][interval].push(kline);
 							return;
 						}
-						//console.log('@klines at ' + kline.k.t);
+						//options.log('@klines at ' + kline.k.t);
 						klineHandler(symbol, kline);
 						if ( callback ) callback(symbol, interval, klineConcat(symbol, interval));
 					}, reconnect);
 					publicRequest(base+'v1/klines', {symbol:symbol, interval:interval}, function(error, data) {
 						klineData(symbol, interval, data);
-						//console.log('/klines at ' + info[symbol][interval].timestamp);
+						//options.log('/klines at ' + info[symbol][interval].timestamp);
 						for ( let kline of klineQueue[symbol][interval] ) {
 							klineHandler(symbol, kline, info[symbol][interval].timestamp);
 						}
