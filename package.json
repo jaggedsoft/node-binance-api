@@ -1,11 +1,11 @@
 {
   "name": "node-binance-api",
-  "version": "0.4.7",
+  "version": "0.4.8",
   "description": "Binance API for node https://github.com/jaggedsoft/node-binance-api",
   "main": "node-binance-api.js",
   "dependencies": {
     "request": "^2.83.0",
-    "ws": "^3.2.0"
+    "ws": "3.2.0"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
