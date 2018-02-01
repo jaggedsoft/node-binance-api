@@ -20,21 +20,20 @@ binance.options({
   APIKEY: '<key>',
   APISECRET: '<secret>',
   useServerTime: true, // If you get timestamp errors, synchronize to server time at startup
-  test: true, // If you want to use sandbox mode where orders are simulated
-  'onLogs': log => {
-    console.log(log);
-  },
-  onError: err => {
-    console.error(err);
-  }
+  test: true // If you want to use sandbox mode where orders are simulated
 });
 ```
 
 #### Getting latest price of a symbol
+binance.prices('BNBBTC', (error, ticker) => {
+	console.log("Price of BNB: ", ticker.BNBBTC);
+});
+
+#### Getting latest price of all symbols
 ```javascript
 binance.prices((error, ticker) => {
 	console.log("prices()", ticker);
-	console.log("Price of BNB: ", ticker.BNBBTC);
+	console.log("Price of BTC: ", ticker.BTCUSDT);
 });
 ```
 <details>
@@ -1435,11 +1434,7 @@ binance.options({
   'APIKEY': 'xxx',
   'APISECRET': 'xxx',
   'useServerTime': true,
-  'onLogs': log => {
-    console.log(log);
-  },
-  onError: err => {
-    console.error(err);
-  }
+  'log': log => {
+    console.log(log); // You can create your own logger here, or disable console output
 });
 ```
