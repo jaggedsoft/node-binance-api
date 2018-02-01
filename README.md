@@ -1428,6 +1428,12 @@ Having problems? Try adding `useServerTime` to your options:
 binance.options({
 	'APIKEY': 'xxx',
 	'APISECRET': 'xxx',
-	'useServerTime': true
+  'useServerTime': true,
+  'onLogs': log => {
+    console.log(log);
+  },
+  onError: err => {
+    console.error(err);
+  }
 });
 ```
