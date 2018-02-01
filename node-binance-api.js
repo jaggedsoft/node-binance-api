@@ -286,10 +286,17 @@ LIMIT_MAKER
 	};
 	////////////////////////////
 	const priceData = function(data) {
-		let prices = {};
-		for ( let obj of data ) {
-			prices[obj.symbol] = obj.price;
+		const prices = {};
+
+		if (Array.isArray(data)) {
+			for ( let obj of data ) {
+				prices[obj.symbol] = obj.price;
+			}
+		} else {
+			// Single price returned
+			prices[data.symbol] = data.price;
 		}
+
 		return prices;
 	};
 	const bookPriceData = function(data) {
@@ -560,8 +567,15 @@ LIMIT_MAKER
 				return callback.call(this, error, depthData(data), symbol);
 			});
 		},
-		prices: function(callback) {
-			request(base+'v3/ticker/price', function(error, response, body) {
+		prices: function(symbol, callback) {
+			const params = 'string' === typeof symbol ? `?symbol=${symbol}` : ''
+
+			if (!callback && 'function' === typeof symbol) {
+				callback = symbol // backward compatibility
+			}
+
+			request(`${base}v3/ticker/price${params}`, function(error, response, body) {
+				console.log(body)
 				if ( !callback ) return;
 
 				if ( error )
