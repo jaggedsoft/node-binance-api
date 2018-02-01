@@ -17,10 +17,16 @@ npm install node-binance-api --save
 ```javascript
 const binance = require('node-binance-api');
 binance.options({
-	APIKEY: '<key>',
-	APISECRET: '<secret>',
-	useServerTime: true, // If you get timestamp errors, synchronize to server time at startup
-	test: true // If you want to use sandbox mode where orders are simulated
+  APIKEY: '<key>',
+  APISECRET: '<secret>',
+  useServerTime: true, // If you get timestamp errors, synchronize to server time at startup
+  test: true, // If you want to use sandbox mode where orders are simulated
+  'onLogs': log => {
+    console.log(log);
+  },
+  onError: err => {
+    console.error(err);
+  }
 });
 ```
 
@@ -1426,8 +1432,14 @@ Verify that your system time is correct. If you have any suggestions don't hesti
 Having problems? Try adding `useServerTime` to your options:
 ```js
 binance.options({
-	'APIKEY': 'xxx',
-	'APISECRET': 'xxx',
-	'useServerTime': true
+  'APIKEY': 'xxx',
+  'APISECRET': 'xxx',
+  'useServerTime': true,
+  'onLogs': log => {
+    console.log(log);
+  },
+  onError: err => {
+    console.error(err);
+  }
 });
 ```
