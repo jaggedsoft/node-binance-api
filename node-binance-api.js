@@ -527,7 +527,7 @@ LIMIT_MAKER
 			if ( options.useServerTime ) {
 				apiRequest(base+'v1/time', function(error, response) {
 					info.timeOffset = response.serverTime - new Date().getTime();
-					//console.info("server time set: ", response.serverTime, info.timeOffset);
+					//options.log("server time set: ", response.serverTime, info.timeOffset);
 					if ( callback ) callback();
 				});
 			} else {
@@ -669,7 +669,7 @@ LIMIT_MAKER
 		useServerTime: function(callback = false) {
 			apiRequest(base+'v1/time', function(error, response) {
 				info.timeOffset = response.serverTime - new Date().getTime();
-				//console.info("server time set: ", response.serverTime, info.timeOffset);
+				//options.log("server time set: ", response.serverTime, info.timeOffset);
 				if ( callback ) callback();
 			});
 		},
@@ -683,8 +683,10 @@ LIMIT_MAKER
 		recentTrades: function(symbol, callback, limit = 500) {
 			marketRequest(base+'v1/trades', {symbol:symbol, limit:limit}, callback);
 		},
-		historicalTrades: function(symbol, callback, limit = 500) {
-			marketRequest(base+'v1/historicalTrades', {symbol:symbol, limit:limit}, callback);
+		historicalTrades: function(symbol, callback, limit = 500, fromId = false) {
+			let parameters = {symbol:symbol, limit:limit};
+			if ( fromId ) parameters.fromId = fromId;
+			marketRequest(base+'v1/historicalTrades', parameters, callback);
 		},
 		// convert chart data to highstock array [timestamp,open,high,low,close]
 		highstock: function(chart, include_volume = false) {
