@@ -26,6 +26,7 @@ module.exports = function() {
 		recvWindow: 60000, // to be lowered to 5000 in v0.5
 		useServerTime: false,
 		reconnect: true,
+		verbose: false,
 		test: false,
 		log: function() {
 			console.log(Array.prototype.slice.call(arguments));
@@ -192,6 +193,7 @@ LIMIT_MAKER
 	};
 	////////////////////////////
 	const subscribe = function(endpoint, callback, reconnect = false) {
+		if ( options.verbose ) options.log("Subscribed to "+endpoint);
 		const ws = new WebSocket(stream+endpoint);
 		ws.endpoint = endpoint;
 		ws.on('open', function() {
@@ -220,10 +222,12 @@ LIMIT_MAKER
 			} else options.log('WebSocket connection closed! '+this.endpoint);
 		});
 		ws.on('unexpected-response', function(req, res) {
-			//Check if the socket is still up, log the error
-			//Terminate and reconnect?
-			//Thanks vaielab https://github.com/jaggedsoft/node-binance-api/issues/77
-			options.log("WebSocket Unexpected response: "+this.endpoint);
+			//Thanks vaielab! https://github.com/jaggedsoft/node-binance-api/issues/77
+			options.log('WebSocket Unexpected response: '+this.endpoint);
+			if ( reconnect && options.reconnect ) {
+				options.log('..WebSocket reconnecting: '+this.endpoint);
+				reconnect();
+			}
 			return true;
 		});
 		ws.on('error', function(error) {
@@ -524,6 +528,7 @@ LIMIT_MAKER
 			if ( typeof options.reconnect === 'undefined' ) options.reconnect = default_options.reconnect;
 			if ( typeof options.test === 'undefined' ) options.test = default_options.test;
 			if ( typeof options.log === 'undefined' ) options.log = default_options.log;
+			if ( typeof options.verbose === 'undefined' ) options.verbose = default_options.verbose;
 			if ( options.useServerTime ) {
 				apiRequest(base+'v1/time', function(error, response) {
 					info.timeOffset = response.serverTime - new Date().getTime();
