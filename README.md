@@ -1228,6 +1228,80 @@ binance.prevDay("BNBBTC", (error, prevDay, symbol) => {
 });
 ```
 
+#### Get Complete WebSocket Chart Cache
+This function pulls existing chart data before connecting to the WebSocket, and provides you realtime synchronized chart information including the most recent 500 candles.
+
+```javascript
+binance.websockets.chart("BNBBTC", "1m", (symbol, interval, chart) => {
+	let tick = binance.last(chart);
+	const last = chart[tick].close;
+	console.log(chart);
+	// Optionally convert 'chart' object to array:
+	// let ohlc = binance.ohlc(chart);
+	// console.log(symbol, ohlc);
+	console.log(symbol+" last price: "+last)
+});
+```
+
+<details>
+ <summary>View Response</summary>
+
+```
+{
+  '1517557800000':
+   { open: '0.00100090',
+     high: '0.00100650',
+     low: '0.00099810',
+     close: '0.00100370',
+     volume: '1161.52000000' },
+  '1517557860000':
+   { open: '0.00100360',
+     high: '0.00101010',
+     low: '0.00100000',
+     close: '0.00100310',
+     volume: '1977.68000000' },
+  '1517557920000':
+   { open: '0.00100100',
+     high: '0.00101130',
+     low: '0.00100080',
+     close: '0.00100670',
+     volume: '2002.00000000' },
+  '1517557980000':
+   { open: '0.00100660',
+     high: '0.00101400',
+     low: '0.00100200',
+     close: '0.00100640',
+     volume: '3896.40000000' },
+  '1517558040000':
+   { open: '0.00100630',
+     high: '0.00101390',
+     low: '0.00100350',
+     close: '0.00100470',
+     volume: '1675.48000000' },
+  '1517558100000':
+   { open: '0.00100860',
+     high: '0.00101450',
+     low: '0.00100100',
+     close: '0.00100270',
+     volume: '1918.46000000' },
+  '1517558160000':
+   { open: '0.00100460',
+     high: '0.00101480',
+     low: '0.00100310',
+     close: '0.00100670',
+     volume: '2464.12000000' },
+  '1517558220000':
+   { open: '0.00100510',
+     high: '0.00100660',
+     low: '0.00100110',
+     close: '0.00100250',
+     volume: '1484.59000000' } }
+// (..many more entries not shown)
+///BNBBTC last price: 0.00100250
+```
+</details>
+
+
 #### Get Kline/candlestick data for a symbol
 You can use the optional API parameters for getting historical candlesticks, these are useful if you want to import data from earlier back in time.
 Optional parameters: limit (max/default 500), startTime, endTime.
@@ -1434,6 +1508,7 @@ binance.options({
 	APIKEY: 'xxx',
 	APISECRET: 'xxx',
 	useServerTime: true,
+	verbose: true, // Add extra output when subscribing to websockets, etc
 	log: log => {
 		console.log(log); // You can create your own logger here, or disable console output
 	}
