@@ -1229,6 +1229,22 @@ binance.prevDay("BNBBTC", (error, prevDay, symbol) => {
 });
 ```
 
+#### Get Kline/candlestick data for a symbol
+You can use the optional API parameters for getting historical candlesticks, these are useful if you want to import data from earlier back in time.
+Optional parameters: limit (max/default 500), startTime, endTime.
+
+```javascript
+// Intervals: 1m,3m,5m,15m,30m,1h,2h,4h,6h,8h,12h,1d,3d,1w,1M
+binance.candlesticks("BNBBTC", "5m", (error, ticks, symbol) => {
+	console.log("candlesticks()", ticks);
+	let last_tick = ticks[ticks.length - 1];
+	let [time, open, high, low, close, volume, closeTime, assetVolume, trades, buyBaseVolume, buyAssetVolume, ignored] = last_tick;
+	console.log(symbol+" last close: "+close);
+}, {limit: 500, endTime: 1514764800000});
+```
+
+# WebSockets Implementation
+
 #### Get Complete WebSocket Chart Cache
 This function pulls existing chart data before connecting to the WebSocket, and provides you realtime synchronized chart information including the most recent 500 candles.
 
@@ -1302,22 +1318,6 @@ binance.websockets.chart("BNBBTC", "1m", (symbol, interval, chart) => {
 ```
 </details>
 
-
-#### Get Kline/candlestick data for a symbol
-You can use the optional API parameters for getting historical candlesticks, these are useful if you want to import data from earlier back in time.
-Optional parameters: limit (max/default 500), startTime, endTime.
-
-```javascript
-// Intervals: 1m,3m,5m,15m,30m,1h,2h,4h,6h,8h,12h,1d,3d,1w,1M
-binance.candlesticks("BNBBTC", "5m", (error, ticks, symbol) => {
-	console.log("candlesticks()", ticks);
-	let last_tick = ticks[ticks.length - 1];
-	let [time, open, high, low, close, volume, closeTime, assetVolume, trades, buyBaseVolume, buyAssetVolume, ignored] = last_tick;
-	console.log(symbol+" last close: "+close);
-}, {limit: 500, endTime: 1514764800000});
-```
-
-# WebSockets Implementation
 
 #### Get Candlestick Updates via WebSocket
 ```javascript
