@@ -24,11 +24,6 @@ binance.options({
 });
 ```
 
-#### Getting latest price of a symbol
-binance.prices('BNBBTC', (error, ticker) => {
-	console.log("Price of BNB: ", ticker.BNBBTC);
-});
-
 #### Getting latest price of all symbols
 ```javascript
 binance.prices((error, ticker) => {
@@ -102,6 +97,12 @@ binance.prices((error, ticker) => {
 ```
 </details>
 
+#### Getting latest price of a symbol
+```javascript
+binance.prices('BNBBTC', (error, ticker) => {
+	console.log("Price of BNB: ", ticker.BNBBTC);
+});
+```
 
 #### Getting list of current balances
 ```javascript
