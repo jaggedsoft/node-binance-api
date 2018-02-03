@@ -194,7 +194,7 @@ LIMIT_MAKER
         }, 'POST');
     };
     ////////////////////////////
-    const _handleSocketClose = function(error) {
+    const _handleSocketClose = function(reconnect, error) {
         /*
         switch ( error ) {
             case 1000:	// CLOSE_NORMAL
@@ -216,7 +216,7 @@ LIMIT_MAKER
             }
         } else options.log('WebSocket connection closed! '+this.endpoint);
     };
-    const _handleSocketUnexpectedResponse = function(req, res) {
+    const _handleSocketUnexpectedResponse = function(reconnect, req, res) {
         //Thanks vaielab! https://github.com/jaggedsoft/node-binance-api/issues/77
             options.log('WebSocket Unexpected response: '+this.endpoint);
             if ( reconnect && options.reconnect ) {
@@ -225,9 +225,9 @@ LIMIT_MAKER
             }
             return true;
     };
-    const _handleSocketError = function(error) {
+    const _handleSocketError = function(reconnect, error) {
         options.log(error);
-        options.log("WebSocket Error: "+this.endpoint, this.error.code);
+        options.log("WebSocket Error: "+this.endpoint, error.code);
         /*
         switch ( error.code ) {
             case 'ECONNREFUSED':
@@ -247,9 +247,9 @@ LIMIT_MAKER
         ws.on('open', function() {
             //options.log('subscribe('+this.endpoint+')');
         });
-        ws.on('close', _handleSocketClose);
-        ws.on('unexpected-response', _handleSocketUnexpectedResponse);
-        ws.on('error', _handleSocketError);
+        ws.on('close', _handleSocketClose.bind(ws, reconnect));
+        ws.on('unexpected-response', _handleSocketUnexpectedResponse.bind(ws, reconnect));
+        ws.on('error', _handleSocketError.bind(ws, reconnect));
         ws.on('message', function(data) {
             //options.log(data);
             try {
@@ -269,9 +269,9 @@ LIMIT_MAKER
         ws.on('open', function() {
             //options.log('CombinedStream: WebSocket connection open: '+this.endpoint, queryParms);
         });
-        ws.on('close', _handleSocketClose);
-        ws.on('unexpected-response', _handleSocketUnexpectedResponse);
-        ws.on('error', _handleSocketError);
+        ws.on('close', _handleSocketClose.bind(ws, reconnect));
+        ws.on('unexpected-response', _handleSocketUnexpectedResponse.bind(ws, reconnect));
+        ws.on('error', _handleSocketError.bind(ws, reconnect));
         ws.on('message', function(data) {
             try {
                 callback(JSON.parse(data).data);
