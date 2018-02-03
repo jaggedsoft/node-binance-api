@@ -592,14 +592,15 @@ LIMIT_MAKER
                 if ( callback ) return callback.call(this, error, data, symbol);
             }, 'DELETE');
         },
-        orderStatus: function(symbol, orderid, callback) {
-            signedRequest(base+'v3/order', {symbol:symbol, orderId:orderid}, function(error, data) {
+        orderStatus: function(symbol, orderid, callback, flags = {}) {
+            let parameters = Object.assign({symbol:symbol, orderId:orderid}, flags);
+            signedRequest(base+'v3/order', parameters, function(error, data) {
                 if ( callback ) return callback.call(this, error, data, symbol);
             });
         },
         openOrders: function(symbol, callback) {
-            let postData = symbol ? {symbol:symbol} : {};
-            signedRequest(base+'v3/openOrders', postData, function(error, data) {
+            let parameters = symbol ? {symbol:symbol} : {};
+            signedRequest(base+'v3/openOrders', parameters, function(error, data) {
                 return callback.call(this, error, data, symbol);
             });
         },
