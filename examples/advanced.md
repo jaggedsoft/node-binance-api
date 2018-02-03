@@ -36,6 +36,22 @@ binance.exchangeInfo(function(response) {
 ```
 ![example](http://image.ibb.co/gA2gXR/Untitled.png)
 
+#### Connect to all WebSockets at once (Thanks keith1024!)
+```js
+binance.prevDay(false, (error, prevDay) => {
+	let markets = [];
+	for ( let obj of prevDay ) {
+	let symbol = obj.symbol;
+		console.log(symbol+" volume:"+obj.volume+" change: "+obj.priceChangePercent+"%");
+		markets.push(symbol);
+	}
+	binance.websockets.candlesticks(markets, '1m', (candlestickData) => {
+		let tick = binance.last(candlestickData);
+		const last = candlestickData[tick].c;
+		console.log(candlestickData.s+": "+last);
+	});
+});
+```
 
 
 #### Enable Test Mode for orders
