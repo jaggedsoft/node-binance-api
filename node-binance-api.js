@@ -835,9 +835,12 @@ LIMIT_MAKER
                     publicRequest(base+'v1/depth', { symbol:symbol, limit:limit }, function(error, json) {
                         info[symbol].firstUpdateId = json.lastUpdateId;
                         depthCache[symbol] = depthData(json);
-                        for (let depth of messageQueue[symbol])
-                            depthHandler(depth, json.lastUpdateId);
-                        delete messageQueue[symbol];
+                        // Process any pending depth messages
+                        if ( typeof messageQueue[symbol] !== 'undefined' ) {
+                            for ( let depth of messageQueue[symbol] )
+                                depthHandler(depth, json.lastUpdateId);
+                            delete messageQueue[symbol];
+                        }
                         if (callback) callback(symbol, depthCache[symbol]);
                     });
                 };
