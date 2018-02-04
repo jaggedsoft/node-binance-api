@@ -66,7 +66,7 @@ module.exports = function() {
     };
 
     const apiRequest = function(url, callback, method = 'GET') {
-        if ( !options.APIKEY ) throw 'apiRequest: Invalid API Key';
+        if ( !options.APIKEY ) throw Error('apiRequest: Invalid API Key');
         let opt = {
             url: url,
             method: method,
@@ -119,7 +119,7 @@ module.exports = function() {
     };
 
     const signedRequest = function(url, data, callback, method = 'GET') {
-        if ( !options.APISECRET ) throw 'signedRequest: Invalid API Secret';
+        if ( !options.APISECRET ) throw Error('signedRequest: Invalid API Secret');
         if ( !data ) data = {};
         data.timestamp = new Date().getTime() + info.timeOffset;
         if ( typeof data.symbol !== 'undefined' ) data.symbol = data.symbol.replace('_','');
@@ -178,7 +178,7 @@ LIMIT_MAKER
         if ( typeof flags.icebergQty !== 'undefined' ) opt.icebergQty = flags.icebergQty;
         if ( typeof flags.stopPrice !== 'undefined' ) {
             opt.stopPrice = flags.stopPrice;
-            if ( opt.type === 'LIMIT' ) throw 'Error: stopPrice: Must set "type" to one of the following: STOP_LOSS, STOP_LOSS_LIMIT, TAKE_PROFIT, TAKE_PROFIT_LIMIT';
+            if ( opt.type === 'LIMIT' ) throw Error('stopPrice: Must set "type" to one of the following: STOP_LOSS, STOP_LOSS_LIMIT, TAKE_PROFIT, TAKE_PROFIT_LIMIT');
         }
         signedRequest(base+endpoint, opt, function(error, response) {
             if ( !response ) {
@@ -470,6 +470,14 @@ LIMIT_MAKER
             askqty+= quantity;
         }
         return {bids: bidbase, asks: askbase, bidQty: bidqty, askQty: askqty};
+    };
+    // Checks whether or not an array contains any duplicate elements
+    // Note(keith1024): at the moment this only works for primitive types,
+    // will require modification to work with objects
+    const isArrayUnique = function(array) {
+        return array.every(function(el, pos, arr) {
+            return arr.indexOf(el) === pos;
+        });
     };
     ////////////////////////////
     return {
@@ -809,11 +817,11 @@ LIMIT_MAKER
             },
             depthCache: function depthCacheFunction(symbols, callback, limit = 500) {
                 let reconnect = function() {
-                    if (options.reconnect) depthCacheFunction(symbols, callback);
+                    if ( options.reconnect ) depthCacheFunction(symbols, callback);
                 };
 
                 let symbolDepthInit = function(symbol) {
-                    if (typeof info[symbol] === 'undefined')
+                    if ( typeof info[symbol] === 'undefined' )
                         info[symbol] = {};
 
                     info[symbol].firstUpdateId = 0;
@@ -823,11 +831,11 @@ LIMIT_MAKER
 
                 let handleDepthStreamData = function(depth) {
                     let symbol = depth.s;
-                    if (!info[symbol].firstUpdateId) {
+                    if ( !info[symbol].firstUpdateId ) {
                         messageQueue[symbol].push(depth);
                     } else {
                         depthHandler(depth);
-                        if (callback) callback(symbol, depthCache[symbol]);
+                        if ( callback ) callback(symbol, depthCache[symbol]);
                     }
                 };
 
@@ -835,16 +843,21 @@ LIMIT_MAKER
                     publicRequest(base+'v1/depth', { symbol:symbol, limit:limit }, function(error, json) {
                         info[symbol].firstUpdateId = json.lastUpdateId;
                         depthCache[symbol] = depthData(json);
-                        for (let depth of messageQueue[symbol])
-                            depthHandler(depth, json.lastUpdateId);
-                        delete messageQueue[symbol];
-                        if (callback) callback(symbol, depthCache[symbol]);
+                        // Process any pending depth messages
+                        if ( typeof messageQueue[symbol] !== 'undefined' ) {
+                            for ( let depth of messageQueue[symbol] )
+                                depthHandler(depth, json.lastUpdateId);
+                            delete messageQueue[symbol];
+                        }
+                        if ( callback ) callback(symbol, depthCache[symbol]);
                     });
                 };
                 // If an array of symbols are sent we use a combined stream connection rather.
                 // This is transparent to the developer, and results in a single socket connection.
                 // This essentially eliminates "unexpected response" errors when subscribing to a lot of data.
-                if (Array.isArray(symbols)) {
+                if ( Array.isArray(symbols) ) {
+                    if ( !isArrayUnique(symbols) ) throw Error('depthCache: "symbols" cannot contain duplicate elements.');
+
                     symbols.forEach(symbolDepthInit);
                     let streams = symbols.map(function (symbol) {
                         return symbol.toLowerCase()+'@depth';
@@ -908,7 +921,8 @@ LIMIT_MAKER
                 // If an array of symbols are sent we use a combined stream connection rather.
                 // This is transparent to the developer, and results in a single socket connection.
                 // This essentially eliminates "unexpected response" errors when subscribing to a lot of data.
-                if (Array.isArray(symbols)) {
+                if ( Array.isArray(symbols) ) {
+                    if ( !isArrayUnique(symbols) ) throw Error('candlesticks: "symbols" cannot contain duplicate elements.');
                     let streams = symbols.map(function (symbol) {
                         return symbol.toLowerCase()+'@kline_'+interval;
                     });
