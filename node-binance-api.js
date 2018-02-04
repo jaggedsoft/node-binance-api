@@ -243,9 +243,21 @@ LIMIT_MAKER
     const subscribe = function(endpoint, callback, reconnect = false) {
         if ( options.verbose ) options.log("Subscribed to "+endpoint);
         const ws = new WebSocket(stream+endpoint);
+        const heartbeat = function() {
+            //console.log("Heartbeat..");
+            this.isAlive = true;
+        };
+        const interval = setInterval(function ping() {
+            if (ws.isAlive === false) return ws.terminate();
+            ws.isAlive = false;
+            ws.ping(function () {});
+        }, 30000);
         ws.endpoint = endpoint;
+        ws.isAlive = false;
         ws.on('open', function() {
             //options.log('subscribe('+this.endpoint+')');
+            ws.isAlive = true;
+            ws.on('pong', heartbeat);
         });
         ws.on('close', _handleSocketClose.bind(ws, reconnect));
         ws.on('unexpected-response', _handleSocketUnexpectedResponse.bind(ws, reconnect));
@@ -264,10 +276,22 @@ LIMIT_MAKER
     const subscribeCombined = function(streams, callback, reconnect = false) {
         const queryParams = streams.join('/');
         const ws = new WebSocket(combineStream+queryParams);
+        const heartbeat = function() {
+            //console.log("Heartbeat..");
+            this.isAlive = true;
+        };
+        const interval = setInterval(function ping() {
+            if (ws.isAlive === false) return ws.terminate();
+            ws.isAlive = false;
+            ws.ping(function () {});
+        }, 30000);
         ws.endpoint = stringHash(queryParams);
+        ws.isAlive = false;
         if ( options.verbose ) options.log('CombinedStream: Subscribed to ['+ws.endpoint+'] '+queryParams);
         ws.on('open', function() {
             //options.log('CombinedStream: WebSocket connection open: '+this.endpoint, queryParms);
+            ws.isAlive = true;
+            ws.on('pong', heartbeat);
         });
         ws.on('close', _handleSocketClose.bind(ws, reconnect));
         ws.on('unexpected-response', _handleSocketUnexpectedResponse.bind(ws, reconnect));
