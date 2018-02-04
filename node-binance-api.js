@@ -817,11 +817,11 @@ LIMIT_MAKER
             },
             depthCache: function depthCacheFunction(symbols, callback, limit = 500) {
                 let reconnect = function() {
-                    if (options.reconnect) depthCacheFunction(symbols, callback);
+                    if ( options.reconnect ) depthCacheFunction(symbols, callback);
                 };
 
                 let symbolDepthInit = function(symbol) {
-                    if (typeof info[symbol] === 'undefined')
+                    if ( typeof info[symbol] === 'undefined' )
                         info[symbol] = {};
 
                     info[symbol].firstUpdateId = 0;
@@ -831,11 +831,11 @@ LIMIT_MAKER
 
                 let handleDepthStreamData = function(depth) {
                     let symbol = depth.s;
-                    if (!info[symbol].firstUpdateId) {
+                    if ( !info[symbol].firstUpdateId ) {
                         messageQueue[symbol].push(depth);
                     } else {
                         depthHandler(depth);
-                        if (callback) callback(symbol, depthCache[symbol]);
+                        if ( callback ) callback(symbol, depthCache[symbol]);
                     }
                 };
 
@@ -849,7 +849,7 @@ LIMIT_MAKER
                                 depthHandler(depth, json.lastUpdateId);
                             delete messageQueue[symbol];
                         }
-                        if (callback) callback(symbol, depthCache[symbol]);
+                        if ( callback ) callback(symbol, depthCache[symbol]);
                     });
                 };
                 // If an array of symbols are sent we use a combined stream connection rather.
