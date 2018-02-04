@@ -197,10 +197,10 @@ LIMIT_MAKER
     const _handleSocketClose = function(reconnect, error) {
         /*
         switch ( error ) {
-            case 1000:  // CLOSE_NORMAL
+            case 1000:	// CLOSE_NORMAL
                 options.log("WebSocket: closed");
                 break;
-            default:    // Abnormal closure
+            default:	// Abnormal closure
                 this.reconnect(error);
                 break;
         }
@@ -284,7 +284,7 @@ LIMIT_MAKER
             this.isAlive = true;
         };
         const interval = setInterval(function ping() {
-            if ( ws.isAlive === false ) {
+            if ( options.reconnect && ws.isAlive === false ) {
                 if ( options.verbose ) options.log("CombinedStream: Terminating inactive WebSocket: "+ws.endpoint);
                 return ws.terminate();
             }
