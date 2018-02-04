@@ -197,10 +197,10 @@ LIMIT_MAKER
     const _handleSocketClose = function(reconnect, error) {
         /*
         switch ( error ) {
-            case 1000:	// CLOSE_NORMAL
+            case 1000:  // CLOSE_NORMAL
                 options.log("WebSocket: closed");
                 break;
-            default:	// Abnormal closure
+            default:    // Abnormal closure
                 this.reconnect(error);
                 break;
         }
@@ -248,9 +248,12 @@ LIMIT_MAKER
             this.isAlive = true;
         };
         const interval = setInterval(function ping() {
-            if (ws.isAlive === false) return ws.terminate();
+            if ( options.reconnect && ws.isAlive === false ) {
+                if ( options.verbose ) options.log("Terminating inactive WebSocket: "+ws.endpoint);
+                return ws.terminate();
+            }
             ws.isAlive = false;
-            ws.ping(function () {});
+            ws.ping(function (){});
         }, 30000);
         ws.endpoint = endpoint;
         ws.isAlive = false;
@@ -281,7 +284,10 @@ LIMIT_MAKER
             this.isAlive = true;
         };
         const interval = setInterval(function ping() {
-            if (ws.isAlive === false) return ws.terminate();
+            if ( ws.isAlive === false ) {
+                if ( options.verbose ) options.log("CombinedStream: Terminating inactive WebSocket: "+ws.endpoint);
+                return ws.terminate();
+            }
             ws.isAlive = false;
             ws.ping(function () {});
         }, 30000);
@@ -975,4 +981,3 @@ LIMIT_MAKER
     };
 }();
 //https://github.com/binance-exchange/binance-official-api-docs
-//add rate limit and response status code
