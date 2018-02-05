@@ -240,28 +240,35 @@ LIMIT_MAKER
         */
         return true;
     };
+    const _handleSocketHeartbeat = function() {
+        this.isAlive = true;
+    };
+    // reworked Tuitio's heartbeat code into a shared single interval tick
+    const noop = function() {};
+    const socketHeartbeatInterval = setInterval(function socketHeartbeat() {
+        // sockets removed from `subscriptions` during a manual terminate()
+        // will no longer be at risk of having functions called on them
+        for ( let endpointId in subscriptions ) {
+            const ws = subscriptions[endpointId];
+            if ( ws.isAlive ) {
+                ws.isAlive = false;
+                ws.ping(noop);
+            } else {
+                if ( options.verbose ) options.log("Terminating inactive/broken WebSocket: "+ws.endpoint);
+                ws.terminate();
+            }
+        }
+    }, 30000);
     const subscribe = function(endpoint, callback, reconnect = false) {
         if ( options.verbose ) options.log("Subscribed to "+endpoint);
         const ws = new WebSocket(stream+endpoint);
-        const heartbeat = function() {
-            //console.log("Heartbeat..");
-            this.isAlive = true;
-        };
-        const interval = setInterval(function ping() {
-            if ( options.reconnect && ws.isAlive === false ) {
-                if ( options.verbose ) options.log("Terminating inactive WebSocket: "+ws.endpoint);
-                return ws.terminate();
-            }
-            ws.isAlive = false;
-            ws.ping(function (){});
-        }, 30000);
         ws.endpoint = endpoint;
         ws.isAlive = false;
         ws.on('open', function() {
             //options.log('subscribe('+this.endpoint+')');
-            ws.isAlive = true;
-            ws.on('pong', heartbeat);
+            this.isAlive = true;
         });
+        ws.on('pong', _handleSocketHeartbeat);
         ws.on('close', _handleSocketClose.bind(ws, reconnect));
         ws.on('unexpected-response', _handleSocketUnexpectedResponse.bind(ws, reconnect));
         ws.on('error', _handleSocketError.bind(ws, reconnect));
@@ -279,26 +286,14 @@ LIMIT_MAKER
     const subscribeCombined = function(streams, callback, reconnect = false) {
         const queryParams = streams.join('/');
         const ws = new WebSocket(combineStream+queryParams);
-        const heartbeat = function() {
-            //console.log("Heartbeat..");
-            this.isAlive = true;
-        };
-        const interval = setInterval(function ping() {
-            if ( options.reconnect && ws.isAlive === false ) {
-                if ( options.verbose ) options.log("CombinedStream: Terminating inactive WebSocket: "+ws.endpoint);
-                return ws.terminate();
-            }
-            ws.isAlive = false;
-            ws.ping(function () {});
-        }, 30000);
         ws.endpoint = stringHash(queryParams);
         ws.isAlive = false;
         if ( options.verbose ) options.log('CombinedStream: Subscribed to ['+ws.endpoint+'] '+queryParams);
         ws.on('open', function() {
             //options.log('CombinedStream: WebSocket connection open: '+this.endpoint, queryParms);
-            ws.isAlive = true;
-            ws.on('pong', heartbeat);
+            this.isAlive = true;
         });
+        ws.on('pong', _handleSocketHeartbeat);
         ws.on('close', _handleSocketClose.bind(ws, reconnect));
         ws.on('unexpected-response', _handleSocketUnexpectedResponse.bind(ws, reconnect));
         ws.on('error', _handleSocketError.bind(ws, reconnect));
