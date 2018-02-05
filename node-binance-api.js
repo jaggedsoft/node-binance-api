@@ -580,6 +580,9 @@ LIMIT_MAKER
         max: function(object) {
             return Math.max.apply(Math, Object.keys(object));
         },
+        setOption: function(key, value) {
+            options[key] = value;
+		},
         options: function(opt, callback = false) {
             options = opt;
             if ( typeof options.recvWindow === 'undefined' ) options.recvWindow = default_options.recvWindow;
@@ -828,7 +831,9 @@ LIMIT_MAKER
             subscriptions: function() {
                 return subscriptions;
             },
-            terminate: function(endpoint) {
+            terminate: function(endpoint, disable_reconnect = true) {
+				if ( disable_reconnect ) options.reconnect = false; // Disable auto reconnect
+				// This will still allow pre-existing sockets to automatically reconnect
                 let ws = subscriptions[endpoint];
                 if ( !ws ) return;
                 options.log('WebSocket terminated:', endpoint);
