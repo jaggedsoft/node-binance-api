@@ -582,7 +582,7 @@ LIMIT_MAKER
         },
         setOption: function(key, value) {
             options[key] = value;
-		},
+        },
         options: function(opt, callback = false) {
             options = opt;
             if ( typeof options.recvWindow === 'undefined' ) options.recvWindow = default_options.recvWindow;
@@ -832,8 +832,7 @@ LIMIT_MAKER
                 return subscriptions;
             },
             terminate: function(endpoint, disable_reconnect = true) {
-				if ( disable_reconnect ) options.reconnect = false; // Disable auto reconnect
-				// This will still allow pre-existing sockets to automatically reconnect
+                if ( disable_reconnect ) options.reconnect = false; // Disable auto reconnect by default
                 let ws = subscriptions[endpoint];
                 if ( !ws ) return;
                 options.log('WebSocket terminated:', endpoint);
