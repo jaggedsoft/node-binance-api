@@ -28,6 +28,20 @@ binance.exchangeInfo(function(error, data) {
 ```
 ![example](https://image.ibb.co/bz5KAG/notationals.png)
 
+#### Clamp order quantities to required amounts via minQty, minNotional, stepSize when placing orders
+```js
+// Set minimum order amount with minQty
+if ( amount < minQty ) amount = minQty;
+
+// Set minimum order amount with minNotional
+if ( price * amount < minNotional ) {
+	amount = minNotional / price;
+}
+
+// Round to stepSize
+amount = binance.roundStep(amount, stepSize);
+```
+
 #### Show API Rate limits
 ```js
 binance.exchangeInfo(function(response) {

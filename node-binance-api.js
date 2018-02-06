@@ -582,7 +582,7 @@ LIMIT_MAKER
         },
         setOption: function(key, value) {
             options[key] = value;
-		},
+        },
         options: function(opt, callback = false) {
             options = opt;
             if ( typeof options.recvWindow === 'undefined' ) options.recvWindow = default_options.recvWindow;
@@ -832,8 +832,7 @@ LIMIT_MAKER
                 return subscriptions;
             },
             terminate: function(endpoint, disable_reconnect = true) {
-				if ( disable_reconnect ) options.reconnect = false; // Disable auto reconnect
-				// This will still allow pre-existing sockets to automatically reconnect
+                if ( disable_reconnect ) options.reconnect = false; // Disable auto reconnect by default
                 let ws = subscriptions[endpoint];
                 if ( !ws ) return;
                 options.log('WebSocket terminated:', endpoint);
@@ -841,8 +840,19 @@ LIMIT_MAKER
                 delete subscriptions[endpoint];
             },
             depth: function depth(symbols, callback) {
-                for ( let symbol of symbols ) {
-                    subscribe(symbol.toLowerCase()+'@depth', callback);
+                let reconnect = function() {
+                    if ( options.reconnect ) depth(symbols, callback);
+                };
+
+                if ( Array.isArray(symbols) ) {
+                    if ( !isArrayUnique(symbols) ) throw Error('depth: "symbols" cannot contain duplicate elements.');
+                    let streams = symbols.map(function(symbol) {
+                        return symbol.toLowerCase()+'@depth';
+                    });
+                    subscribeCombined(streams, callback, reconnect);
+                } else {
+                    let symbol = symbols;
+                    subscribe(symbol.toLowerCase()+'@depth', callback, reconnect);
                 }
             },
             depthCache: function depthCacheFunction(symbols, callback, limit = 500) {
@@ -901,17 +911,28 @@ LIMIT_MAKER
                     getSymbolDepthSnapshot(symbol);
                 }
             },
-            trades: function(symbols, callback) {
-                for ( let symbol of symbols ) {
-                    let reconnect = function() {
-                        if ( options.reconnect ) subscribe(symbol.toLowerCase()+'@aggTrade', callback, reconnect);
-                    };
+            trades: function trades(symbols, callback) {
+                let reconnect = function() {
+                    if ( options.reconnect ) trades(symbols, callback);
+                };
+
+                if ( Array.isArray(symbols) ) {
+                    if ( !isArrayUnique(symbols) ) throw Error('trades: "symbols" cannot contain duplicate elements.');
+                    let streams = symbols.map(function(symbol) {
+                        return symbol.toLowerCase()+'@aggTrade';
+                    });
+                    subscribeCombined(streams, callback, reconnect);
+                } else {
+                    let symbol = symbols;
                     subscribe(symbol.toLowerCase()+'@aggTrade', callback, reconnect);
                 }
             },
             chart: function chart(symbols, interval, callback) {
-                if ( typeof symbols === 'string' ) symbols = [symbols]; // accept both strings and arrays
-                for ( let symbol of symbols ) {
+                let reconnect = function() {
+                    if ( options.reconnect ) chart(symbols, interval, callback);
+                };
+
+                let symbolChartInit = function(symbol) {
                     if ( typeof info[symbol] === 'undefined' ) info[symbol] = {};
                     if ( typeof info[symbol][interval] === 'undefined' ) info[symbol][interval] = {};
                     if ( typeof ohlc[symbol] === 'undefined' ) ohlc[symbol] = {};
@@ -921,27 +942,45 @@ LIMIT_MAKER
                     if ( typeof klineQueue[symbol] === 'undefined' ) klineQueue[symbol] = {};
                     if ( typeof klineQueue[symbol][interval] === 'undefined' ) klineQueue[symbol][interval] = [];
                     info[symbol][interval].timestamp = 0;
-                    let reconnect = function() {
-                        if ( options.reconnect ) chart(symbols, interval, callback);
-                    };
-                    subscribe(symbol.toLowerCase()+'@kline_'+interval, function(kline) {
-                        if ( !info[symbol][interval].timestamp ) {
-                            klineQueue[symbol][interval].push(kline);
-                            return;
-                        }
+                }
+
+                let handleKlineStreamData = function(kline) {
+                    let symbol = kline.s;
+                    if ( !info[symbol][interval].timestamp ) {
+                        klineQueue[symbol][interval].push(kline);
+                    } else {
                         //options.log('@klines at ' + kline.k.t);
                         klineHandler(symbol, kline);
                         if ( callback ) callback(symbol, interval, klineConcat(symbol, interval));
-                    }, reconnect);
-                    publicRequest(base+'v1/klines', {symbol:symbol, interval:interval}, function(error, data) {
+                    }
+                };
+
+                let getSymbolKlineSnapshot = function(symbol) {
+                    publicRequest(base + 'v1/klines', { symbol:symbol, interval:interval }, function (error, data) {
                         klineData(symbol, interval, data);
                         //options.log('/klines at ' + info[symbol][interval].timestamp);
-                        for ( let kline of klineQueue[symbol][interval] ) {
-                            klineHandler(symbol, kline, info[symbol][interval].timestamp);
+                        if ( typeof klineQueue[symbol][interval] !== 'undefined' ) {
+                            for ( let kline of klineQueue[symbol][interval] )
+                                klineHandler(symbol, kline, info[symbol][interval].timestamp);
+                            delete klineQueue[symbol][interval];
                         }
-                        delete klineQueue[symbol][interval];
                         if ( callback ) callback(symbol, interval, klineConcat(symbol, interval));
                     });
+                };
+
+                if ( Array.isArray(symbols) ) {
+                    if ( !isArrayUnique(symbols) ) throw Error('chart: "symbols" cannot contain duplicate elements.');
+                    symbols.forEach(symbolChartInit);
+                    let streams = symbols.map(function(symbol) {
+                        return symbol.toLowerCase()+`@kline_`+interval;
+                    });
+                    subscribeCombined(streams, handleKlineStreamData, reconnect);
+                    symbols.forEach(getSymbolKlineSnapshot);
+                } else {
+                    let symbol = symbols;
+                    symbolChartInit(symbol);
+                    subscribe(symbol.toLowerCase()+'@kline_'+interval, handleKlineStreamData, reconnect);
+                    getSymbolKlineSnapshot(symbol);
                 }
             },
             candlesticks: function candlesticks(symbols, interval, callback) {
@@ -962,20 +1001,34 @@ LIMIT_MAKER
                     subscribe(symbol+'@kline_'+interval, callback, reconnect);
                 }
             },
-            prevDay: function prevDay(symbol, callback) {
-                let streamName = symbol ? symbol.toLowerCase()+'@ticker' : '!ticker@arr';
+            prevDay: function prevDay(symbols, callback) {
                 let reconnect = function() {
                     if ( options.reconnect ) prevDay(symbol, callback);
                 };
-                subscribe(streamName, function(data) {
-                    if ( data instanceof Array ) {
+
+                // Combine stream for array of symbols
+                if ( Array.isArray(symbols) ) {
+                    if ( !isArrayUnique(symbols) ) throw Error('prevDay: "symbols" cannot contain duplicate elements.');
+                    let streams = symbols.map(function(symbol) {
+                        return symbol.toLowerCase()+'@ticker';
+                    });
+                    subscribeCombined(streams, function(data) {
+                        prevDayStreamHandler(data, callback);
+                    }, reconnect);
+                // Raw stream for  a single symbol
+                } else if ( symbols ) {
+                    let symbol = symbols;
+                    subscribe(symbol.toLowerCase()+'@ticker', function(data) {
+                        prevDayStreamHandler(data, callback);
+                    }, reconnect);
+                // Raw stream of all listed symbols
+                } else {
+                    subscribe('!ticker@arr', function(data) {
                         for ( let line of data ) {
                             prevDayStreamHandler(line, callback);
                         }
-                        return;
-                    }
-                    prevDayStreamHandler(data, callback);
-                }, reconnect);
+                    }, reconnect);
+                }
             }
         }
     };
