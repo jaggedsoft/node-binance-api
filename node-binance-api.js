@@ -1003,7 +1003,7 @@ LIMIT_MAKER
             },
             prevDay: function prevDay(symbols, callback) {
                 let reconnect = function() {
-                    if ( options.reconnect ) prevDay(symbol, callback);
+                    if ( options.reconnect ) prevDay(symbols, callback);
                 };
 
                 // Combine stream for array of symbols
