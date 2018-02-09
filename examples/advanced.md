@@ -28,6 +28,20 @@ binance.exchangeInfo(function(error, data) {
 ```
 ![example](https://image.ibb.co/bz5KAG/notationals.png)
 
+#### Clamp order quantities to required amounts via minQty, minNotional, stepSize when placing orders
+```js
+// Set minimum order amount with minQty
+if ( amount < minQty ) amount = minQty;
+
+// Set minimum order amount with minNotional
+if ( price * amount < minNotional ) {
+	amount = minNotional / price;
+}
+
+// Round to stepSize
+amount = binance.roundStep(amount, stepSize);
+```
+
 #### Show API Rate limits
 ```js
 binance.exchangeInfo(function(response) {
@@ -36,6 +50,23 @@ binance.exchangeInfo(function(response) {
 ```
 ![example](http://image.ibb.co/gA2gXR/Untitled.png)
 
+#### Connect to all WebSockets at once (Thanks keith1024!)
+```js
+binance.prevDay(false, (error, prevDay) => {
+	let markets = [];
+	for ( let obj of prevDay ) {
+		let symbol = obj.symbol;
+		console.log(symbol+" volume:"+obj.volume+" change: "+obj.priceChangePercent+"%");
+		markets.push(symbol);
+	}
+	binance.websockets.candlesticks(markets, '1m', (candlestickData) => {
+		let tick = binance.last(candlestickData);
+		const symbol = candlestickData.s;
+		const close = candlestickData[tick].c;
+		console.log(symbol+": "+close);
+	});
+});
+```
 
 
 #### Enable Test Mode for orders
