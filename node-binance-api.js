@@ -678,8 +678,8 @@ LIMIT_MAKER
             publicRequest(base+'v1/exchangeInfo', {}, callback);
         },
         systemStatus: function(callback) {
-			publicRequest(wapi+'v3/systemStatus.html', {}, callback);
-		},
+            publicRequest(wapi+'v3/systemStatus.html', {}, callback);
+        },
         withdraw: function(asset, address, amount, addressTag = false, callback = false) {
             let params = {asset, address, amount};
             params.name = 'API Withdraw';
