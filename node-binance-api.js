@@ -628,8 +628,9 @@ LIMIT_MAKER
                 }
             });
         },
-        allOrders: function(symbol, callback) {
-            signedRequest(base+'v3/allOrders', {symbol:symbol, limit:500}, function(error, data) {
+        allOrders: function(symbol, callback, options = {}) {
+            let parameters = Object.assign({symbol:symbol}, options);
+            signedRequest(base+'v3/allOrders', parameters, function(error, data) {
                 if ( callback ) return callback.call(this, error, data, symbol);
             });
         },

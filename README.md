@@ -8,8 +8,8 @@ This project is designed to help you make your own projects that interact with t
 
 ### Recent improvements:
 WebSocket performance and stability has been drastically improved in the last few versions.
-> 1. You can now subscribe to every symbol instantly. You no longer need to use timers when connecting to large amounts of websockets. Thanks to keith1024, they are now all connected through a combined stream for maximum performance.
-> 2. WebSocket unexpected responses are handled properly. Thanks vaielab! Bulletproof.
+> 1. You can subscribe to every symbol instantly, they are now connected through a combined stream for maximum performance. Thanks keith1024!
+> 2. WebSocket unexpected responses are handled properly. Thanks vaielab!
 > 3. WebSocket zombie connections are pinged and reconnected automatically. Thanks Tuitio!
 
 #### Installation
@@ -1521,4 +1521,4 @@ binance.options({
 });
 ```
 
-Thank you to all contributors: keith1024, vaielab, nickreese, Tuitio, itnok, CollinEstes, sethyx, mstijak, MadDeveloper, balthazar, bitoiu, matthewwoop, robaleman, hems!
+Thank you to all contributors: keith1024, vaielab, nickreese, Tuitio, grandmore, itnok, CollinEstes, sethyx, mstijak, MadDeveloper, balthazar, bitoiu, matthewwoop, robaleman, hems!
