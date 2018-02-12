@@ -854,7 +854,7 @@ LIMIT_MAKER
 
                 let handleDepthStreamData = function(depth) {
                     let symbol = depth.s;
-                    if ( !info[symbol].firstUpdateId ) {
+                    if (messageQueue[symbol] && !info[symbol].firstUpdateId ) {
                         messageQueue[symbol].push(depth);
                     } else {
                         depthHandler(depth);
