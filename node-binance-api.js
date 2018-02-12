@@ -38,6 +38,7 @@ module.exports = function() {
     let info = {
         timeOffset: 0
     };
+    let socketHeartbeatInterval;
 
     const publicRequest = function(url, data, callback, method = 'GET') {
         if ( !data ) data = {};
@@ -194,8 +195,34 @@ LIMIT_MAKER
         }, 'POST');
     };
     ////////////////////////////
+    // reworked Tuitio's heartbeat code into a shared single interval tick
+    const noop = function() {};
+    const socketHeartbeat = function() {
+        // sockets removed from `subscriptions` during a manual terminate()
+        // will no longer be at risk of having functions called on them
+        for ( let endpointId in subscriptions ) {
+            const ws = subscriptions[endpointId];
+            if ( ws.isAlive ) {
+                ws.isAlive = false;
+                if ( ws.readyState === WebSocket.OPEN) ws.ping(noop);
+            } else {
+                if ( options.verbose ) options.log("Terminating inactive/broken WebSocket: "+ws.endpoint);
+                if ( ws.readyState === WebSocket.OPEN) ws.terminate();
+            }
+        }
+    };
+    const _handleSocketOpen = function() {
+        this.isAlive = true;
+        if (Object.keys(subscriptions).length === 0) {
+            socketHeartbeatInterval = setInterval(socketHeartbeat, 30000);
+        }
+        subscriptions[this.endpoint] = this;
+    };
     const _handleSocketClose = function(reconnect, code, reason) {
         delete subscriptions[this.endpoint];
+        if (Object.keys(subscriptions).length === 0) {
+            clearInterval(socketHeartbeatInterval);
+        }
         options.log('WebSocket closed: '+this.endpoint+
             (code ? ' ('+code+')' : '')+
             (reason ? ' '+reason : '')
@@ -221,33 +248,13 @@ LIMIT_MAKER
     const _handleSocketHeartbeat = function() {
         this.isAlive = true;
     };
-    // reworked Tuitio's heartbeat code into a shared single interval tick
-    const noop = function() {};
-    const socketHeartbeatInterval = setInterval(function socketHeartbeat() {
-        // sockets removed from `subscriptions` during a manual terminate()
-        // will no longer be at risk of having functions called on them
-        for ( let endpointId in subscriptions ) {
-            const ws = subscriptions[endpointId];
-            if ( ws.isAlive ) {
-                ws.isAlive = false;
-                if ( ws.readyState === WebSocket.OPEN) ws.ping(noop);
-            } else {
-                if ( options.verbose ) options.log("Terminating inactive/broken WebSocket: "+ws.endpoint);
-                if ( ws.readyState === WebSocket.OPEN) ws.terminate();
-            }
-        }
-    }, 30000);
     const subscribe = function(endpoint, callback, reconnect = false) {
         if ( options.verbose ) options.log("Subscribed to "+endpoint);
         const ws = new WebSocket(stream+endpoint);
         ws.reconnect = options.reconnect;
         ws.endpoint = endpoint;
         ws.isAlive = false;
-        ws.on('open', function() {
-            //options.log('subscribe('+this.endpoint+')');
-            this.isAlive = true;
-            subscriptions[this.endpoint] = this;
-        });
+        ws.on('open', _handleSocketOpen);
         ws.on('pong', _handleSocketHeartbeat);
         ws.on('error', _handleSocketError);
         ws.on('close', _handleSocketClose.bind(ws, reconnect));
@@ -267,11 +274,7 @@ LIMIT_MAKER
         ws.endpoint = stringHash(queryParams);
         ws.isAlive = false;
         if ( options.verbose ) options.log('CombinedStream: Subscribed to ['+ws.endpoint+'] '+queryParams);
-        ws.on('open', function() {
-            //options.log('CombinedStream: WebSocket connection open: '+this.endpoint, queryParms);
-            this.isAlive = true;
-            subscriptions[this.endpoint] = this;
-        });
+        ws.on('open', _handleSocketOpen);
         ws.on('pong', _handleSocketHeartbeat);
         ws.on('error', _handleSocketError);
         ws.on('close', _handleSocketClose.bind(ws, reconnect));
@@ -854,7 +857,7 @@ LIMIT_MAKER
 
                 let handleDepthStreamData = function(depth) {
                     let symbol = depth.s;
-                    if ( !info[symbol].firstUpdateId ) {
+                    if (messageQueue[symbol] && !info[symbol].firstUpdateId ) {
                         messageQueue[symbol].push(depth);
                     } else {
                         depthHandler(depth);
