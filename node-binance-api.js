@@ -19,8 +19,8 @@ module.exports = function() {
     const userAgent = 'Mozilla/4.0 (compatible; Node Binance API)';
     const contentType = 'application/x-www-form-urlencoded';
     let subscriptions = {};
-    let messageQueue = {};
     let depthCache = {};
+    let _depthCacheContext = {};
     let ohlcLatest = {};
     let klineQueue = {};
     let ohlc = {};
@@ -211,12 +211,13 @@ LIMIT_MAKER
             }
         }
     };
-    const _handleSocketOpen = function() {
+    const _handleSocketOpen = function(opened_callback) {
         this.isAlive = true;
         if (Object.keys(subscriptions).length === 0) {
             socketHeartbeatInterval = setInterval(socketHeartbeat, 30000);
         }
         subscriptions[this.endpoint] = this;
+        if ( typeof opened_callback === 'function' ) opened_callback(this.endpoint);
     };
     const _handleSocketClose = function(reconnect, code, reason) {
         delete subscriptions[this.endpoint];
@@ -248,13 +249,13 @@ LIMIT_MAKER
     const _handleSocketHeartbeat = function() {
         this.isAlive = true;
     };
-    const subscribe = function(endpoint, callback, reconnect = false) {
+    const subscribe = function(endpoint, callback, reconnect = false, opened_callback = false) {
         if ( options.verbose ) options.log("Subscribed to "+endpoint);
         const ws = new WebSocket(stream+endpoint);
         ws.reconnect = options.reconnect;
         ws.endpoint = endpoint;
         ws.isAlive = false;
-        ws.on('open', _handleSocketOpen);
+        ws.on('open', _handleSocketOpen.bind(ws, opened_callback));
         ws.on('pong', _handleSocketHeartbeat);
         ws.on('error', _handleSocketError);
         ws.on('close', _handleSocketClose.bind(ws, reconnect));
@@ -267,14 +268,14 @@ LIMIT_MAKER
         });
         return ws;
     };
-    const subscribeCombined = function(streams, callback, reconnect = false) {
+    const subscribeCombined = function(streams, callback, reconnect = false, opened_callback = false) {
         const queryParams = streams.join('/');
         const ws = new WebSocket(combineStream+queryParams);
         ws.reconnect = options.reconnect;
         ws.endpoint = stringHash(queryParams);
         ws.isAlive = false;
         if ( options.verbose ) options.log('CombinedStream: Subscribed to ['+ws.endpoint+'] '+queryParams);
-        ws.on('open', _handleSocketOpen);
+        ws.on('open', _handleSocketOpen.bind(ws, opened_callback));
         ws.on('pong', _handleSocketHeartbeat);
         ws.on('error', _handleSocketError);
         ws.on('close', _handleSocketClose.bind(ws, reconnect));
@@ -441,20 +442,29 @@ LIMIT_MAKER
         }
         return {bids:bids, asks:asks};
     }
-    const depthHandler = function(depth, firstUpdateId = 0) { // Used for websocket @depth
+    const depthHandler = function(depth) { // Used for websocket @depth
         let symbol = depth.s, obj;
-        if ( depth.u <= firstUpdateId ) return;
-        for ( obj of depth.b ) { //bids
-            depthCache[symbol].bids[obj[0]] = parseFloat(obj[1]);
-            if ( obj[1] === '0.00000000' ) {
-                delete depthCache[symbol].bids[obj[0]];
+        let context = _depthCacheContext[symbol];
+        // This now conforms 100% to the Binance docs constraints on managing a local order book
+        if ( !context.lastEventUpdateId && (depth.U > context.snapshotUpdateId + 1 || depth.u < context.snapshotUpdateId + 1 )) {
+            options.log('depthHandler :'+symbol+': Unexpected first depth event. Skipping. ' +
+                '!! IF this persists, the "'+symbol+'" cache is OUT OF SYNC !! ');
+        } else if ( context.lastEventUpdateId && depth.U !== context.lastEventUpdateId + 1 ) {
+            options.log('depthHandler :'+symbol+': !! DEPTH CACHE OUT OF SYNC !!');
+        } else {
+            for ( obj of depth.b ) { //bids
+                depthCache[symbol].bids[obj[0]] = parseFloat(obj[1]);
+                if ( obj[1] === '0.00000000' ) {
+                    delete depthCache[symbol].bids[obj[0]];
+                }
             }
-        }
-        for ( obj of depth.a ) { //asks
-            depthCache[symbol].asks[obj[0]] = parseFloat(obj[1]);
-            if ( obj[1] === '0.00000000' ) {
-                delete depthCache[symbol].asks[obj[0]];
+            for ( obj of depth.a ) { //asks
+                depthCache[symbol].asks[obj[0]] = parseFloat(obj[1]);
+                if ( obj[1] === '0.00000000' ) {
+                    delete depthCache[symbol].asks[obj[0]];
+                }
             }
+            context.lastEventUpdateId = depth.u;
         }
     };
     const getDepthCache = function(symbol) {
@@ -843,22 +853,26 @@ LIMIT_MAKER
             },
             depthCache: function depthCacheFunction(symbols, callback, limit = 500) {
                 let reconnect = function() {
-                    if ( options.reconnect ) depthCacheFunction(symbols, callback);
+                    if ( options.reconnect ) depthCacheFunction(symbols, callback, limit);
                 };
 
                 let symbolDepthInit = function(symbol) {
-                    if ( typeof info[symbol] === 'undefined' )
-                        info[symbol] = {};
+                    if ( typeof _depthCacheContext[symbol] === 'undefined' )
+                        _depthCacheContext[symbol] = {};
 
-                    info[symbol].firstUpdateId = 0;
+                    let context = _depthCacheContext[symbol];
+                    context.snapshotUpdateId = undefined;
+                    context.lastEventUpdateId = undefined;
+                    context.messageQueue = [];
+
                     depthCache[symbol] = { bids: {}, asks: {} };
-                    messageQueue[symbol] = [];
                 };
 
                 let handleDepthStreamData = function(depth) {
                     let symbol = depth.s;
-                    if (messageQueue[symbol] && !info[symbol].firstUpdateId ) {
-                        messageQueue[symbol].push(depth);
+                    let context = _depthCacheContext[symbol];
+                    if ( !context.snapshotUpdateId ) {
+                        context.messageQueue.push(depth);
                     } else {
                         depthHandler(depth);
                         if ( callback ) callback(symbol, depthCache[symbol]);
@@ -867,14 +881,16 @@ LIMIT_MAKER
 
                 let getSymbolDepthSnapshot = function(symbol, index) {
                     publicRequest(base+'v1/depth', { symbol:symbol, limit:limit }, function(error, json) {
-                        info[symbol].firstUpdateId = json.lastUpdateId;
+                        // Initialize depth cache from snapshot
                         depthCache[symbol] = depthData(json);
+                        // Prepare depth cache context
+                        let context = _depthCacheContext[symbol];
+                        context.snapshotUpdateId = json.lastUpdateId;
+                        context.messageQueue = context.messageQueue.filter(depth => depth.u > context.snapshotUpdateId);
                         // Process any pending depth messages
-                        if ( typeof messageQueue[symbol] !== 'undefined' ) {
-                            for ( let depth of messageQueue[symbol] )
-                                depthHandler(depth, json.lastUpdateId);
-                            delete messageQueue[symbol];
-                        }
+                        for ( let depth of context.messageQueue )
+                            depthHandler(depth, json.lastUpdateId);
+                        delete context.messageQueue;
                         if ( callback ) callback(symbol, depthCache[symbol]);
                     });
                 };
@@ -889,13 +905,15 @@ LIMIT_MAKER
                     let streams = symbols.map(function (symbol) {
                         return symbol.toLowerCase()+'@depth';
                     });
-                    subscription = subscribeCombined(streams, handleDepthStreamData, reconnect);
-                    symbols.forEach(getSymbolDepthSnapshot);
+                    subscription = subscribeCombined(streams, handleDepthStreamData, reconnect, function(endpoint) {
+                        symbols.forEach(getSymbolDepthSnapshot);
+                    });
                 } else {
                     let symbol = symbols;
                     symbolDepthInit(symbol);
-                    subscription = subscribe(symbol.toLowerCase()+'@depth', handleDepthStreamData, reconnect);
-                    getSymbolDepthSnapshot(symbol);
+                    subscription = subscribe(symbol.toLowerCase()+'@depth', handleDepthStreamData, reconnect, function(endpoint) {
+                        getSymbolDepthSnapshot(symbol);
+                    });
                 }
                 return subscription.endpoint;
             },
