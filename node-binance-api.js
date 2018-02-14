@@ -853,7 +853,7 @@ LIMIT_MAKER
             },
             depthCache: function depthCacheFunction(symbols, callback, limit = 500) {
                 let reconnect = function() {
-                    if ( options.reconnect ) depthCacheFunction(symbols, callback. limit);
+                    if ( options.reconnect ) depthCacheFunction(symbols, callback, limit);
                 };
 
                 let symbolDepthInit = function(symbol) {
