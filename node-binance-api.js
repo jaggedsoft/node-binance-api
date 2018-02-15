@@ -502,8 +502,12 @@ LIMIT_MAKER
         depthVolume: function(symbol) {
             return depthVolume(symbol);
         },
-        roundStep: function roundStep(number, stepSize) {
-            return ( (number / stepSize) | 0 ) * stepSize;
+		getPrecision: function(float) { // Count decimal places
+			return float.toString().split(".")[1].length || 0;
+		},
+        roundStep: function(number, stepSize) {
+            const precision = stepSize.toString().split(".")[1].length || 0;
+            return (( (number / stepSize) | 0 ) * stepSize).toFixed(precision);
         },
         percent: function(min, max, width = 100) {
             return ( min * 0.01 ) / ( max * 0.01 ) * width;
