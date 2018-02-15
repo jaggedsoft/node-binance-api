@@ -1,3 +1,4 @@
+![](https://img.shields.io/npm/dt/node-binance-api.svg?style=for-the-badge&maxAge=86400) ![Contributors](https://img.shields.io/github/contributors/jaggedsoft/node-binance-api.svg?style=for-the-badge&maxAge=86400) ![Issues](https://img.shields.io/github/issues/jaggedsoft/node-binance-api.svg?style=for-the-badge&maxAge=86400) ![Issue Closure](https://img.shields.io/issuestats/i/github/jaggedsoft/node-binance-api.svg?style=for-the-badge&maxAge=86400) 
 ## Advanced Examples
 
 #### exchangeInfo(): Pull minimum order size, quantity, etc.
@@ -81,7 +82,7 @@ binance.options({
 
 
 #### Terminate WebSocket connections
-First disable automatic reconnection of websockets
+> First disable automatic reconnection of websockets. If you want the ability to terminate a websocket connection, you must connect to it individually. If you pass an array of symbols, a combined stream will be opened and these types of sockets cannot be terminated.
 
 ```js
 binance.options({
@@ -147,6 +148,22 @@ BNB     available: 41.33761879 (0.00000000 on order)
 SNM     available: 0.76352833 (0.00000000 on order)
 ```
 </details>
+
+#### newOrderRespType example when placing orders
+```js
+// Returns additional information, such as filled orders
+// Allows you to get the actual price paid when placing market orders
+let quantity = 1;
+const flags = {type: 'MARKET', newOrderRespType: 'FULL'};
+binance.marketBuy("BNBBTC", quantity, flags, function(error, response) {
+	if ( error ) return console.error(error);
+	console.log("Market Buy response", response);
+	console.log("order id: " + response.orderId);
+	console.log("First price: "+response.fills[0].price);
+});
+```
+![image](https://user-images.githubusercontent.com/4283360/36094574-acb15ae6-0fa3-11e8-9209-e6f528e09e84.png)
+> First price: 0.00106140
   
 #### Recent Trades (historicalTrades, recentTrades, aggTrades functions)
 
