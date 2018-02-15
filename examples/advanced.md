@@ -33,7 +33,8 @@ binance.exchangeInfo(function(error, data) {
 	//fs.writeFile("minimums.json", JSON.stringify(minimums, null, 4), function(err){});
 });
 ```
-![example](https://image.ibb.co/bz5KAG/notationals.png)![image](https://user-images.githubusercontent.com/4283360/36242753-725126de-11d2-11e8-9d03-5ce0d20a62cd.png)
+![image](https://user-images.githubusercontent.com/4283360/36249988-528054dc-11f1-11e8-90b8-c6002f2639f0.png)
+
 
 #### Clamp order quantities to required amounts via minQty, minNotional, stepSize when placing orders
 ```js
@@ -84,6 +85,13 @@ binance.options({
   'APISECRET':'<secret>',
   'test':true
 });
+```
+
+#### Get last order for a symbol
+```js
+binance.allOrders("BNBBTC", (error, orders, symbol) => {
+  console.log(symbol+" last order:", orders);
+}, {limit:1});
 ```
 
 
