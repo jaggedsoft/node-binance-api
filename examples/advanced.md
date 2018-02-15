@@ -1,4 +1,4 @@
-![](https://img.shields.io/npm/dt/node-binance-api.svg?style=for-the-badge&maxAge=86400) ![Contributors](https://img.shields.io/github/contributors/jaggedsoft/node-binance-api.svg?style=for-the-badge&maxAge=86400) ![Issues](https://img.shields.io/github/issues/jaggedsoft/node-binance-api.svg?style=for-the-badge&maxAge=86400) ![Issue Closure](https://img.shields.io/issuestats/i/github/jaggedsoft/node-binance-api.svg?style=for-the-badge&maxAge=86400) 
+![Downloads](https://img.shields.io/npm/dt/node-binance-api.svg?style=for-the-badge&maxAge=86400) ![Stars](https://img.shields.io/github/stars/jaggedsoft/node-binance-api.svg?style=for-the-badge&label=Stars) ![Contributors](https://img.shields.io/github/contributors/jaggedsoft/node-binance-api.svg?style=for-the-badge&maxAge=86400) ![Issues](https://img.shields.io/github/issues/jaggedsoft/node-binance-api.svg?style=for-the-badge&maxAge=86400) ![Issue Closure](https://img.shields.io/issuestats/i/github/jaggedsoft/node-binance-api.svg?style=for-the-badge&maxAge=86400) 
 ## Advanced Examples
 
 #### exchangeInfo(): Pull minimum order size, quantity, etc.
@@ -8,26 +8,32 @@
 binance.exchangeInfo(function(error, data) {
 	let minimums = {};
 	for ( let obj of data.symbols ) {
-		let filters = {minNotional:0.001,minQty:1,maxQty:10000000,stepSize:1,minPrice:0.00000001,maxPrice:100000};
+		let filters = {status: obj.status};
 		for ( let filter of obj.filters ) {
 			if ( filter.filterType == "MIN_NOTIONAL" ) {
 				filters.minNotional = filter.minNotional;
 			} else if ( filter.filterType == "PRICE_FILTER" ) {
 				filters.minPrice = filter.minPrice;
 				filters.maxPrice = filter.maxPrice;
+				filters.tickSize = filter.tickSize;
 			} else if ( filter.filterType == "LOT_SIZE" ) {
+				filters.stepSize = filter.stepSize;
 				filters.minQty = filter.minQty;
 				filters.maxQty = filter.maxQty;
-				filters.stepSize = filter.stepSize;
 			}
 		}
+		//filters.baseAssetPrecision = obj.baseAssetPrecision;
+		//filters.quoteAssetPrecision = obj.quoteAssetPrecision;
+		filters.orderTypes = obj.orderTypes;
+		filters.icebergAllowed = obj.icebergAllowed;
 		minimums[obj.symbol] = filters;
 	}
 	console.log(minimums);
-	fs.writeFile("minimums.json", JSON.stringify(minimums, null, 4), function(err){});
+	global.filters = minimums;
+	//fs.writeFile("minimums.json", JSON.stringify(minimums, null, 4), function(err){});
 });
 ```
-![example](https://image.ibb.co/bz5KAG/notationals.png)
+![example](https://image.ibb.co/bz5KAG/notationals.png)![image](https://user-images.githubusercontent.com/4283360/36242753-725126de-11d2-11e8-9d03-5ce0d20a62cd.png)
 
 #### Clamp order quantities to required amounts via minQty, minNotional, stepSize when placing orders
 ```js
