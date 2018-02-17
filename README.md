@@ -175,8 +175,8 @@ binance.bookTickers('BNBBTC', (error, ticker) => {
 });
 ```
 
- <details>		 <details>
-  <summary>View Response</summary>		  <summary>View Response</summary>
+ <details>
+  <summary>View Response</summary>
 
 ```js 		 
 {
