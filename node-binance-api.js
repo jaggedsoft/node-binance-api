@@ -672,8 +672,10 @@ LIMIT_MAKER
                     return callback( null, priceData(JSON.parse(body)) );
             });
         },
-        bookTickers: function(callback) {
-            request(base+'v3/ticker/bookTicker', function(error, response, body) {
+        bookTickers: function(symbol, callback) {
+            const params = typeof symbol === 'string' ? '?symbol='+symbol : '';
+            if ( typeof symbol === 'function' ) callback = symbol; // backwards compatibility
+            request(base+'v3/ticker/bookTicker'+params, function(error, response, body) {
                 if ( !callback ) return;
 
                 if ( error )
@@ -682,8 +684,10 @@ LIMIT_MAKER
                 if ( response && response.statusCode !== 200 )
                     return callback( response );
 
-                if ( callback )
-                    return callback( null, bookPriceData(JSON.parse(body)) );
+                if ( callback ) {
+                    const result = symbol ? JSON.parse(body) : bookPriceData(JSON.parse(body));
+                    return callback( null, result );
+                }
             });
         },
         prevDay: function(symbol, callback) {
