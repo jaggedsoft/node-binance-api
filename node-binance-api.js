@@ -879,7 +879,7 @@ LIMIT_MAKER
                 let handleDepthStreamData = function(depth) {
                     let symbol = depth.s;
                     let context = _depthCacheContext[symbol];
-                    if ( !context.snapshotUpdateId ) {
+                    if (context.messageQueue && !context.snapshotUpdateId ) {
                         context.messageQueue.push(depth);
                     } else {
                         depthHandler(depth);
