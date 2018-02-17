@@ -175,6 +175,22 @@ binance.bookTickers('BNBBTC', (error, ticker) => {
 });
 ```
 
+ <details>		 <details>
+  <summary>View Response</summary>		  <summary>View Response</summary>
+
+```js 		 
+{
+  "symbol": "BNBBTC",
+  "bidPrice": "4.00000000",
+  "bidQty": "431.00000000",
+  "askPrice": "4.00000200",
+  "askQty": "9.00000000"
+}
+
+// from: https://github.com/binance-exchange/binance-official-api-docs/blob/master/rest-api.md#symbol-order-book-ticker
+```
+</details>
+
 #### Getting bid/ask prices for all symbols
 ```js
 binance.bookTickers((error, ticker) => {
