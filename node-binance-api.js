@@ -19,8 +19,8 @@ module.exports = function() {
     const userAgent = 'Mozilla/4.0 (compatible; Node Binance API)';
     const contentType = 'application/x-www-form-urlencoded';
     let subscriptions = {};
-    let messageQueue = {};
     let depthCache = {};
+    let _depthCacheContext = {};
     let ohlcLatest = {};
     let klineQueue = {};
     let ohlc = {};
@@ -38,6 +38,7 @@ module.exports = function() {
     let info = {
         timeOffset: 0
     };
+    let socketHeartbeatInterval;
 
     const publicRequest = function(url, data, callback, method = 'GET') {
         if ( !data ) data = {};
@@ -194,8 +195,35 @@ LIMIT_MAKER
         }, 'POST');
     };
     ////////////////////////////
+    // reworked Tuitio's heartbeat code into a shared single interval tick
+    const noop = function() {};
+    const socketHeartbeat = function() {
+        // sockets removed from `subscriptions` during a manual terminate()
+        // will no longer be at risk of having functions called on them
+        for ( let endpointId in subscriptions ) {
+            const ws = subscriptions[endpointId];
+            if ( ws.isAlive ) {
+                ws.isAlive = false;
+                if ( ws.readyState === WebSocket.OPEN) ws.ping(noop);
+            } else {
+                if ( options.verbose ) options.log("Terminating inactive/broken WebSocket: "+ws.endpoint);
+                if ( ws.readyState === WebSocket.OPEN) ws.terminate();
+            }
+        }
+    };
+    const _handleSocketOpen = function(opened_callback) {
+        this.isAlive = true;
+        if (Object.keys(subscriptions).length === 0) {
+            socketHeartbeatInterval = setInterval(socketHeartbeat, 30000);
+        }
+        subscriptions[this.endpoint] = this;
+        if ( typeof opened_callback === 'function' ) opened_callback(this.endpoint);
+    };
     const _handleSocketClose = function(reconnect, code, reason) {
         delete subscriptions[this.endpoint];
+        if (Object.keys(subscriptions).length === 0) {
+            clearInterval(socketHeartbeatInterval);
+        }
         options.log('WebSocket closed: '+this.endpoint+
             (code ? ' ('+code+')' : '')+
             (reason ? ' '+reason : '')
@@ -221,33 +249,13 @@ LIMIT_MAKER
     const _handleSocketHeartbeat = function() {
         this.isAlive = true;
     };
-    // reworked Tuitio's heartbeat code into a shared single interval tick
-    const noop = function() {};
-    const socketHeartbeatInterval = setInterval(function socketHeartbeat() {
-        // sockets removed from `subscriptions` during a manual terminate()
-        // will no longer be at risk of having functions called on them
-        for ( let endpointId in subscriptions ) {
-            const ws = subscriptions[endpointId];
-            if ( ws.isAlive ) {
-                ws.isAlive = false;
-                if ( ws.readyState === WebSocket.OPEN) ws.ping(noop);
-            } else {
-                if ( options.verbose ) options.log("Terminating inactive/broken WebSocket: "+ws.endpoint);
-                if ( ws.readyState === WebSocket.OPEN) ws.terminate();
-            }
-        }
-    }, 30000);
-    const subscribe = function(endpoint, callback, reconnect = false) {
+    const subscribe = function(endpoint, callback, reconnect = false, opened_callback = false) {
         if ( options.verbose ) options.log("Subscribed to "+endpoint);
         const ws = new WebSocket(stream+endpoint);
         ws.reconnect = options.reconnect;
         ws.endpoint = endpoint;
         ws.isAlive = false;
-        ws.on('open', function() {
-            //options.log('subscribe('+this.endpoint+')');
-            this.isAlive = true;
-            subscriptions[this.endpoint] = this;
-        });
+        ws.on('open', _handleSocketOpen.bind(ws, opened_callback));
         ws.on('pong', _handleSocketHeartbeat);
         ws.on('error', _handleSocketError);
         ws.on('close', _handleSocketClose.bind(ws, reconnect));
@@ -260,18 +268,14 @@ LIMIT_MAKER
         });
         return ws;
     };
-    const subscribeCombined = function(streams, callback, reconnect = false) {
+    const subscribeCombined = function(streams, callback, reconnect = false, opened_callback = false) {
         const queryParams = streams.join('/');
         const ws = new WebSocket(combineStream+queryParams);
         ws.reconnect = options.reconnect;
         ws.endpoint = stringHash(queryParams);
         ws.isAlive = false;
         if ( options.verbose ) options.log('CombinedStream: Subscribed to ['+ws.endpoint+'] '+queryParams);
-        ws.on('open', function() {
-            //options.log('CombinedStream: WebSocket connection open: '+this.endpoint, queryParms);
-            this.isAlive = true;
-            subscriptions[this.endpoint] = this;
-        });
+        ws.on('open', _handleSocketOpen.bind(ws, opened_callback));
         ws.on('pong', _handleSocketHeartbeat);
         ws.on('error', _handleSocketError);
         ws.on('close', _handleSocketClose.bind(ws, reconnect));
@@ -438,20 +442,29 @@ LIMIT_MAKER
         }
         return {bids:bids, asks:asks};
     }
-    const depthHandler = function(depth, firstUpdateId = 0) { // Used for websocket @depth
+    const depthHandler = function(depth) { // Used for websocket @depth
         let symbol = depth.s, obj;
-        if ( depth.u <= firstUpdateId ) return;
-        for ( obj of depth.b ) { //bids
-            depthCache[symbol].bids[obj[0]] = parseFloat(obj[1]);
-            if ( obj[1] === '0.00000000' ) {
-                delete depthCache[symbol].bids[obj[0]];
+        let context = _depthCacheContext[symbol];
+        // This now conforms 100% to the Binance docs constraints on managing a local order book
+        if ( !context.lastEventUpdateId && (depth.U > context.snapshotUpdateId + 1 || depth.u < context.snapshotUpdateId + 1 )) {
+            options.log('depthHandler :'+symbol+': Unexpected first depth event. Skipping. ' +
+                '!! IF this persists, the "'+symbol+'" cache is OUT OF SYNC !! ');
+        } else if ( context.lastEventUpdateId && depth.U !== context.lastEventUpdateId + 1 ) {
+            options.log('depthHandler :'+symbol+': !! DEPTH CACHE OUT OF SYNC !!');
+        } else {
+            for ( obj of depth.b ) { //bids
+                depthCache[symbol].bids[obj[0]] = parseFloat(obj[1]);
+                if ( obj[1] === '0.00000000' ) {
+                    delete depthCache[symbol].bids[obj[0]];
+                }
             }
-        }
-        for ( obj of depth.a ) { //asks
-            depthCache[symbol].asks[obj[0]] = parseFloat(obj[1]);
-            if ( obj[1] === '0.00000000' ) {
-                delete depthCache[symbol].asks[obj[0]];
+            for ( obj of depth.a ) { //asks
+                depthCache[symbol].asks[obj[0]] = parseFloat(obj[1]);
+                if ( obj[1] === '0.00000000' ) {
+                    delete depthCache[symbol].asks[obj[0]];
+                }
             }
+            context.lastEventUpdateId = depth.u;
         }
     };
     const getDepthCache = function(symbol) {
@@ -489,8 +502,12 @@ LIMIT_MAKER
         depthVolume: function(symbol) {
             return depthVolume(symbol);
         },
-        roundStep: function roundStep(number, stepSize) {
-            return ( (number / stepSize) | 0 ) * stepSize;
+		getPrecision: function(float) { // Count decimal places
+			return float.toString().split(".")[1].length || 0;
+		},
+        roundStep: function(number, stepSize) {
+            const precision = stepSize.toString().split(".")[1].length || 0;
+            return (( (number / stepSize) | 0 ) * stepSize).toFixed(precision);
         },
         percent: function(min, max, width = 100) {
             return ( min * 0.01 ) / ( max * 0.01 ) * width;
@@ -628,8 +645,9 @@ LIMIT_MAKER
                 }
             });
         },
-        allOrders: function(symbol, callback) {
-            signedRequest(base+'v3/allOrders', {symbol:symbol, limit:500}, function(error, data) {
+        allOrders: function(symbol, callback, options = {}) {
+            let parameters = Object.assign({symbol:symbol}, options);
+            signedRequest(base+'v3/allOrders', parameters, function(error, data) {
                 if ( callback ) return callback.call(this, error, data, symbol);
             });
         },
@@ -654,8 +672,10 @@ LIMIT_MAKER
                     return callback( null, priceData(JSON.parse(body)) );
             });
         },
-        bookTickers: function(callback) {
-            request(base+'v3/ticker/bookTicker', function(error, response, body) {
+        bookTickers: function(symbol, callback) {
+            const params = typeof symbol === 'string' ? '?symbol='+symbol : '';
+            if ( typeof symbol === 'function' ) callback = symbol; // backwards compatibility
+            request(base+'v3/ticker/bookTicker'+params, function(error, response, body) {
                 if ( !callback ) return;
 
                 if ( error )
@@ -664,8 +684,10 @@ LIMIT_MAKER
                 if ( response && response.statusCode !== 200 )
                     return callback( response );
 
-                if ( callback )
-                    return callback( null, bookPriceData(JSON.parse(body)) );
+                if ( callback ) {
+                    const result = symbol ? JSON.parse(body) : bookPriceData(JSON.parse(body));
+                    return callback( null, result );
+                }
             });
         },
         prevDay: function(symbol, callback) {
@@ -676,6 +698,9 @@ LIMIT_MAKER
         },
         exchangeInfo: function(callback) {
             publicRequest(base+'v1/exchangeInfo', {}, callback);
+        },
+        systemStatus: function(callback) {
+            publicRequest(wapi+'v3/systemStatus.html', {}, callback);
         },
         withdraw: function(asset, address, amount, addressTag = false, callback = false) {
             let params = {asset, address, amount};
@@ -836,22 +861,26 @@ LIMIT_MAKER
             },
             depthCache: function depthCacheFunction(symbols, callback, limit = 500) {
                 let reconnect = function() {
-                    if ( options.reconnect ) depthCacheFunction(symbols, callback);
+                    if ( options.reconnect ) depthCacheFunction(symbols, callback, limit);
                 };
 
                 let symbolDepthInit = function(symbol) {
-                    if ( typeof info[symbol] === 'undefined' )
-                        info[symbol] = {};
+                    if ( typeof _depthCacheContext[symbol] === 'undefined' )
+                        _depthCacheContext[symbol] = {};
 
-                    info[symbol].firstUpdateId = 0;
+                    let context = _depthCacheContext[symbol];
+                    context.snapshotUpdateId = undefined;
+                    context.lastEventUpdateId = undefined;
+                    context.messageQueue = [];
+
                     depthCache[symbol] = { bids: {}, asks: {} };
-                    messageQueue[symbol] = [];
                 };
 
                 let handleDepthStreamData = function(depth) {
                     let symbol = depth.s;
-                    if ( !info[symbol].firstUpdateId ) {
-                        messageQueue[symbol].push(depth);
+                    let context = _depthCacheContext[symbol];
+                    if ( !context.snapshotUpdateId ) {
+                        context.messageQueue.push(depth);
                     } else {
                         depthHandler(depth);
                         if ( callback ) callback(symbol, depthCache[symbol]);
@@ -860,14 +889,16 @@ LIMIT_MAKER
 
                 let getSymbolDepthSnapshot = function(symbol, index) {
                     publicRequest(base+'v1/depth', { symbol:symbol, limit:limit }, function(error, json) {
-                        info[symbol].firstUpdateId = json.lastUpdateId;
+                        // Initialize depth cache from snapshot
                         depthCache[symbol] = depthData(json);
+                        // Prepare depth cache context
+                        let context = _depthCacheContext[symbol];
+                        context.snapshotUpdateId = json.lastUpdateId;
+                        context.messageQueue = context.messageQueue.filter(depth => depth.u > context.snapshotUpdateId);
                         // Process any pending depth messages
-                        if ( typeof messageQueue[symbol] !== 'undefined' ) {
-                            for ( let depth of messageQueue[symbol] )
-                                depthHandler(depth, json.lastUpdateId);
-                            delete messageQueue[symbol];
-                        }
+                        for ( let depth of context.messageQueue )
+                            depthHandler(depth, json.lastUpdateId);
+                        delete context.messageQueue;
                         if ( callback ) callback(symbol, depthCache[symbol]);
                     });
                 };
@@ -882,13 +913,15 @@ LIMIT_MAKER
                     let streams = symbols.map(function (symbol) {
                         return symbol.toLowerCase()+'@depth';
                     });
-                    subscription = subscribeCombined(streams, handleDepthStreamData, reconnect);
-                    symbols.forEach(getSymbolDepthSnapshot);
+                    subscription = subscribeCombined(streams, handleDepthStreamData, reconnect, function(endpoint) {
+                        symbols.forEach(getSymbolDepthSnapshot);
+                    });
                 } else {
                     let symbol = symbols;
                     symbolDepthInit(symbol);
-                    subscription = subscribe(symbol.toLowerCase()+'@depth', handleDepthStreamData, reconnect);
-                    getSymbolDepthSnapshot(symbol);
+                    subscription = subscribe(symbol.toLowerCase()+'@depth', handleDepthStreamData, reconnect, function(endpoint) {
+                        getSymbolDepthSnapshot(symbol);
+                    });
                 }
                 return subscription.endpoint;
             },
