@@ -712,8 +712,8 @@ LIMIT_MAKER
             let params = asset ? {asset:asset} : {};
             signedRequest(wapi+'v3/withdrawHistory.html', params, callback);
         },
-        depositHistory: function(callback, asset = false) {
-            let params = asset ? {asset:asset} : {};
+        depositHistory: function(callback, params = {}) {
+            if ( typeof params === 'string' ) params = {asset:params}; // Support 'asset' (string) or optional parameters (object)
             signedRequest(wapi+'v3/depositHistory.html', params, callback);
         },
         depositAddress: function(asset, callback) {
@@ -879,7 +879,7 @@ LIMIT_MAKER
                 let handleDepthStreamData = function(depth) {
                     let symbol = depth.s;
                     let context = _depthCacheContext[symbol];
-                    if ( !context.snapshotUpdateId ) {
+                    if (context.messageQueue && !context.snapshotUpdateId ) {
                         context.messageQueue.push(depth);
                     } else {
                         depthHandler(depth);
