@@ -228,6 +228,7 @@ LIMIT_MAKER
             (code ? ' ('+code+')' : '')+
             (reason ? ' '+reason : '')
         );
+        if ( typeof reconnect === 'undefined' ) reconnect = false;
         if ( options.reconnect && this.reconnect && reconnect ) {
             if ( parseInt(this.endpoint.length, 10) === 60 ) options.log('Account data WebSocket reconnecting...');
             else options.log('WebSocket reconnecting: '+this.endpoint+'...');
