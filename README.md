@@ -1519,26 +1519,17 @@ binance.withdraw("ETH", "0x1d2034348c851ea29c7d03731c7968a5bcc91564", 1, false, 
 binance.withdraw("BTC", "1C5gqLRs96Xq4V2ZZAR1347yUCpHie7sa", 0.2);
 ```
 
-
 #### [Advanced Examples](https://github.com/jaggedsoft/node-binance-api/blob/master/examples/advanced.md)
+> [exchangeInfo: Pull minimum order size, quantity, etc](https://github.com/jaggedsoft/node-binance-api/blob/master/examples/advanced.md#exchangeinfo-pull-minimum-order-size-quantity-etc)\
+[Clamp order quantities to required amounts via minQty, minNotional, stepSize when placing orders](https://github.com/jaggedsoft/node-binance-api/blob/master/examples/advanced.md#clamp-order-quantities-to-required-amounts-via-minqty-minnotional-stepsize-when-placing-orders)\
+[Show API Rate limits](https://github.com/jaggedsoft/node-binance-api/blob/master/examples/advanced.md#show-api-rate-limits)\
+[Connect to all WebSockets at once](https://github.com/jaggedsoft/node-binance-api/blob/master/examples/advanced.md#connect-to-all-websockets-at-once-thanks-keith1024)\
+[Get last order for a symbol](https://github.com/jaggedsoft/node-binance-api/blob/master/examples/advanced.md#get-last-order-for-a-symbol)\
+[newOrderRespType example](https://github.com/jaggedsoft/node-binance-api/blob/master/examples/advanced.md#neworderresptype-example-when-placing-orders)\
+[Recent Trades (historicalTrades, recentTrades, aggTrades functions)](https://github.com/jaggedsoft/node-binance-api/blob/master/examples/advanced.md#recent-trades-historicaltrades-recenttrades-aggtrades-functions)\
+[Terminate WebSocket connections](https://github.com/jaggedsoft/node-binance-api/blob/master/examples/advanced.md#terminate-websocket-connections)\
+[User Data: Account Balance Updates, Trade Updates, New Orders, Filled Orders, Cancelled Orders via WebSocket](https://github.com/jaggedsoft/node-binance-api/blob/master/examples/advanced.md#user-data-account-balance-updates-trade-updates-new-orders-filled-orders-cancelled-orders-via-websocket)
 
-> [exchangeInfo: Pull minimum order size, quantity, etc](https://github.com/jaggedsoft/node-binance-api/blob/master/examples/advanced.md#exchangeinfo-pull-minimum-order-size-quantity-etc)
-
-> [Clamp order quantities to required amounts via minQty, minNotional, stepSize when placing orders](https://github.com/jaggedsoft/node-binance-api/blob/master/examples/advanced.md#clamp-order-quantities-to-required-amounts-via-minqty-minnotional-stepsize-when-placing-orders)
-
-> [Show API Rate limits](https://github.com/jaggedsoft/node-binance-api/blob/master/examples/advanced.md#show-api-rate-limits)
-
-> [Connect to all WebSockets at once](https://github.com/jaggedsoft/node-binance-api/blob/master/examples/advanced.md#connect-to-all-websockets-at-once-thanks-keith1024)
-
-> [Get last order for a symbol](https://github.com/jaggedsoft/node-binance-api/blob/master/examples/advanced.md#get-last-order-for-a-symbol)
-
-> [newOrderRespType example](https://github.com/jaggedsoft/node-binance-api/blob/master/examples/advanced.md#neworderresptype-example-when-placing-orders)
-
-> [Recent Trades (historicalTrades, recentTrades, aggTrades functions)](https://github.com/jaggedsoft/node-binance-api/blob/master/examples/advanced.md#recent-trades-historicaltrades-recenttrades-aggtrades-functions)
-
-> [Terminate WebSocket connections](https://github.com/jaggedsoft/node-binance-api/blob/master/examples/advanced.md#terminate-websocket-connections)
-
-> [User Data: Account Balance Updates, Trade Updates, New Orders, Filled Orders, Cancelled Orders via WebSocket](https://github.com/jaggedsoft/node-binance-api/blob/master/examples/advanced.md#user-data-account-balance-updates-trade-updates-new-orders-filled-orders-cancelled-orders-via-websocket)
 
 ### Troubleshooting
 Verify that your system time is correct. If you have any suggestions don't hestitate to file an issue.
