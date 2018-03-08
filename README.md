@@ -1367,7 +1367,7 @@ binance.websockets.trades(['BNBBTC', 'ETHBTC'], (trades) => {
 #### Get miniTicker via WebSocket
 ```js
 binance.websockets.miniTicker(markets => {
-	console.log(markets);
+  console.log(markets);
 });
 ```
 
