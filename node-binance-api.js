@@ -1026,7 +1026,7 @@ LIMIT_MAKER
                     if ( options.reconnect ) miniTicker(callback);
                 };
                 let subscription = subscribe('!miniTicker@arr', function(data) {
-                    let markets = [];
+                    let markets = {};
                     for ( let obj of data ) {
                         markets[obj.s] = {
                             close: obj.c,
