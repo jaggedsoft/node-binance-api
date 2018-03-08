@@ -1028,8 +1028,7 @@ LIMIT_MAKER
                 let subscription = subscribe('!miniTicker@arr', function(data) {
                     let markets = [];
                     for ( let obj of data ) {
-                        markets.push({
-                            symbol: obj.s,
+                        markets[obj.s] = {
                             close: obj.c,
                             open: obj.o,
                             high: obj.h,
@@ -1037,7 +1036,7 @@ LIMIT_MAKER
                             volume: obj.v,
                             quoteVolume: obj.q,
                             eventTime: obj.E
-                        });
+                        };
                     }
                     callback(markets);
                 }, reconnect);
