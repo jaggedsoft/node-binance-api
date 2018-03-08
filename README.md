@@ -1364,6 +1364,44 @@ binance.websockets.trades(['BNBBTC', 'ETHBTC'], (trades) => {
 });
 ```
 
+#### Get miniTicker via WebSocket
+```js
+binance.websockets.miniTicker(markets => {
+	console.log(markets);
+});
+```
+
+<details>
+ <summary>View Response</summary>
+
+```
+  ICXBNB:
+   { close: '0.34803000',
+     open: '0.34249000',
+     high: '0.35000000',
+     low: '0.31001000',
+     volume: '134681.88000000',
+     quoteVolume: '44351.78363150',
+     eventTime: 1520501508957 },
+  ELFETH:
+   { close: '0.00120820',
+     open: '0.00132816',
+     high: '0.00132926',
+     low: '0.00115888',
+     volume: '852919.00000000',
+     quoteVolume: '1045.37831133',
+     eventTime: 1520501508735 },
+  PIVXBTC:
+   { close: '0.00049510',
+     open: '0.00051000',
+     high: '0.00056290',
+     low: '0.00049200',
+     volume: '215530.27000000',
+     quoteVolume: '111.50245426',
+     eventTime: 1520501508367 }
+```
+</details>
+
 #### Get 24hr Price Change Statistics via WebSocket
 ```js
 // For all symbols:

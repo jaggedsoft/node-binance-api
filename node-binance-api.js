@@ -1022,6 +1022,27 @@ LIMIT_MAKER
                 }
                 return subscription.endpoint;
             },
+            miniTicker: function miniTicker(callback) {
+                let reconnect = function() {
+                    if ( options.reconnect ) miniTicker(callback);
+                };
+                let subscription = subscribe('!miniTicker@arr', function(data) {
+                    let markets = {};
+                    for ( let obj of data ) {
+                        markets[obj.s] = {
+                            close: obj.c,
+                            open: obj.o,
+                            high: obj.h,
+                            low: obj.l,
+                            volume: obj.v,
+                            quoteVolume: obj.q,
+                            eventTime: obj.E
+                        };
+                    }
+                    callback(markets);
+                }, reconnect);
+                return subscription.endpoint;
+            },
             prevDay: function prevDay(symbols, callback) {
                 let reconnect = function() {
                     if ( options.reconnect ) prevDay(symbols, callback);
