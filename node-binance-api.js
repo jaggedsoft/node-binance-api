@@ -441,7 +441,7 @@ LIMIT_MAKER
                 asks[obj[0]] = parseFloat(obj[1]);
             }
         }
-        return {bids:bids, asks:asks};
+        return {lastUpdateId: data.lastUpdateId, bids:bids, asks:asks};
     }
     const depthHandler = function(depth) { // Used for websocket @depth
         let symbol = depth.s, obj;
