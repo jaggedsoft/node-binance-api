@@ -123,7 +123,6 @@ module.exports = function() {
         if ( !options.APISECRET ) throw Error('signedRequest: Invalid API Secret');
         if ( !data ) data = {};
         data.timestamp = new Date().getTime() + info.timeOffset;
-        if ( typeof data.symbol !== 'undefined' ) data.symbol = data.symbol.replace('_','');
         if ( typeof data.recvWindow === 'undefined' ) data.recvWindow = options.recvWindow;
         let query = Object.keys(data).reduce(function(a,k){a.push(k+'='+encodeURIComponent(data[k]));return a},[]).join('&');
         let signature = crypto.createHmac('sha256', options.APISECRET).update(query).digest('hex'); // set the HMAC hash header
