@@ -11,6 +11,7 @@ module.exports = function() {
     const WebSocket = require('ws');
     const request = require('request');
     const crypto = require('crypto');
+    const file = require('fs');
     const stringHash = require('string-hash');
     const base = 'https://api.binance.com/api/';
     const wapi = 'https://api.binance.com/wapi/';
@@ -123,7 +124,6 @@ module.exports = function() {
         if ( !options.APISECRET ) throw Error('signedRequest: Invalid API Secret');
         if ( !data ) data = {};
         data.timestamp = new Date().getTime() + info.timeOffset;
-        if ( typeof data.symbol !== 'undefined' ) data.symbol = data.symbol.replace('_','');
         if ( typeof data.recvWindow === 'undefined' ) data.recvWindow = options.recvWindow;
         let query = Object.keys(data).reduce(function(a,k){a.push(k+'='+encodeURIComponent(data[k]));return a},[]).join('&');
         let signature = crypto.createHmac('sha256', options.APISECRET).update(query).digest('hex'); // set the HMAC hash header
@@ -579,7 +579,9 @@ LIMIT_MAKER
             options[key] = value;
         },
         options: function(opt, callback = false) {
-            options = opt;
+            if ( typeof opt === 'string' ) { // Pass json config filename
+                options = JSON.parse(file.readFileSync(opt));
+            } else options = opt;
             if ( typeof options.recvWindow === 'undefined' ) options.recvWindow = default_options.recvWindow;
             if ( typeof options.useServerTime === 'undefined' ) options.useServerTime = default_options.useServerTime;
             if ( typeof options.reconnect === 'undefined' ) options.reconnect = default_options.reconnect;
