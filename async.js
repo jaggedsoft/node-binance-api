@@ -1,3 +1,14 @@
+/*
+(async () => {
+    let api = require('./async.js');
+    api.options('options.json');
+    await api.useServerTime();
+    console.log(await api.prices());
+    console.log(await api.time());
+    //console.log(await api.openOrders());
+    //console.log(await api.balance());
+})();
+*/
 module.exports = function() {
     'use strict';
     const file = require('fs');
