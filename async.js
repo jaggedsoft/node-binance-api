@@ -9,6 +9,7 @@
     //console.log(await api.balance());
 })();
 */
+
 module.exports = function() {
     'use strict';
     const file = require('fs');
@@ -19,8 +20,8 @@ module.exports = function() {
     const userAgent = 'Mozilla/4.0 (compatible; Node Binance API)';
     const contentType = 'application/x-www-form-urlencoded';
     let options = {};
-    
-    const default_options = {
+
+    const defaults = {
         proxy: false,
         recvWindow: 5000,
         timeOffset: 0,
@@ -43,7 +44,7 @@ module.exports = function() {
         else {
             if ( typeof data.recvWindow === 'undefined' ) data.recvWindow = options.recvWindow;
             headers['X-MBX-APIKEY'] = options.APIKEY;
-            if ( !options.APIKEY ) throw Error('Invalid API Key');
+            if ( !options.APIKEY ) return new Error('Invalid API Key');
         }
         if ( flags.type === 'SIGNED' ) {
             if ( !options.APISECRET ) return new Error('Invalid API Secret');
@@ -73,9 +74,9 @@ module.exports = function() {
             if ( typeof opt === 'string' ) options = JSON.parse(file.readFileSync(opt));
             else options = opt;
             // Set default options
-            for ( let key in default_options ) {
+            for ( let key in defaults ) {
                 if ( typeof options[key] === 'undefined' ) {
-                    options[key] = default_options[key];
+                    options[key] = defaults[key];
                 }
             }
         },
@@ -91,12 +92,14 @@ module.exports = function() {
             return response.serverTime;
         },
 
+        // prices({symbol:'BTCUSDT'}) or prices()
         prices: async function prices(flags = {}) {
             let url = base+'v3/ticker/price';
             if ( typeof flags.symbol !== 'undefined' ) url+= '?symbol=' + flags.symbol;
             return await request(url);
         },
 
+        // openOrders({symbol:'BTCUSDT'}) or openOrders()
         openOrders: async function(symbol = false) {
             let parameters = symbol ? {symbol:symbol} : {};
             return await request(base+'v3/openOrders', parameters, {type: 'SIGNED'});
