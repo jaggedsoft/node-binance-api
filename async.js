@@ -1,15 +1,3 @@
-/*
-(async () => {
-    let api = require('./async.js');
-    api.options('options.json');
-    await api.useServerTime();
-    console.log(await api.prices());
-    console.log(await api.time());
-    console.log(await api.openOrders());
-})();
-*/
-
-// Experimental async REST API functions
 module.exports = function() {
     'use strict';
     const file = require('fs');
@@ -20,6 +8,7 @@ module.exports = function() {
     const userAgent = 'Mozilla/4.0 (compatible; Node Binance API)';
     const contentType = 'application/x-www-form-urlencoded';
     let options = {};
+    
     const default_options = {
         proxy: false,
         recvWindow: 5000,
@@ -32,6 +21,7 @@ module.exports = function() {
             console.log(Array.prototype.slice.call(arguments));
         }
     };
+
     async function request(url, data = {}, flags = {}) {
         let headers = {
             'User-Agent': userAgent,
@@ -65,12 +55,12 @@ module.exports = function() {
             return new Error(JSON.stringify(error.response.data)); // error.message
         }
     }
+
     return {
         options: function(opt) {
             // Accept options as string (load json from file) or object
-            if ( typeof opt === 'string' ) {
-                options = JSON.parse(file.readFileSync(opt));
-            } else options = opt;
+            if ( typeof opt === 'string' ) options = JSON.parse(file.readFileSync(opt));
+            else options = opt;
             // Set default options
             for ( let key in default_options ) {
                 if ( typeof options[key] === 'undefined' ) {
@@ -78,25 +68,31 @@ module.exports = function() {
                 }
             }
         },
+
         useServerTime: async function useServerTime() {
             const response = await request(base+'v1/time');
             options.timeOffset = response.serverTime - new Date().getTime();
             return response.serverTime;
         },
+
         time: async function time() {
-            return await request(base+'v1/time');
+            const response = await request(base+'v1/time');
+            return response.serverTime;
         },
+
         prices: async function prices(flags = {}) {
             let url = base+'v3/ticker/price';
             if ( typeof flags.symbol !== 'undefined' ) url+= '?symbol=' + flags.symbol;
             return await request(url);
         },
+
         openOrders: async function(symbol = false) {
             let parameters = symbol ? {symbol:symbol} : {};
             return await request(base+'v3/openOrders', parameters, {type: 'SIGNED'});
         },
+
         balance: async function() {
-            return await request(base+'v3/account', {}, {type: 'SIGNED'});
+            return request(base+'v3/account', {}, {type: 'SIGNED'});
         }
     }
 }();
