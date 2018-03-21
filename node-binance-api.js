@@ -11,6 +11,7 @@ module.exports = function() {
     const WebSocket = require('ws');
     const request = require('request');
     const crypto = require('crypto');
+    const file = require('fs');
     const stringHash = require('string-hash');
     const base = 'https://api.binance.com/api/';
     const wapi = 'https://api.binance.com/wapi/';
@@ -123,7 +124,6 @@ module.exports = function() {
         if ( !options.APISECRET ) throw Error('signedRequest: Invalid API Secret');
         if ( !data ) data = {};
         data.timestamp = new Date().getTime() + info.timeOffset;
-        if ( typeof data.symbol !== 'undefined' ) data.symbol = data.symbol.replace('_','');
         if ( typeof data.recvWindow === 'undefined' ) data.recvWindow = options.recvWindow;
         let query = Object.keys(data).reduce(function(a,k){a.push(k+'='+encodeURIComponent(data[k]));return a},[]).join('&');
         let signature = crypto.createHmac('sha256', options.APISECRET).update(query).digest('hex'); // set the HMAC hash header
@@ -440,7 +440,7 @@ LIMIT_MAKER
                 asks[obj[0]] = parseFloat(obj[1]);
             }
         }
-        return {bids:bids, asks:asks};
+        return {lastUpdateId: data.lastUpdateId, bids:bids, asks:asks};
     }
     const depthHandler = function(depth) { // Used for websocket @depth
         let symbol = depth.s, obj;
@@ -578,7 +578,9 @@ LIMIT_MAKER
             options[key] = value;
         },
         options: function(opt, callback = false) {
-            options = opt;
+            if ( typeof opt === 'string' ) { // Pass json config filename
+                options = JSON.parse(file.readFileSync(opt));
+            } else options = opt;
             if ( typeof options.recvWindow === 'undefined' ) options.recvWindow = default_options.recvWindow;
             if ( typeof options.useServerTime === 'undefined' ) options.useServerTime = default_options.useServerTime;
             if ( typeof options.reconnect === 'undefined' ) options.reconnect = default_options.reconnect;
@@ -712,8 +714,8 @@ LIMIT_MAKER
             let params = asset ? {asset:asset} : {};
             signedRequest(wapi+'v3/withdrawHistory.html', params, callback);
         },
-        depositHistory: function(callback, asset = false) {
-            let params = asset ? {asset:asset} : {};
+        depositHistory: function(callback, params = {}) {
+            if ( typeof params === 'string' ) params = {asset:params}; // Support 'asset' (string) or optional parameters (object)
             signedRequest(wapi+'v3/depositHistory.html', params, callback);
         },
         depositAddress: function(asset, callback) {
@@ -879,7 +881,7 @@ LIMIT_MAKER
                 let handleDepthStreamData = function(depth) {
                     let symbol = depth.s;
                     let context = _depthCacheContext[symbol];
-                    if ( !context.snapshotUpdateId ) {
+                    if (context.messageQueue && !context.snapshotUpdateId ) {
                         context.messageQueue.push(depth);
                     } else {
                         depthHandler(depth);
@@ -1019,6 +1021,27 @@ LIMIT_MAKER
                     let symbol = symbols.toLowerCase();
                     subscription = subscribe(symbol+'@kline_'+interval, callback, reconnect);
                 }
+                return subscription.endpoint;
+            },
+            miniTicker: function miniTicker(callback) {
+                let reconnect = function() {
+                    if ( options.reconnect ) miniTicker(callback);
+                };
+                let subscription = subscribe('!miniTicker@arr', function(data) {
+                    let markets = {};
+                    for ( let obj of data ) {
+                        markets[obj.s] = {
+                            close: obj.c,
+                            open: obj.o,
+                            high: obj.h,
+                            low: obj.l,
+                            volume: obj.v,
+                            quoteVolume: obj.q,
+                            eventTime: obj.E
+                        };
+                    }
+                    callback(markets);
+                }, reconnect);
                 return subscription.endpoint;
             },
             prevDay: function prevDay(symbols, callback) {
