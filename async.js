@@ -10,15 +10,13 @@
 })();
 */
 
+// consider moving all websocket functions to binance-websockets
+
 module.exports = function() {
     'use strict';
     const file = require('fs');
     const axios = require('axios');
     const crypto = require('crypto');
-    const base = 'https://api.binance.com/api/';
-    const wapi = 'https://api.binance.com/wapi/';
-    const userAgent = 'Mozilla/4.0 (compatible; Node Binance API)';
-    const contentType = 'application/x-www-form-urlencoded';
     let options = {};
 
     const defaults = {
@@ -35,6 +33,10 @@ module.exports = function() {
     };
 
     async function request(url, data = {}, flags = {}) {
+        const base = 'https://api.binance.com/api/';
+        const wapi = 'https://api.binance.com/wapi/';
+        const userAgent = 'Mozilla/4.0 (compatible; Node Binance API)';
+        const contentType = 'application/x-www-form-urlencoded';
         let headers = {
             'User-Agent': userAgent,
             'Content-type': contentType
@@ -59,9 +61,10 @@ module.exports = function() {
                 method: flags.method,
                 headers: headers,
                 timeout: options.recvWindow,
-                proxy: options.proxy
+                proxy: options.proxy,
+                baseURL: typeof flags.wapi === 'undefined' ? base : wapi,
             });
-            if ( response && response.status !== 200 ) return new Error(response.data);
+            if ( response && response.status !== 200 ) return new Error(JSON.stringify(response.data));
             return response.data;
         } catch ( error ) {
             return new Error(JSON.stringify(error.response.data)); // error.message
@@ -82,19 +85,19 @@ module.exports = function() {
         },
 
         useServerTime: async function useServerTime() {
-            const response = await request(base+'v1/time');
+            const response = await request('/v1/time');
             options.timeOffset = response.serverTime - new Date().getTime();
             return response.serverTime;
         },
 
         time: async function time() {
-            const response = await request(base+'v1/time');
+            const response = await request('/v1/time');
             return response.serverTime;
         },
 
         // prices({symbol:'BTCUSDT'}) or prices()
         prices: async function prices(flags = {}) {
-            let url = base+'v3/ticker/price';
+            let url = '/v3/ticker/price';
             if ( typeof flags.symbol !== 'undefined' ) url+= '?symbol=' + flags.symbol;
             return await request(url);
         },
@@ -102,11 +105,11 @@ module.exports = function() {
         // openOrders({symbol:'BTCUSDT'}) or openOrders()
         openOrders: async function(symbol = false) {
             let parameters = symbol ? {symbol:symbol} : {};
-            return await request(base+'v3/openOrders', parameters, {type: 'SIGNED'});
+            return await request('/v3/openOrders', parameters, {type: 'SIGNED'});
         },
 
         balance: async function() {
-            return request(base+'v3/account', {}, {type: 'SIGNED'});
+            return request('/v3/account', {}, {type: 'SIGNED'});
         }
     }
 }();
