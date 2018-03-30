@@ -813,22 +813,25 @@ LIMIT_MAKER
         websockets: {
             userData: function userData(callback, execution_callback = false, subscribed_callback = false) {
                 let reconnect = function() {
-                    if ( options.reconnect ) userData(callback, execution_callback);
+                    if ( options.reconnect ) userData(callback, execution_callback, subscribed_callback);
                 };
                 apiRequest(base+'v1/userDataStream', function(error, response) {
                     options.listenKey = response.listenKey;
-                    setInterval(function() { // keepalive
+                    setTimeout(function userDataKeepAlive() { // keepalive
                         try {
-                            apiRequest(base+'v1/userDataStream?listenKey='+options.listenKey, false, 'PUT');
+                            apiRequest(base+'v1/userDataStream?listenKey='+options.listenKey, function(err, res) {
+                                if ( err ) setTimeout(userDataKeepAlive, 60000); // retry in 1 minute
+                                else setTimeout(userDataKeepAlive, 60 * 30 * 1000); // 30 minute keepalive
+                            }, 'PUT');
                         } catch ( error ) {
-                            //error.message
+                            setTimeout(userDataKeepAlive, 60000); // retry in 1 minute
                         }
                     }, 60 * 30 * 1000); // 30 minute keepalive
                     options.balance_callback = callback;
                     options.execution_callback = execution_callback;
                     const subscription = subscribe(options.listenKey, userDataHandler, reconnect);
                     if ( subscribed_callback ) subscribed_callback(subscription.endpoint);
-                },'POST');
+                }, 'POST');
             },
             subscribe: function(url, callback, reconnect = false) {
                 return subscribe(url, callback, reconnect);
