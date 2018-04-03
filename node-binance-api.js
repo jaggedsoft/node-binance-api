@@ -447,10 +447,17 @@ LIMIT_MAKER
         let context = _depthCacheContext[symbol];
         // This now conforms 100% to the Binance docs constraints on managing a local order book
         if ( !context.lastEventUpdateId && (depth.U > context.snapshotUpdateId + 1 || depth.u < context.snapshotUpdateId + 1 )) {
-            options.log('depthHandler :'+symbol+': Unexpected first depth event. Skipping. ' +
-                '!! IF this persists, the "'+symbol+'" cache is OUT OF SYNC !! ');
+            // I think if the count exceeded 1 we could deem the cache out of sync. But we'll
+            // be lenient and give the cache up to a count of 3 before calling it out of sync.
+            if ( ++context.skipCount > 2 ) {
+                const msg = 'depthHandler: ['+symbol+'] Skip count exceeded. The depth cache is out of sync.';
+                if ( options.verbose ) options.log(msg);
+                throw new Error(msg);
+            }
         } else if ( context.lastEventUpdateId && depth.U !== context.lastEventUpdateId + 1 ) {
-            options.log('depthHandler :'+symbol+': !! DEPTH CACHE OUT OF SYNC !!');
+            const msg = 'depthHandler: ['+symbol+'] Incorrect update ID. The depth cache is out of sync.';
+            if ( options.verbose ) options.log(msg);
+            throw new Error(msg);
         } else {
             for ( obj of depth.b ) { //bids
                 depthCache[symbol].bids[obj[0]] = parseFloat(obj[1]);
@@ -464,6 +471,7 @@ LIMIT_MAKER
                     delete depthCache[symbol].asks[obj[0]];
                 }
             }
+            context.skipCount = 0;
             context.lastEventUpdateId = depth.u;
         }
     };
@@ -813,22 +821,25 @@ LIMIT_MAKER
         websockets: {
             userData: function userData(callback, execution_callback = false, subscribed_callback = false) {
                 let reconnect = function() {
-                    if ( options.reconnect ) userData(callback, execution_callback);
+                    if ( options.reconnect ) userData(callback, execution_callback, subscribed_callback);
                 };
                 apiRequest(base+'v1/userDataStream', function(error, response) {
                     options.listenKey = response.listenKey;
-                    setInterval(function() { // keepalive
+                    setTimeout(function userDataKeepAlive() { // keepalive
                         try {
-                            apiRequest(base+'v1/userDataStream?listenKey='+options.listenKey, false, 'PUT');
+                            apiRequest(base+'v1/userDataStream?listenKey='+options.listenKey, function(err, res) {
+                                if ( err ) setTimeout(userDataKeepAlive, 60000); // retry in 1 minute
+                                else setTimeout(userDataKeepAlive, 60 * 30 * 1000); // 30 minute keepalive
+                            }, 'PUT');
                         } catch ( error ) {
-                            //error.message
+                            setTimeout(userDataKeepAlive, 60000); // retry in 1 minute
                         }
                     }, 60 * 30 * 1000); // 30 minute keepalive
                     options.balance_callback = callback;
                     options.execution_callback = execution_callback;
                     const subscription = subscribe(options.listenKey, userDataHandler, reconnect);
                     if ( subscribed_callback ) subscribed_callback(subscription.endpoint);
-                },'POST');
+                }, 'POST');
             },
             subscribe: function(url, callback, reconnect = false) {
                 return subscribe(url, callback, reconnect);
@@ -873,6 +884,7 @@ LIMIT_MAKER
                     let context = _depthCacheContext[symbol];
                     context.snapshotUpdateId = undefined;
                     context.lastEventUpdateId = undefined;
+                    context.skipCount = 0;
                     context.messageQueue = [];
 
                     depthCache[symbol] = { bids: {}, asks: {} };
@@ -884,8 +896,12 @@ LIMIT_MAKER
                     if (context.messageQueue && !context.snapshotUpdateId ) {
                         context.messageQueue.push(depth);
                     } else {
-                        depthHandler(depth);
-                        if ( callback ) callback(symbol, depthCache[symbol]);
+                        try {
+                            depthHandler(depth);
+                            if ( callback ) callback(symbol, depthCache[symbol]);
+                        } catch (err) {
+                            reconnect();
+                        }
                     }
                 };
 
@@ -898,8 +914,12 @@ LIMIT_MAKER
                         context.snapshotUpdateId = json.lastUpdateId;
                         context.messageQueue = context.messageQueue.filter(depth => depth.u > context.snapshotUpdateId);
                         // Process any pending depth messages
-                        for ( let depth of context.messageQueue )
-                            depthHandler(depth, json.lastUpdateId);
+                        for ( let depth of context.messageQueue ) {
+                            // Although sync errors shouldn't ever happen here, we catch and swallow them anyway
+                            // just in case. The stream handler function above will deal with broken caches.
+                            try { depthHandler(depth); }
+                            catch (err) {}
+                        }
                         delete context.messageQueue;
                         if ( callback ) callback(symbol, depthCache[symbol]);
                     });
