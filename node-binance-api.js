@@ -67,6 +67,14 @@ module.exports = function() {
         });
     };
 
+    const isIterable = function(obj) {
+      // checks for null and undefined
+      if (obj == null) {
+        return false;
+      }
+      return typeof obj[Symbol.iterator] === 'function';
+    }
+
     const apiRequest = function(url, callback, method = 'GET') {
         if ( !options.APIKEY ) throw Error('apiRequest: Invalid API Key');
         let opt = {
@@ -389,13 +397,16 @@ LIMIT_MAKER
     };
     const klineData = function(symbol, interval, ticks) { // Used for /depth
         let last_time = 0;
-        for ( let tick of ticks ) {
-            // eslint-disable-next-line no-unused-vars
-            let [time, open, high, low, close, volume, closeTime, assetVolume, trades, buyBaseVolume, buyAssetVolume, ignored] = tick;
-            ohlc[symbol][interval][time] = {open:open, high:high, low:low, close:close, volume:volume};
-            last_time = time;
+        if(isIterable(ticks)) {
+          for ( let tick of ticks ) {
+              // eslint-disable-next-line no-unused-vars
+              let [time, open, high, low, close, volume, closeTime, assetVolume, trades, buyBaseVolume, buyAssetVolume, ignored] = tick;
+              ohlc[symbol][interval][time] = {open:open, high:high, low:low, close:close, volume:volume};
+              last_time = time;
+          }
+
+          info[symbol][interval].timestamp = last_time;
         }
-        info[symbol][interval].timestamp = last_time;
     };
     const klineConcat = function(symbol, interval) { // Combine all OHLC data with latest update
         let output = ohlc[symbol][interval];
@@ -986,7 +997,9 @@ LIMIT_MAKER
                 let handleKlineStreamData = function(kline) {
                     let symbol = kline.s;
                     if ( !info[symbol][interval].timestamp ) {
+                      if(klineQueue[symbol][interval] !== undefined && kline !== null) {
                         klineQueue[symbol][interval].push(kline);
+                      }
                     } else {
                         //options.log('@klines at ' + kline.k.t);
                         klineHandler(symbol, kline);
