@@ -1,0 +1,36 @@
+sudo: required
+dist: trusty
+language: node_js
+node_js:
+  - "9"
+
+branches:
+  only: master
+
+
+before_script:
+    - npm install
+    - travis_retry wget https://raw.githubusercontent.com/dmzoneill/node-binance-api/gh-travis/node-binance-api-test.js -O node-binance-api-test.js
+    - npm install -g coveralls
+    - npm install -g istanbul
+
+script:
+    - node node-binance-api-test.js
+    - istanbul cover node-binance-api-test.js && cat ./coverage/lcov.info | coveralls
+
+#addons:
+#  apt:
+#    packages:
+#      - doxygen
+#      - doxygen-doc
+#      - doxygen-latex
+#      - doxygen-gui
+#      - graphviz
+
+env:
+  global:
+    - GH_REPO_NAME: php-binance-api
+    - DOXYFILE: $TRAVIS_BUILD_DIR/doxy.gen
+    - GH_REPO_REF: github.com/jaggedsoft/php-binance-api.git
+    - DOXY_FILES: $TRAVIS_BUILD_DIR/php-binance-api.php
+    - DOXY_FILES_EXCLUDE: $TRAVIS_BUILD_DIR/examples/*
