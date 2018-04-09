@@ -10,10 +10,15 @@ branches:
 before_script:
     - npm install
     - travis_retry wget https://raw.githubusercontent.com/jaggedsoft/node-binance-api/gh-travis/node-binance-api-test.js -O node-binance-api-test.js
-    - npm install -g coveralls
-    - npm install -g istanbul
+    - travis_retry npm install -g coveralls
+    - travis_retry npm install -g istanbul
+    - travis_retry npm install debug
+    - travis_retry npm install mocha chai
+    - travis_retry npm install -g mocha 
 
 script:
-    - node node-binance-api-test.js
-    - istanbul cover node-binance-api-test.js && cat ./coverage/lcov.info | coveralls
+    - mocha node-binance-api-test.js
 
+after_success:
+    - istanbul cover node-binance-api-test.js 
+    - cat ./coverage/lcov.info | coveralls -v
