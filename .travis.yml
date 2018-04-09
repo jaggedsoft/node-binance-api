@@ -15,7 +15,7 @@ before_script:
     - travis_retry npm install debug
 
 script:
-    - DEBUG=* node binance-api-test.js
+    - DEBUG=* node node-binance-api-test.js
 
 after_success:
     - istanbul cover node-binance-api-test.js 
