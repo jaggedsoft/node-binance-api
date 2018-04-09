@@ -13,9 +13,11 @@ before_script:
     - travis_retry npm install -g coveralls
     - travis_retry npm install -g istanbul
     - travis_retry npm install debug
+    - travis_retry npm install mocha chai
+    - travis_retry npm install -g mocha 
 
 script:
-    - DEBUG=* node node-binance-api-test.js
+    - mocha node-binance-api-test.js
 
 after_success:
     - istanbul cover node-binance-api-test.js 
