@@ -21,7 +21,7 @@ module.exports = function() {
     const contentType = 'application/x-www-form-urlencoded';
     let subscriptions = {};
     let depthCache = {};
-    let _depthCacheContext = {};
+    let depthCacheContext = {};
     let ohlcLatest = {};
     let klineQueue = {};
     let ohlc = {};
@@ -31,14 +31,12 @@ module.exports = function() {
         reconnect: true,
         verbose: false,
         test: false,
-        log: function() {
-            console.log(Array.prototype.slice.call(arguments));
+        log: function(...args) {
+            console.log(Array.prototype.slice.call(args));
         }
     };
     let options = default_options;
-    let info = {
-        timeOffset: 0
-    };
+    let info = { timeOffset: 0 };
     let socketHeartbeatInterval;
 
     const publicRequest = function(url, data, callback, method = 'GET') {
@@ -57,11 +55,9 @@ module.exports = function() {
         request(opt, function(error, response, body) {
             if ( !callback ) return;
 
-            if ( error )
-                return callback( error, {});
+            if ( error ) return callback( error, {});
 
-            if ( response && response.statusCode !== 200 )
-                return callback( response, {} );
+            if ( response && response.statusCode !== 200 ) return callback( response, {} );
 
             return callback( null, JSON.parse(body) );
         });
@@ -69,7 +65,7 @@ module.exports = function() {
 
     const isIterable = function(obj) {
       // checks for null and undefined
-      if (obj == null) {
+      if (obj === null) {
         return false;
       }
       return typeof obj[Symbol.iterator] === 'function';
@@ -91,11 +87,9 @@ module.exports = function() {
         request(opt, function(error, response, body) {
             if ( !callback ) return;
 
-            if ( error )
-                return callback( error, {} );
+            if ( error ) return callback( error, {} );
 
-            if ( response && response.statusCode !== 200 )
-                return callback( response, {} );
+            if ( response && response.statusCode !== 200 ) return callback( response, {} );
 
             return callback( null, JSON.parse(body) );
         });
@@ -118,11 +112,9 @@ module.exports = function() {
         request(opt, function(error, response, body) {
             if ( !callback ) return;
 
-            if ( error )
-                return callback( error, {} );
+            if ( error ) return callback( error, {} );
 
-            if ( response && response.statusCode !== 200 )
-                return callback( response, {} );
+            if ( response && response.statusCode !== 200 ) return callback( response, {} );
 
             return callback( null, JSON.parse(body) );
         });
@@ -149,11 +141,9 @@ module.exports = function() {
         request(opt, function(error, response, body) {
             if ( !callback ) return;
 
-            if ( error )
-                return callback( error, {} );
+            if ( error ) return callback( error, {} );
 
-            if ( response && response.statusCode !== 200 )
-                return callback( response, {} );
+            if ( response && response.statusCode !== 200 ) return callback( response, {} );
 
             return callback( null, JSON.parse(body) );
         });
@@ -174,8 +164,8 @@ module.exports = function() {
             opt.timeInForce = 'GTC';
         }
         if ( typeof flags.timeInForce !== 'undefined' ) opt.timeInForce = flags.timeInForce;
-        if ( typeof flags.newOrderRespType !== "undefined") opt.newOrderRespType = flags.newOrderRespType;
-        if ( typeof flags.newClientOrderId !== "undefined" ) opt.newClientOrderId = flags.newClientOrderId;
+        if ( typeof flags.newOrderRespType !== 'undefined' ) opt.newOrderRespType = flags.newOrderRespType;
+        if ( typeof flags.newClientOrderId !== 'undefined' ) opt.newClientOrderId = flags.newClientOrderId;
 
         /*
 STOP_LOSS
@@ -202,24 +192,26 @@ LIMIT_MAKER
             else options.log(side+'('+symbol+','+quantity+','+price+') ',response);
         }, 'POST');
     };
-    ////////////////////////////
     // reworked Tuitio's heartbeat code into a shared single interval tick
-    const noop = function() {};
+    const noop = function() {
+        // do nothing
+    };
     const socketHeartbeat = function() {
-        // sockets removed from `subscriptions` during a manual terminate()
-        // will no longer be at risk of having functions called on them
+
+        /* sockets removed from `subscriptions` during a manual terminate()
+           will no longer be at risk of having functions called on them */
         for ( let endpointId in subscriptions ) {
             const ws = subscriptions[endpointId];
             if ( ws.isAlive ) {
                 ws.isAlive = false;
                 if ( ws.readyState === WebSocket.OPEN) ws.ping(noop);
             } else {
-                if ( options.verbose ) options.log("Terminating inactive/broken WebSocket: "+ws.endpoint);
+                if ( options.verbose ) options.log('Terminating inactive/broken WebSocket: '+ws.endpoint);
                 if ( ws.readyState === WebSocket.OPEN) ws.terminate();
             }
         }
     };
-    const _handleSocketOpen = function(opened_callback) {
+    const handleSocketOpen = function(opened_callback) {
         this.isAlive = true;
         if (Object.keys(subscriptions).length === 0) {
             socketHeartbeatInterval = setInterval(socketHeartbeat, 30000);
@@ -227,15 +219,14 @@ LIMIT_MAKER
         subscriptions[this.endpoint] = this;
         if ( typeof opened_callback === 'function' ) opened_callback(this.endpoint);
     };
-    const _handleSocketClose = function(reconnect, code, reason) {
+    const handleSocketClose = function(reconnect, code, reason) {
         delete subscriptions[this.endpoint];
         if (Object.keys(subscriptions).length === 0) {
             clearInterval(socketHeartbeatInterval);
         }
         options.log('WebSocket closed: '+this.endpoint+
             (code ? ' ('+code+')' : '')+
-            (reason ? ' '+reason : '')
-        );
+            (reason ? ' '+reason : ''));
         if ( options.reconnect && this.reconnect && reconnect ) {
             if ( parseInt(this.endpoint.length, 10) === 60 ) options.log('Account data WebSocket reconnecting...');
             else options.log('WebSocket reconnecting: '+this.endpoint+'...');
@@ -246,27 +237,27 @@ LIMIT_MAKER
             }
         }
     };
-    const _handleSocketError = function(error) {
-        // Errors ultimately result in a `close` event.
-        // see: https://github.com/websockets/ws/blob/828194044bf247af852b31c49e2800d557fedeff/lib/websocket.js#L126
+    const handleSocketError = function(error) {
+
+        /* Errors ultimately result in a `close` event.
+           see: https://github.com/websockets/ws/blob/828194044bf247af852b31c49e2800d557fedeff/lib/websocket.js#L126 */
         options.log('WebSocket error: '+this.endpoint+
             (error.code ? ' ('+error.code+')' : '')+
-            (error.message ? ' '+error.message : '')
-        );
+            (error.message ? ' '+error.message : ''));
     };
-    const _handleSocketHeartbeat = function() {
+    const handleSocketHeartbeat = function() {
         this.isAlive = true;
     };
     const subscribe = function(endpoint, callback, reconnect = false, opened_callback = false) {
-        if ( options.verbose ) options.log("Subscribed to "+endpoint);
+        if ( options.verbose ) options.log('Subscribed to '+endpoint);
         const ws = new WebSocket(stream+endpoint);
         ws.reconnect = options.reconnect;
         ws.endpoint = endpoint;
         ws.isAlive = false;
-        ws.on('open', _handleSocketOpen.bind(ws, opened_callback));
-        ws.on('pong', _handleSocketHeartbeat);
-        ws.on('error', _handleSocketError);
-        ws.on('close', _handleSocketClose.bind(ws, reconnect));
+        ws.on('open', handleSocketOpen.bind(ws, opened_callback));
+        ws.on('pong', handleSocketHeartbeat);
+        ws.on('error', handleSocketError);
+        ws.on('close', handleSocketClose.bind(ws, reconnect));
         ws.on('message', function(data) {
             try {
                 callback(JSON.parse(data));
@@ -283,10 +274,10 @@ LIMIT_MAKER
         ws.endpoint = stringHash(queryParams);
         ws.isAlive = false;
         if ( options.verbose ) options.log('CombinedStream: Subscribed to ['+ws.endpoint+'] '+queryParams);
-        ws.on('open', _handleSocketOpen.bind(ws, opened_callback));
-        ws.on('pong', _handleSocketHeartbeat);
-        ws.on('error', _handleSocketError);
-        ws.on('close', _handleSocketClose.bind(ws, reconnect));
+        ws.on('open', handleSocketOpen.bind(ws, opened_callback));
+        ws.on('pong', handleSocketHeartbeat);
+        ws.on('error', handleSocketError);
+        ws.on('close', handleSocketClose.bind(ws, reconnect));
         ws.on('message', function(data) {
             try {
                 callback(JSON.parse(data).data);
@@ -396,7 +387,7 @@ LIMIT_MAKER
     };
     const klineData = function(symbol, interval, ticks) { // Used for /depth
         let last_time = 0;
-        if(isIterable(ticks)) {
+        if (isIterable(ticks)) {
           for ( let tick of ticks ) {
               // eslint-disable-next-line no-unused-vars
               let [time, open, high, low, close, volume, closeTime, assetVolume, trades, buyBaseVolume, buyAssetVolume, ignored] = tick;
@@ -455,11 +446,12 @@ LIMIT_MAKER
     }
     const depthHandler = function(depth) { // Used for websocket @depth
         let symbol = depth.s, obj;
-        let context = _depthCacheContext[symbol];
+        let context = depthCacheContext[symbol];
         // This now conforms 100% to the Binance docs constraints on managing a local order book
         if ( !context.lastEventUpdateId && (depth.U > context.snapshotUpdateId + 1 || depth.u < context.snapshotUpdateId + 1 )) {
-            // I think if the count exceeded 1 we could deem the cache out of sync. But we'll
-            // be lenient and give the cache up to a count of 3 before calling it out of sync.
+
+            /* I think if the count exceeded 1 we could deem the cache out of sync. But we'll
+               be lenient and give the cache up to a count of 3 before calling it out of sync. */
             if ( ++context.skipCount > 2 ) {
                 const msg = 'depthHandler: ['+symbol+'] Skip count exceeded. The depth cache is out of sync.';
                 if ( options.verbose ) options.log(msg);
@@ -505,15 +497,15 @@ LIMIT_MAKER
         }
         return {bids: bidbase, asks: askbase, bidQty: bidqty, askQty: askqty};
     };
-    // Checks whether or not an array contains any duplicate elements
-    // Note(keith1024): at the moment this only works for primitive types,
-    // will require modification to work with objects
+
+    /* Checks whether or not an array contains any duplicate elements
+       Note(keith1024): at the moment this only works for primitive types,
+       will require modification to work with objects */
     const isArrayUnique = function(array) {
         return array.every(function(el, pos, arr) {
             return arr.indexOf(el) === pos;
         });
     };
-    ////////////////////////////
     return {
         depthCache: function(symbol) {
             return getDepthCache(symbol);
@@ -522,10 +514,10 @@ LIMIT_MAKER
             return depthVolume(symbol);
         },
 		getPrecision: function(float) { // Count decimal places
-			return float.toString().split(".")[1].length || 0;
+			return float.toString().split('.')[1].length || 0;
 		},
         roundStep: function(number, stepSize) {
-            const precision = stepSize.toString().split(".")[1].length || 0;
+            const precision = stepSize.toString().split('.')[1].length || 0;
             return (( (number / stepSize) | 0 ) * stepSize).toFixed(precision);
         },
         percent: function(min, max, width = 100) {
@@ -601,7 +593,7 @@ LIMIT_MAKER
 	},
 	getOptions: function() {
             return options;
-	},	
+	},
         options: function(opt, callback = false) {
             if ( typeof opt === 'string' ) { // Pass json config filename
                 options = JSON.parse(file.readFileSync(opt));
@@ -618,9 +610,7 @@ LIMIT_MAKER
                     //options.log("server time set: ", response.serverTime, info.timeOffset);
                     if ( callback ) callback();
                 });
-            } else {
-                if ( callback ) callback();
-            }
+            } else if ( callback ) callback();
         },
         buy: function(symbol, quantity, price, flags = {}, callback = false) {
             order('BUY', symbol, quantity, price, flags, callback);
@@ -633,7 +623,7 @@ LIMIT_MAKER
                 callback = flags;
                 flags = {type:'MARKET'};
             }
-            if ( typeof flags.type == 'undefined' ) flags.type = 'MARKET';
+            if ( typeof flags.type === 'undefined' ) flags.type = 'MARKET';
             order('BUY', symbol, quantity, 0, flags, callback);
         },
         marketSell: function(symbol, quantity, flags = {type:'MARKET'}, callback = false) {
@@ -641,7 +631,7 @@ LIMIT_MAKER
                 callback = flags;
                 flags = {type:'MARKET'};
             }
-            if ( typeof flags.type == 'undefined' ) flags.type = 'MARKET';
+            if ( typeof flags.type === 'undefined' ) flags.type = 'MARKET';
             order('SELL', symbol, quantity, 0, flags, callback);
         },
         cancel: function(symbol, orderid, callback = false) {
@@ -689,14 +679,11 @@ LIMIT_MAKER
             request(base+'v3/ticker/price'+params, function(error, response, body) {
                 if ( !callback ) return;
 
-                if ( error )
-                    return callback( error );
+                if ( error ) return callback( error );
 
-                if ( response && response.statusCode !== 200 )
-                    return callback( response );
+                if ( response && response.statusCode !== 200 ) return callback( response );
 
-                if ( callback )
-                    return callback( null, priceData(JSON.parse(body)) );
+                if ( callback ) return callback( null, priceData(JSON.parse(body)) );
             });
         },
         bookTickers: function(symbol, callback) {
@@ -705,11 +692,9 @@ LIMIT_MAKER
             request(base+'v3/ticker/bookTicker'+params, function(error, response, body) {
                 if ( !callback ) return;
 
-                if ( error )
-                    return callback( error );
+                if ( error ) return callback( error );
 
-                if ( response && response.statusCode !== 200 )
-                    return callback( response );
+                if ( response && response.statusCode !== 200 ) return callback( response );
 
                 if ( callback ) {
                     const result = symbol ? JSON.parse(body) : bookPriceData(JSON.parse(body));
@@ -844,7 +829,7 @@ LIMIT_MAKER
                     options.listenKey = response.listenKey;
                     setTimeout(function userDataKeepAlive() { // keepalive
                         try {
-                            apiRequest(base+'v1/userDataStream?listenKey='+options.listenKey, function(err, res) {
+                            apiRequest(base+'v1/userDataStream?listenKey='+options.listenKey, function(err) {
                                 if ( err ) setTimeout(userDataKeepAlive, 60000); // retry in 1 minute
                                 else setTimeout(userDataKeepAlive, 60 * 30 * 1000); // 30 minute keepalive
                             }, 'PUT');
@@ -876,7 +861,7 @@ LIMIT_MAKER
                     if ( options.reconnect ) depth(symbols, callback);
                 };
 
-                let subscription = undefined;
+                let subscription;
                 if ( Array.isArray(symbols) ) {
                     if ( !isArrayUnique(symbols) ) throw Error('depth: "symbols" cannot contain duplicate elements.');
                     let streams = symbols.map(function(symbol) {
@@ -895,21 +880,13 @@ LIMIT_MAKER
                 };
 
                 let symbolDepthInit = function(symbol) {
-                    if ( typeof _depthCacheContext[symbol] === 'undefined' )
-                        _depthCacheContext[symbol] = {};
-
-                    let context = _depthCacheContext[symbol];
-                    context.snapshotUpdateId = undefined;
-                    context.lastEventUpdateId = undefined;
-                    context.skipCount = 0;
-                    context.messageQueue = [];
-
+                    if ( typeof depthCacheContext[symbol] === 'undefined' ) depthCacheContext[symbol] = {};
                     depthCache[symbol] = { bids: {}, asks: {} };
                 };
 
                 let handleDepthStreamData = function(depth) {
                     let symbol = depth.s;
-                    let context = _depthCacheContext[symbol];
+                    let context = depthCacheContext[symbol];
                     if (context.messageQueue && !context.snapshotUpdateId ) {
                         context.messageQueue.push(depth);
                     } else {
@@ -922,29 +899,32 @@ LIMIT_MAKER
                     }
                 };
 
-                let getSymbolDepthSnapshot = function(symbol, index) {
+                let getSymbolDepthSnapshot = function(symbol) {
                     publicRequest(base+'v1/depth', { symbol:symbol, limit:limit }, function(error, json) {
                         // Initialize depth cache from snapshot
                         depthCache[symbol] = depthData(json);
                         // Prepare depth cache context
-                        let context = _depthCacheContext[symbol];
+                        let context = depthCacheContext[symbol];
                         context.snapshotUpdateId = json.lastUpdateId;
                         context.messageQueue = context.messageQueue.filter(depth => depth.u > context.snapshotUpdateId);
                         // Process any pending depth messages
                         for ( let depth of context.messageQueue ) {
-                            // Although sync errors shouldn't ever happen here, we catch and swallow them anyway
-                            // just in case. The stream handler function above will deal with broken caches.
-                            try { depthHandler(depth); }
-                            catch (err) {}
+
+                            /* Although sync errors shouldn't ever happen here, we catch and swallow them anyway
+                               just in case. The stream handler function above will deal with broken caches. */
+                            try {depthHandler(depth);} catch (err) {
+                                // do nothing
+                            }
                         }
                         delete context.messageQueue;
                         if ( callback ) callback(symbol, depthCache[symbol]);
                     });
                 };
-                // If an array of symbols are sent we use a combined stream connection rather.
-                // This is transparent to the developer, and results in a single socket connection.
-                // This essentially eliminates "unexpected response" errors when subscribing to a lot of data.
-                let subscription = undefined;
+
+                /* If an array of symbols are sent we use a combined stream connection rather.
+                   This is transparent to the developer, and results in a single socket connection.
+                   This essentially eliminates "unexpected response" errors when subscribing to a lot of data. */
+                let subscription;
                 if ( Array.isArray(symbols) ) {
                     if ( !isArrayUnique(symbols) ) throw Error('depthCache: "symbols" cannot contain duplicate elements.');
 
@@ -952,13 +932,13 @@ LIMIT_MAKER
                     let streams = symbols.map(function (symbol) {
                         return symbol.toLowerCase()+'@depth';
                     });
-                    subscription = subscribeCombined(streams, handleDepthStreamData, reconnect, function(endpoint) {
+                    subscription = subscribeCombined(streams, handleDepthStreamData, reconnect, function() {
                         symbols.forEach(getSymbolDepthSnapshot);
                     });
                 } else {
                     let symbol = symbols;
                     symbolDepthInit(symbol);
-                    subscription = subscribe(symbol.toLowerCase()+'@depth', handleDepthStreamData, reconnect, function(endpoint) {
+                    subscription = subscribe(symbol.toLowerCase()+'@depth', handleDepthStreamData, reconnect, function() {
                         getSymbolDepthSnapshot(symbol);
                     });
                 }
@@ -969,7 +949,7 @@ LIMIT_MAKER
                     if ( options.reconnect ) trades(symbols, callback);
                 };
 
-                let subscription = undefined;
+                let subscription;
                 if ( Array.isArray(symbols) ) {
                     if ( !isArrayUnique(symbols) ) throw Error('trades: "symbols" cannot contain duplicate elements.');
                     let streams = symbols.map(function(symbol) {
@@ -1002,7 +982,7 @@ LIMIT_MAKER
                 let handleKlineStreamData = function(kline) {
                     let symbol = kline.s;
                     if ( !info[symbol][interval].timestamp ) {
-                      if(klineQueue[symbol][interval] !== undefined && kline !== null) {
+                      if ( typeof (klineQueue[symbol][interval]) !== 'undefined' && kline !== null) {
                         klineQueue[symbol][interval].push(kline);
                       }
                     } else {
@@ -1017,20 +997,19 @@ LIMIT_MAKER
                         klineData(symbol, interval, data);
                         //options.log('/klines at ' + info[symbol][interval].timestamp);
                         if ( typeof klineQueue[symbol][interval] !== 'undefined' ) {
-                            for ( let kline of klineQueue[symbol][interval] )
-                                klineHandler(symbol, kline, info[symbol][interval].timestamp);
+                            for ( let kline of klineQueue[symbol][interval] ) klineHandler(symbol, kline, info[symbol][interval].timestamp);
                             delete klineQueue[symbol][interval];
                         }
                         if ( callback ) callback(symbol, interval, klineConcat(symbol, interval));
                     });
                 };
 
-                let subscription = undefined;
+                let subscription;
                 if ( Array.isArray(symbols) ) {
                     if ( !isArrayUnique(symbols) ) throw Error('chart: "symbols" cannot contain duplicate elements.');
                     symbols.forEach(symbolChartInit);
                     let streams = symbols.map(function(symbol) {
-                        return symbol.toLowerCase()+`@kline_`+interval;
+                        return symbol.toLowerCase()+'@kline_'+interval;
                     });
                     subscription = subscribeCombined(streams, handleKlineStreamData, reconnect);
                     symbols.forEach(getSymbolKlineSnapshot);
@@ -1046,10 +1025,11 @@ LIMIT_MAKER
                 let reconnect = function() {
                     if ( options.reconnect ) candlesticks(symbols, interval, callback);
                 };
-                // If an array of symbols are sent we use a combined stream connection rather.
-                // This is transparent to the developer, and results in a single socket connection.
-                // This essentially eliminates "unexpected response" errors when subscribing to a lot of data.
-                let subscription = undefined;
+
+                /* If an array of symbols are sent we use a combined stream connection rather.
+                   This is transparent to the developer, and results in a single socket connection.
+                   This essentially eliminates "unexpected response" errors when subscribing to a lot of data. */
+                let subscription;
                 if ( Array.isArray(symbols) ) {
                     if ( !isArrayUnique(symbols) ) throw Error('candlesticks: "symbols" cannot contain duplicate elements.');
                     let streams = symbols.map(function (symbol) {
@@ -1088,7 +1068,7 @@ LIMIT_MAKER
                     if ( options.reconnect ) prevDay(symbols, callback);
                 };
 
-                let subscription = undefined;
+                let subscription;
                 // Combine stream for array of symbols
                 if ( Array.isArray(symbols) ) {
                     if ( !isArrayUnique(symbols) ) throw Error('prevDay: "symbols" cannot contain duplicate elements.');

@@ -5,18 +5,21 @@
   "main": "node-binance-api.js",
   "dependencies": {
     "chai": "^4.1.2",
+    "codacy-coverage": "^2.1.1",
+    "codecov": "^3.0.0",
     "coveralls": "^3.0.0",
+    "eslint": "^4.19.1",
     "istanbul": "^0.4.5",
     "mocha": "^5.0.5",
+    "mocha-lcov-reporter": "^1.3.0",
     "nyc": "^11.6.0",
-    "request": "^2.83.0",
+    "request": "^2.85.0",
     "string-hash": "^1.1.3",
-    "ws": "^4.0.0",
-    "codacy-coverage": "*",
-    "mocha-lcov-reporter": "*" 
+    "ws": "^4.1.0"
   },
   "scripts": {
     "test": "mocha",
+    "lint": "eslint -c .eslintrc.js node-binance-api.js",
     "cover": "istanbul cover _mocha --report lcovonly",
     "coveralls": "cat ./coverage/lcov.info | coveralls",
     "codacy": "cat ./coverage/lcov.info | codacy-coverage -v",

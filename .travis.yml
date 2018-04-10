@@ -9,13 +9,13 @@ branches:
 
 before_script:
     - npm install
-    - travis_retry wget https://raw.githubusercontent.com/jaggedsoft/node-binance-api/gh-travis/node-binance-api-test.js -O test.js
     - travis_retry npm install
-    - travis_retry npm install coveralls istanbul mocha chai codecov codacy-coverage mocha-lcov-reporter
-    - travis_retry npm install -g coveralls istanbul mocha chai codecov codacy-coverage mocha-lcov-reporter
+    - travis_retry npm install coveralls istanbul mocha chai codecov codacy-coverage mocha-lcov-reporter eslint
+    - travis_retry npm install -g coveralls istanbul mocha chai codecov codacy-coverage mocha-lcov-reporter eslint
 
 script:
     - npm run test
+    - npm run lint  
 
 after_success:
     - npm run cover
