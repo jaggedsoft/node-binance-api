@@ -11,12 +11,16 @@
     "nyc": "^11.6.0",
     "request": "^2.83.0",
     "string-hash": "^1.1.3",
-    "ws": "^4.0.0"
+    "ws": "^4.0.0",
+    "codacy-coverage": "*",
+    "mocha-lcov-reporter": "*" 
   },
   "scripts": {
     "test": "mocha",
-    "cover": "istanbul cover _mocha",
-    "coveralls": "npm run cover -- --report lcovonly && cat ./coverage/lcov.info | coveralls"
+    "cover": "istanbul cover _mocha --report lcovonly",
+    "coveralls": "cat ./coverage/lcov.info | coveralls",
+    "codacy": "cat ./coverage/lcov.info | codacy-coverage",
+    "codecov": "codecov"
   },
   "repository": {
     "type": "git",
