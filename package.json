@@ -19,7 +19,7 @@
     "test": "mocha",
     "cover": "istanbul cover _mocha --report lcovonly",
     "coveralls": "cat ./coverage/lcov.info | coveralls",
-    "codacy": "cat ./coverage/lcov.info | codacy-coverage",
+    "codacy": "cat ./coverage/lcov.info | codacy-coverage -v",
     "codecov": "codecov"
   },
   "repository": {
