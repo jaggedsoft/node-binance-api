@@ -140,6 +140,7 @@ module.exports = {
             "warn",
             {
                 allow: [
+                    "log",
                     "warn",
                     "error"
                 ]
