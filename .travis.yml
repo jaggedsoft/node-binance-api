@@ -20,4 +20,4 @@ script:
 after_success:
     - npm run cover
     - npm run coveralls
-    - npm run codecov  
+    - codecov  
