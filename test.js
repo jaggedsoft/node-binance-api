@@ -18,9 +18,19 @@ let util = require( 'util' );
 
 let num_pairs = 299;
 let num_currencies = 156;
+let logger = {
+  log: function (msg){
+    let logLineDetails = ((new Error().stack).split('at ')[3]).trim();
+    let logLineNum = logLineDetails.split(':');
+    console.log('DEBUG', logLineNum[1] + ':' + logLineNum[2], msg);
+  }
+}
 let debug = function( x ) {
-  console.log( typeof x );
-  console.log( util.inspect( x ) );
+  if ( typeof ( process.env.node_binance_api ) === 'undefined' ) {
+    return;
+  }
+  logger.log( typeof ( x ) );
+  logger.log( util.inspect( x ) );
 }
 let stopSockets = function() {
   let endpoints = binance.websockets.subscriptions();
@@ -31,7 +41,6 @@ let stopSockets = function() {
 }
 describe( 'Construct', function() {
   it( 'Construct the binance object', function() {
-
     binance.options( {
       APIKEY: 'z5RQZ9n8JcS3HLDQmPpfLQIGGQN6TTs5pCP5CTnn4nYk2ImFcew49v4ZrmP3MGl5',
       APISECRET: 'ZqePF1DcLb6Oa0CfcLWH0Tva59y8qBBIqu789JEY27jq0RkOKXpNl9992By1PN9Z',
@@ -39,7 +48,7 @@ describe( 'Construct', function() {
       reconnect: false,
       verbose: true
     } );
-
+    debug( binance );
     assert( typeof ( binance ) === 'object', 'Binance is not an object' );
   } );
 } );
@@ -88,8 +97,9 @@ describe( 'Depth cache', function() {
 
 describe( 'Prices', function() {
   it( 'Checks the price of BNBBTC', function() {
-
     binance.prices( 'BNBBTC', ( error, ticker ) => {
+      debug( error );
+      debug( ticker );
       assert( typeof ( error ) === 'object' );
       assert( typeof ( ticker ) === 'object' );
       assert( error === null );
@@ -97,14 +107,14 @@ describe( 'Prices', function() {
       assert( Object.prototype.hasOwnProperty.call(ticker, 'BNBBTC' ) );
       assert( Object.prototype.hasOwnProperty.call(ticker, 'ETHBTC' ) === false );
     } );
-
   } );
 } );
 
 describe( 'All Prices', function() {
   it( 'Checks the prices of coin pairs', function() {
-
     binance.prices( ( error, ticker ) => {
+      debug( error );
+      debug( ticker );
       assert( typeof ( error ) === 'object' );
       assert( typeof ( ticker ) === 'object' );
       assert( error === null );
@@ -112,14 +122,14 @@ describe( 'All Prices', function() {
       assert( Object.prototype.hasOwnProperty.call(ticker, 'BNBBTC' ) );
       assert( Object.keys( ticker ).length >= num_pairs );
     } );
-
   } );
 } );
 
 describe( 'Balances', function() {
   it( 'Get the balances in the account', function() {
-
     binance.balance( ( error, balances ) => {
+      debug( error );
+      debug( balances );
       assert( error === null );
       assert( balances !== null );
       assert( balances );
@@ -128,14 +138,14 @@ describe( 'Balances', function() {
       assert( Object.prototype.hasOwnProperty.call(balances.BNB, 'onOrder' ) );
       assert( Object.keys( balances ).length >= num_currencies );
     } );
-
   } );
 } );
 
 describe( 'Book Ticker', function() {
   it( 'Get the BNB book ticker', function() {
-
     binance.bookTickers( 'BNBBTC', ( error, ticker ) => {
+      debug( error );
+      debug( ticker );
       assert( error === null );
       assert( ticker !== null );
       assert( ticker );
@@ -145,14 +155,14 @@ describe( 'Book Ticker', function() {
         assert( Object.prototype.hasOwnProperty.call(ticker, value ) );
       } );
     } );
-
   } );
 } );
 
 describe( 'Booker Tickers', function() {
   it( 'Get the tickers for all pairs', function() {
-
     binance.bookTickers( ( error, ticker ) => {
+      debug( error );
+      debug( ticker );
       assert( typeof ( error ) === 'object' );
       assert( typeof ( ticker ) === 'object' );
       assert( error === null );
@@ -166,13 +176,11 @@ describe( 'Booker Tickers', function() {
         } );
       } );
     } );
-
   } );
 } );
 
 describe( 'Market', function() {
   it( 'Get the market base symbol of a symbol pair', function() {
-
     let tocheck = ['TRXBNB', 'BNBBTC', 'BNBETH', 'BNBUSDT'];
     tocheck.forEach( function(element) {
       let mark = binance.getMarket(element);
@@ -181,14 +189,15 @@ describe( 'Market', function() {
     });
 
     assert.isNotOk( binance.getMarket('ABCDEFG' ), 'should be undefined' );
-
   } );
 } );
 
 describe( 'Depth chart BNB', function() {
   it( 'Get the depth chart information for BNBBTC', function() {
-
     binance.depth( 'BNBBTC', ( error, depth, symbol ) => {
+      debug( error );
+      debug( depth );
+      debug( symbol );
       assert( error === null );
       assert( depth !== null );
       assert( symbol !== null );
@@ -196,63 +205,52 @@ describe( 'Depth chart BNB', function() {
       assert( symbol === 'BNBBTC' );
       assert( typeof ( depth ) === 'object' );
       assert( Object.keys( depth ).length === 3 );
+
       let members = ['lastUpdateId', 'asks', 'bids'];
       members.forEach( function( value ) {
         assert( Object.prototype.hasOwnProperty.call(depth, value ) );
       } );
     } );
-
   } );
 } );
 
 describe( 'Buy', function() {
   it( 'Attempt to buy ETH', function() {
-
     let quantity = 1;
     let price = 0.069;
     assert( typeof ( binance.buy( 'ETHBTC', quantity, price ) ) === 'undefined' );
-
   } );
 } );
 
 describe( 'Sell', function() {
   it( 'Attempt to sell ETH', function() {
-
     let quantity = 1;
     let price = 0.069;
     assert( typeof ( binance.sell( 'ETHBTC', quantity, price ) ) === 'undefined' );
-
   } );
 } );
 
 describe( 'MarketiBuy', function() {
   it( 'Attempt to buy ETH at market price', function() {
-
     let quantity = 1;
     assert( typeof ( binance.marketBuy( 'BNBBTC', quantity ) ) === 'undefined' );
-
   } );
 } );
 
 describe( 'MarketSell', function() {
   it( 'Attempt to sell ETH at market price', function() {
-
     let quantity = 1;
     assert( typeof ( binance.marketSell( 'ETHBTC', quantity ) ) === 'undefined' );
-
   } );
 } );
 
 describe( 'Buy order advanced', function() {
   it( 'Attempt to buy BNB specifying order type', function() {
-
     let quantity = 1;
     let price = 0.069;
     binance.buy( 'BNBETH', quantity, price, { type: 'LIMIT' }, ( error, response ) => {
-
-      /* should be no money in the account
-         debug( error );
-         debug( response ); */
+      debug( error );
+      debug( response );
       assert( typeof ( error ) === 'object' );
       assert( typeof ( response ) === 'object' );
       assert( error !== null );
@@ -261,42 +259,34 @@ describe( 'Buy order advanced', function() {
       assert( typeof ( response.orderId ) === 'undefined' );
       assert( Object.keys( response ).length === 0 );
     } );
-
   } );
 } );
 
 describe( 'Sell Stop loess', function() {
   it( 'Attempt to create a stop loss order', function() {
-
     let type = 'STOP_LOSS';
     let quantity = 1;
     let price = 0.069;
     let stopPrice = 0.068;
     assert( typeof ( binance.sell( 'ETHBTC', quantity, price, { stopPrice: stopPrice, type: type } ) ) === 'undefined' );
-
   } );
 } );
 
 describe( 'Iceberg sell order', function() {
   it( 'Attempt to create a sell order', function() {
-
     let quantity = 1;
     let price = 0.069;
     assert( typeof ( binance.sell( 'ETHBTC', quantity, price, { icebergQty: 10 } ) ) === 'undefined' );
-
   } );
 } );
 
 describe( 'Cancel order', function() {
   it( 'Attempt to cancel an order', function() {
-
     let orderid = '7610385';
     binance.cancel( 'ETHBTC', orderid, ( error, response, symbol ) => {
-
-      /* should be no money in the account
-         debug( error );
-         debug( response );
-         debug( symbol ); */
+      debug( error );
+      debug( response );
+      debug( symbol );
       assert( typeof ( error ) === 'object' );
       assert( typeof ( response ) === 'object' );
       assert( typeof ( symbol ) === 'string' );
@@ -307,19 +297,15 @@ describe( 'Cancel order', function() {
       assert( typeof ( response.orderId ) === 'undefined' );
       assert( Object.keys( response ).length === 0 );
     } );
-
   } );
 } );
 
 describe( 'Cancel orders', function() {
   it( 'Attempt to cancel all orders given a symbol', function() {
-
     binance.cancelOrders( 'XMRBTC', ( error, response, symbol ) => {
-
-      /* should be no money in the account
-         debug( error );
-         debug( response );
-         debug( symbol ); */
+      debug( error );
+      debug( response );
+      debug( symbol );
       assert( typeof ( error ) === 'object' );
       assert( typeof ( response ) === 'object' );
       assert( typeof ( symbol ) === 'string' );
@@ -330,19 +316,15 @@ describe( 'Cancel orders', function() {
       assert( typeof ( response.orderId ) === 'undefined' );
       assert( Object.keys( response ).length === 0 );
     } );
-
   } );
 } );
 
 describe( 'Open Orders', function() {
   it( 'Attempt to show all orders to ETHBTC', function() {
-
     binance.openOrders( 'ETHBTC', ( error, openOrders, symbol ) => {
-
-      /* should be no money in the account
-         debug( error );
-         debug( openOrders );
-         debug( symbol ); */
+      debug( error );
+      debug( openOrders );
+      debug( symbol );
       assert( typeof ( error ) === 'object' );
       assert( typeof ( openOrders ) === 'object' );
       assert( typeof ( symbol ) === 'string' );
@@ -352,37 +334,29 @@ describe( 'Open Orders', function() {
       assert( symbol !== null );
       assert( Object.keys( openOrders ).length === 0 );
     } );
-
   } );
 } );
 
 describe( 'Open Orders', function() {
   it( 'Attempt to show all orders for all symbols', function() {
-
     binance.openOrders( false, ( error, openOrders ) => {
-
-      /* should be no money in the account
-         debug( error );
-         debug( openOrders ); */
+      debug( error );
+      debug( openOrders );
       assert( typeof ( error ) === 'object' );
       assert( typeof ( openOrders ) === 'object' );
       assert( error === null );
       assert( openOrders !== null );
       assert( Object.keys( openOrders ).length === 0 );
     } );
-
   } );
 } );
 
 describe( 'Order status', function() {
   it( 'Attempt to get the order status for a given order id', function() {
-
     binance.orderStatus( 'ETHBTC', '1234567890', ( error, orderStatus, symbol ) => {
-
-      /* should be no money in the account
-         debug( error );
-         debug( orderStatus );
-         debug( symbol ); */
+      debug( error );
+      debug( orderStatus );
+      debug( symbol );
       assert( typeof ( error ) === 'object' );
       assert( typeof ( orderStatus ) === 'object' );
       assert( typeof ( symbol ) === 'string' );
@@ -392,19 +366,15 @@ describe( 'Order status', function() {
       assert( error.body === '{"code":-2013,"msg":"Order does not exist."}' );
       assert( Object.keys( orderStatus ).length === 0 );
     } );
-
   } );
 } );
 
 describe( 'trades', function() {
   it( 'Attempt get all trade history for given symbol', function() {
-
     binance.trades( 'SNMBTC', ( error, trades, symbol ) => {
-
-      /* should be no money in the account
-         debug( error );
-         debug( trades );
-         debug( symbol ); */
+      debug( error );
+      debug( trades );
+      debug( symbol );
       assert( typeof ( error ) === 'object' );
       assert( typeof ( trades ) === 'object' );
       assert( typeof ( symbol ) === 'string' );
@@ -413,18 +383,15 @@ describe( 'trades', function() {
       assert( trades !== null );
       assert( Object.keys( trades ).length === 0 );
     } );
-
   } );
 } );
 
 describe( 'Orders', function() {
   it( 'Attempt get all orders for given symbol', function() {
-
     binance.allOrders( 'ETHBTC', ( error, orders, symbol ) => {
-
-      /* debug( error );
-         debug( orders );
-         debug( symbol ); */
+      debug( error );
+      debug( orders );
+      debug( symbol );
       assert( typeof ( error ) === 'object' );
       assert( typeof ( orders ) === 'object' );
       assert( typeof ( symbol ) === 'string' );
@@ -433,7 +400,6 @@ describe( 'Orders', function() {
       assert( orders !== null );
       assert( Object.keys( orders ).length === 0 );
     } );
-
   } );
 } );
 
@@ -441,9 +407,8 @@ describe( 'Prevday all symbols', function() {
   it( 'Attempt get prevday trade status for all symbols', function() {
 
     binance.prevDay( false, ( error, prevDay ) => {
-
-      /* debug( error );
-         debug( prevDay ); */
+      debug( error );
+      debug( prevDay );
       assert( typeof ( error ) === 'object' );
       assert( typeof ( prevDay ) === 'object' );
       assert( error === null );
@@ -451,27 +416,25 @@ describe( 'Prevday all symbols', function() {
       assert( Object.keys( prevDay ).length >= num_pairs );
 
       let members = [
-'symbol', 'priceChange', 'priceChangePercent', 'weightedAvgPrice', 'prevClosePrice',
+        'symbol', 'priceChange', 'priceChangePercent', 'weightedAvgPrice', 'prevClosePrice',
         'lastPrice', 'lastQty', 'bidPrice', 'bidQty', 'askQty', 'openPrice', 'highPrice', 'lowPrice',
         'volume', 'quoteVolume', 'openTime', 'closeTime', 'firstId', 'lastId', 'count'
-];
+      ];
       prevDay.forEach( function( obj ) {
         members.forEach( function( key ) {
           assert( Object.prototype.hasOwnProperty.call( obj, key ) );
         } );
       } );
     } );
-
   } );
 } );
 
 describe( 'Prevday', function() {
   it( 'Attempt get prevday trade status for given symbol', function() {
-
     binance.prevDay( 'BNBBTC', ( error, prevDay, symbol ) => {
-
-      /* debug( error );
-         debug( prevDay ); */
+      debug( error );
+      debug( prevDay );
+      debug( symbol );
       assert( typeof ( error ) === 'object' );
       assert( typeof ( prevDay ) === 'object' );
       assert( typeof ( symbol ) === 'string' );
@@ -480,26 +443,23 @@ describe( 'Prevday', function() {
       assert( prevDay !== null );
 
       let members = [
-'symbol', 'priceChange', 'priceChangePercent', 'weightedAvgPrice', 'prevClosePrice',
+        'symbol', 'priceChange', 'priceChangePercent', 'weightedAvgPrice', 'prevClosePrice',
         'lastPrice', 'lastQty', 'bidPrice', 'bidQty', 'askQty', 'openPrice', 'highPrice', 'lowPrice',
         'volume', 'quoteVolume', 'openTime', 'closeTime', 'firstId', 'lastId', 'count'
-];
+      ];
       members.forEach( function( key ) {
         assert( Object.prototype.hasOwnProperty.call( prevDay, key ) );
       } );
     } );
-
   } );
 } );
 
 describe( 'Candle sticks', function() {
   it( 'Attempt get candlesticks for a given symbol', function() {
-
     binance.candlesticks( 'BNBBTC', '5m', ( error, ticks, symbol ) => {
-
-      /* debug( error );
-         debug( ticks );
-         debug( symbol ); */
+      debug( error );
+      debug( ticks );
+      debug( symbol );
       assert( typeof ( error ) === 'object' );
       assert( typeof ( ticks ) === 'object' );
       assert( typeof ( symbol ) === 'string' );
@@ -514,12 +474,10 @@ describe( 'Candle sticks', function() {
       limit: 500,
       endTime: 1514764800000
     } );
-
   } );
 } );
 
 describe( 'Object keys', function() {
-
   describe( 'First', function() {
     it( 'Gets the first key', function() {
       let first = binance.first( { first: '1', second: '2', third: '3' } );assert.strictEqual( 'first', first, 'should be first' );
@@ -550,7 +508,6 @@ describe( 'Object keys', function() {
       debug( 'todo' );
     });
   });
-
 });
 
 describe( 'Set/Get options', function() {
@@ -587,7 +544,6 @@ describe( 'Reverse', function() {
 describe( 'Array', function() {
   it( 'Convert object to an array', function() {
     let actual = binance.array( { 'a': 1, 'b': 2,'c': 3 } );
-    //debug( actual );
     let expected = [[NaN, 1], [NaN, 2], [NaN, 3]];
     assert.isArray( actual, 'should be an array' );
     assert( actual.length === 3, 'should be of lenght 3' );
@@ -597,7 +553,6 @@ describe( 'Array', function() {
 
 describe( 'sortBids', function() {
   it( 'Sorts symbols bids and reurns an object', function() {
-
     /* let actual = binance.sortBids( 'BNBBTC' );
        debug( actual ); */
     debug( 'todo' );
@@ -606,7 +561,6 @@ describe( 'sortBids', function() {
 
 describe( 'sortAsks', function() {
   it( 'Sorts symbols asks and reurns an object', function() {
-
     /* let actual = binance.sortBids( 'BNBBTC' );
        debug( actual ); */
     debug( 'todo' );
@@ -627,9 +581,6 @@ describe( 'Exchange Info', function() {
   });
 
   it( 'Gets the exchange info as an object', function() {
-
-    /* debug( async_error );
-       debug( async_data ); */
     assert( typeof ( async_error ) === 'object', 'error should be object' );
     assert( async_error === null, 'Error should be null' );
 
@@ -709,9 +660,16 @@ describe( 'Account status', function() {
 });
 
 describe( 'Account', function() {
-  it( 'Todo', function() {
-    debug( 'todo' );
-  });
+  it( 'Attempt to get account information', function() {
+    binance.account( ( error, data ) => {
+      debug( error );
+      debug( data );
+      assert( typeof ( error ) === 'object' );
+      assert( typeof ( data ) === 'object' );
+      assert( error === null );
+      assert( data !== null );
+    } );
+  } );
 });
 
 describe( 'Use Server Time', function() {
@@ -755,4 +713,3 @@ describe( 'Ohlc', function() {
     debug( 'todo' );
   });
 });
-
