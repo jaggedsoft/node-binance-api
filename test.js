@@ -47,7 +47,12 @@ let stopSockets = function() {
   }
 }
 debug( 'Begin' );
+
+/*global describe*/
+/*eslint no-undef: "error"*/
 describe( 'Construct', function() {
+  /*global it*/
+  /*eslint no-undef: "error"*/
   it( 'Construct the binance object', function( done ) {
     binance.options( {
       APIKEY: 'z5RQZ9n8JcS3HLDQmPpfLQIGGQN6TTs5pCP5CTnn4nYk2ImFcew49v4ZrmP3MGl5',
@@ -61,48 +66,6 @@ describe( 'Construct', function() {
     done();
   } ).timeout( TIMEOUT );
 } );
-
-/*global describe*/
-/*eslint no-undef: "error"*/
-describe( 'Depth cache', function() {
-  /*global it*/
-  /*eslint no-undef: "error"*/
-  it( 'Attempt to get depthcache of a symbol', function( done ) {
-
-    //binance.websockets.depthCache(['BNBBTC'], (symbol, depth) => {
-      //debug( depth );
-      stopSockets();
-    //});
-
-    //debug( 'todo' );
-
-    /*
-    var dc_true = binance.depthCache( "BNBBTC" );
-    var dc_false = binance.depthCache( "ABCDEF" );
-
-    //debug( dc_true );
-
-    // true cases
-    assert( typeof( dc_true ) == "object" , "Should be an object" );
-    assert.notDeepEqual( dc_true , {bids: {}, asks: {}}, "should not be blank object with asks and bids keys only" );
-    assert( object.Keys( dc_true ).length == 2 );
-    assert( dc_true.hasOwnProperty( "asks" ), "missing asks property" );
-    assert( dc_true.hasOwnProperty( "bids" ), "missing bids property" );
-    assert( Object.keys( dc_true.asks ).length != 0, "should not be 0" );
-    assert( Object.keys( dc_true.bids ).length != 0, "should not be 0" );
-
-    // false cases
-    assert( typeof( dc_false ) == "object" , "Should be an object" );
-    assert.deepEqual( dc_false, {bids: {}, asks: {}}, "should be blank object with asks and bids keys" );
-    assert( object.Keys( dc_false ).length == 2 );
-    assert( dc_false.hasOwnProperty( "asks" ), "missing asks property" );
-    assert( dc_false.hasOwnProperty( "bids" ), "missing bids property" );
-    assert( Object.keys( dc_false.asks ).length = 0, "should be 0" );
-    assert( Object.keys( dc_false.bids ).length = 0, "should be 0" );
-    */
-    done();
-  }).timeout( TIMEOUT );
-});
 
 describe( 'Prices', function() {
   it( 'Checks the price of BNBBTC', function( done ) {
@@ -1089,6 +1052,61 @@ describe( 'Websockets depth', function() {
 
     debug(bids);
     debug(asks);
+
+    // true cases
+    assert( typeof( dc_true ) == "object" , "Should be an object" );
+    assert.notDeepEqual( dc_true , {bids: {}, asks: {}}, "should not be blank object with asks and bids keys only" );
+    assert( object.Keys( dc_true ).length == 2 );
+    assert( dc_true.hasOwnProperty( "asks" ), "missing asks property" );
+    assert( dc_true.hasOwnProperty( "bids" ), "missing bids property" );
+    assert( Object.keys( dc_true.asks ).length != 0, "should not be 0" );
+    assert( Object.keys( dc_true.bids ).length != 0, "should not be 0" );
+
+    // false cases
+    assert( typeof( dc_false ) == "object" , "Should be an object" );
+    assert.deepEqual( dc_false, {bids: {}, asks: {}}, "should be blank object with asks and bids keys" );
+    assert( object.Keys( dc_false ).length == 2 );
+    assert( dc_false.hasOwnProperty( "asks" ), "missing asks property" );
+    assert( dc_false.hasOwnProperty( "bids" ), "missing bids property" );
+    assert( Object.keys( dc_false.asks ).length = 0, "should be 0" );
+    assert( Object.keys( dc_false.bids ).length = 0, "should be 0" );
+  });
+});
+*/
+
+describe( 'Websockets depth', function() {
+  let depth;
+  /*global beforeEach*/
+  beforeEach(function (done) {
+    this.timeout( TIMEOUT );
+    binance.websockets.depth(['BNBBTC'], e_depth => {
+      depth = e_depth;
+      stopSockets();
+      done();
+    });
+  });
+
+  it( 'Calls depth websocket', function() {
+    assert( typeof ( depth ) === 'object', WARN_SHOULD_BE_OBJ );
+    assert( depth !== null, WARN_SHOULD_BE_NOT_NULL );
+  });
+});
+
+/*
+describe( 'Websockets userdata', function() {
+  let userdata;
+  beforeEach(function (done) {
+    this.timeout( TIMEOUT );
+    binance.websockets.userData( data => {
+      userdata = data;
+      stopSockets();
+      done();
+    });
+  });
+
+  it( 'Calls userdata websocket', function() {
+    assert( typeof ( userdata ) === 'object', WARN_SHOULD_BE_OBJ );
+    assert( userdata !== null, WARN_SHOULD_BE_NOT_NULL );
   });
 });
 */
