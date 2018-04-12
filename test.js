@@ -1098,7 +1098,7 @@ describe( 'Websockets trades', function() {
   /*global beforeEach*/
   beforeEach(function (done) {
     this.timeout( TIMEOUT );
-    binance.websockets.trades(['BNBBTC', 'ETHBTC'], (e_trades) => {
+    binance.websockets.trades(['BNBBTC', 'ETHBTC'], e_trades => {
       trades = e_trades;
       stopSockets();
       done();
