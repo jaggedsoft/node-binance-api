@@ -17,7 +17,6 @@ const WARN_SHOULD_BE_UNDEFINED = 'should be undefined';
 const WARN_SHOULD_BE_TYPE = 'should be a string ';
 
 let chai = require( 'chai' );
-let counter = require( 'chai-counter' );
 let assert = chai.assert;
 
 let path = require( 'path' );
@@ -70,7 +69,7 @@ describe( 'Depth cache', function() {
 
     //binance.websockets.depthCache(['BNBBTC'], (symbol, depth) => {
       //debug( depth );
-    //  stopSockets();
+      stopSockets();
     //});
 
     //debug( 'todo' );
@@ -786,7 +785,7 @@ describe( 'Use Server Time', function() {
   });
 });
 
-describe( 'Time', function() {  
+describe( 'Time', function() {
   it( 'Attempt to get server time', function() {
     binance.time( ( error, data ) => {
       //debug( error );
