@@ -41,6 +41,7 @@ let debug = function( x ) {
 }
 let stopSockets = function() {
   let endpoints = binance.websockets.subscriptions();
+  debug( endpoints );
   for ( let endpoint in endpoints ) {
     console.log('Terminated ws endpoint' + endpoint);
     binance.websockets.terminate(endpoint);
@@ -938,6 +939,7 @@ describe( 'Websockets miniticker', function() {
 describe( 'Websockets prevDay', function() {
   it( 'Calls prevDay websocketi for symbol', function( done ) {
     binance.websockets.prevDay( false, (error, response) => {
+      stopSockets();
       assert( typeof ( error ) === 'object', WARN_SHOULD_BE_OBJ );
       assert( error === null, WARN_SHOULD_BE_NULL );
       assert( typeof ( response ) === 'object', WARN_SHOULD_BE_OBJ );
@@ -955,13 +957,13 @@ describe( 'Websockets prevDay', function() {
 	});
       });
 
-      stopSockets();
       done();
     });
   }).timeout( TIMEOUT );
 
   it( 'Calls prevDay websocket for all symbols', function( done ) {
     binance.websockets.prevDay( false, (error, response) => {
+      stopSockets();
       assert( typeof ( error ) === 'object', WARN_SHOULD_BE_OBJ );
       assert( error === null, WARN_SHOULD_BE_NULL );
       assert( typeof ( response ) === 'object', WARN_SHOULD_BE_OBJ );
@@ -977,7 +979,6 @@ describe( 'Websockets prevDay', function() {
           assert( Object.prototype.hasOwnProperty.call( response, key ), WARN_SHOULD_HAVE_KEY + key );
       });
 
-      stopSockets();
       done();
     });
   }).timeout( TIMEOUT );
