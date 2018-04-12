@@ -117,7 +117,7 @@ module.exports = {
         "max-statements": "off",
         "max-statements-per-line": "off",
         "multiline-comment-style": [
-            "error",
+            "off",
             "bare-block"
         ],
         "new-cap": "error",

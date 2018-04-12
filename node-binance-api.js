@@ -588,12 +588,15 @@ LIMIT_MAKER
         setOption: function(key, value) {
             options[key] = value;
         },
-	getOption: function(key) {
-            return options[key];
-	},
-	getOptions: function() {
-            return options;
-	},
+        getOption: function(key) {
+                return options[key];
+        },
+        getInfo: function() {
+                return info;
+        },
+        getOptions: function() {
+                return options;
+        },
         options: function(opt, callback = false) {
             if ( typeof opt === 'string' ) { // Pass json config filename
                 options = JSON.parse(file.readFileSync(opt));

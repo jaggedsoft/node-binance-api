@@ -39,5 +39,8 @@
   "bugs": {
     "url": "https://github.com/jaggedsoft/node-binance-api/issues"
   },
-  "homepage": "https://github.com/jaggedsoft/node-binance-api#readme"
+  "homepage": "https://github.com/jaggedsoft/node-binance-api#readme",
+  "devDependencies": {
+    "chai-counter": "^1.0.0"
+  }
 }
