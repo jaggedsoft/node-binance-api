@@ -883,20 +883,12 @@ describe( 'Historical Trades', function() {
   } ).timeout( TIMEOUT );
 });
 
-describe( 'Highstock', function() {
-  it( 'Todo', function( done ) {
-    //debug( 'todo' );
+describe( 'getInfo', function() {
+  it( 'Gets the info array form the binance object', function( done ) {
+    assert( typeof ( binance.getInfo() ) === 'object', 'Should be of type array' )
     done();
   }).timeout( TIMEOUT );
 });
-
-describe( 'Ohlc', function() {
-  it( 'Todo', function( done ) {
-    //debug( 'todo' );
-    done();
-  }).timeout( TIMEOUT );
-});
-
 
 describe( 'Websockets miniticker', function() {
   let markets;
@@ -1034,6 +1026,34 @@ describe( 'Websockets trades', function() {
   });
 });
 
+describe( 'depthCache', function() {
+  it( 'depthCache', function( done ) {
+    binance.depthCache( 'BNBBTC' );
+    done();
+  }).timeout( TIMEOUT );
+});
+
+describe( 'depthVolume', function() {
+  it( 'depthVolume', function( done ) {
+    binance.depthVolume( 'BNBBTC' );
+    done();
+  }).timeout( TIMEOUT );
+});
+
+describe( 'getPrecision', function() {
+  it( 'getPrecision', function( done ) {
+    binance.getPrecision( 1.9999999 );
+    done();
+  }).timeout( TIMEOUT );
+});
+
+describe( 'roundStep', function() {
+  it( 'roundStep', function( done ) {
+    binance.roundStep( 10, 0.8 );
+    done();
+  }).timeout( TIMEOUT );
+});
+
 /*
 describe( 'Websockets userdata', function() {
   let userdata;
@@ -1101,8 +1121,8 @@ describe( 'Websockets depth', function() {
 });
 */
 
+/*
 describe( 'Websockets prevDay', function() {
-  /*
   let response;
 
   beforeEach(function (done) {
@@ -1157,5 +1177,5 @@ describe( 'Websockets prevDay', function() {
       assert( Object.prototype.hasOwnProperty.call( response, key ), WARN_SHOULD_HAVE_KEY + key );
     });
   });
-  */
 });
+*/
