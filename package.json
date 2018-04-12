@@ -20,7 +20,7 @@
   "scripts": {
     "test": "mocha",
     "test-debug": "mocha --inspect-brk",
-    "lint": "eslint -c .eslintrc.js node-binance-api.js",
+    "lint": "eslint -c .eslintrc.js node-binance-api.js test.js",
     "cover": "istanbul cover _mocha --report lcovonly",
     "coveralls": "cat ./coverage/lcov.info | coveralls",
     "codacy": "cat ./coverage/lcov.info | codacy-coverage -v",

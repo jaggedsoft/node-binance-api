@@ -15,6 +15,7 @@ const WARN_SHOULD_HAVE_KEY = 'should have key ';
 const WARN_SHOULD_NOT_HAVE_KEY = 'should not have key ';
 const WARN_SHOULD_BE_UNDEFINED = 'should be undefined';
 const WARN_SHOULD_BE_TYPE = 'should be a string ';
+const TIMEOUT = 5000;
 
 let chai = require( 'chai' );
 let assert = chai.assert;
@@ -46,8 +47,9 @@ let stopSockets = function() {
     binance.websockets.terminate(endpoint);
   }
 }
+debug( 'Begin' );
 describe( 'Construct', function() {
-  it( 'Construct the binance object', function() {
+  it( 'Construct the binance object', function( done ) {
     binance.options( {
       APIKEY: 'z5RQZ9n8JcS3HLDQmPpfLQIGGQN6TTs5pCP5CTnn4nYk2ImFcew49v4ZrmP3MGl5',
       APISECRET: 'ZqePF1DcLb6Oa0CfcLWH0Tva59y8qBBIqu789JEY27jq0RkOKXpNl9992By1PN9Z',
@@ -57,7 +59,8 @@ describe( 'Construct', function() {
     } );
     //debug( binance );
     assert( typeof ( binance ) === 'object', 'Binance is not an object' );
-  } );
+    done();
+  } ).timeout( TIMEOUT );
 } );
 
 /*global describe*/
@@ -65,7 +68,7 @@ describe( 'Construct', function() {
 describe( 'Depth cache', function() {
   /*global it*/
   /*eslint no-undef: "error"*/
-  it( 'Attempt to get depthcache of a symbol', function() {
+  it( 'Attempt to get depthcache of a symbol', function( done ) {
 
     //binance.websockets.depthCache(['BNBBTC'], (symbol, depth) => {
       //debug( depth );
@@ -98,12 +101,12 @@ describe( 'Depth cache', function() {
     assert( Object.keys( dc_false.asks ).length = 0, "should be 0" );
     assert( Object.keys( dc_false.bids ).length = 0, "should be 0" );
     */
-
-  });
+    done();
+  }).timeout( TIMEOUT );
 });
 
 describe( 'Prices', function() {
-  it( 'Checks the price of BNBBTC', function() {
+  it( 'Checks the price of BNBBTC', function( done ) {
     binance.prices( 'BNBBTC', ( error, ticker ) => {
       //debug( error );
       //debug( ticker );
@@ -113,12 +116,13 @@ describe( 'Prices', function() {
       assert( ticker !== null, WARN_SHOULD_BE_NOT_NULL );
       assert( Object.prototype.hasOwnProperty.call(ticker, 'BNBBTC' ), WARN_SHOULD_HAVE_KEY + 'BNBBTC' );
       assert( Object.prototype.hasOwnProperty.call(ticker, 'ETHBTC' ) === false, WARN_SHOULD_NOT_HAVE_KEY + 'ETHBTC' );
-    } );
-  } );
-} );
+      done();
+    });
+  }).timeout( TIMEOUT );
+});
 
 describe( 'All Prices', function() {
-  it( 'Checks the prices of coin pairs', function() {
+  it( 'Checks the prices of coin pairs', function( done ) {
     binance.prices( ( error, ticker ) => {
       //debug( error );
       //debug( ticker );
@@ -128,12 +132,13 @@ describe( 'All Prices', function() {
       assert( ticker !== null, WARN_SHOULD_BE_NOT_NULL );
       assert( Object.prototype.hasOwnProperty.call(ticker, 'BNBBTC' ), WARN_SHOULD_HAVE_KEY + 'BNBBTC' );
       assert( Object.keys( ticker ).length >= num_pairs, 'should at least ' + num_pairs + 'currency pairs?' );
-    } );
-  } );
-} );
+      done();
+    });
+  }).timeout( TIMEOUT );
+});
 
 describe( 'Balances', function() {
-  it( 'Get the balances in the account', function() {
+  it( 'Get the balances in the account', function( done ) {
     binance.balance( ( error, balances ) => {
       //debug( error );
       //debug( balances );
@@ -144,12 +149,13 @@ describe( 'Balances', function() {
       assert( Object.prototype.hasOwnProperty.call(balances.BNB, 'available' ), WARN_SHOULD_HAVE_KEY + 'available' );
       assert( Object.prototype.hasOwnProperty.call(balances.BNB, 'onOrder' ), WARN_SHOULD_HAVE_KEY + 'onOrder' );
       assert( Object.keys( balances ).length >= num_currencies, 'should at least ' + num_currencies + 'currencies?' );
-    } );
-  } );
-} );
+      done();
+    });
+  }).timeout( TIMEOUT );
+});
 
 describe( 'Book Ticker', function() {
-  it( 'Get the BNB book ticker', function() {
+  it( 'Get the BNB book ticker', function( done ) {
     binance.bookTickers( 'BNBBTC', ( error, ticker ) => {
       //debug( error );
       //debug( ticker );
@@ -160,13 +166,14 @@ describe( 'Book Ticker', function() {
       let members = ['symbol', 'bidPrice', 'bidQty', 'askPrice', 'askQty'];
       members.forEach( function( value ) {
         assert( Object.prototype.hasOwnProperty.call(ticker, value ), WARN_SHOULD_HAVE_KEY + value );
-      } );
-    } );
-  } );
-} );
+      });
+      done();
+    });
+  }).timeout( TIMEOUT );
+});
 
 describe( 'Booker Tickers', function() {
-  it( 'Get the tickers for all pairs', function() {
+  it( 'Get the tickers for all pairs', function( done ) {
     binance.bookTickers( ( error, ticker ) => {
       //debug( error );
       //debug( ticker );
@@ -180,14 +187,15 @@ describe( 'Booker Tickers', function() {
       ticker.forEach( function( obj) {
         members.forEach( function( member ) {
           assert( Object.prototype.hasOwnProperty.call( obj, member ), WARN_SHOULD_HAVE_KEY + member );
-        } );
-      } );
-    } );
-  } );
-} );
+        });
+      });
+      done();
+    });
+  }).timeout( TIMEOUT );
+});
 
 describe( 'Market', function() {
-  it( 'Get the market base symbol of a symbol pair', function() {
+  it( 'Get the market base symbol of a symbol pair', function( done ) {
     let tocheck = ['TRXBNB', 'BNBBTC', 'BNBETH', 'BNBUSDT'];
     tocheck.forEach( function(element) {
       let mark = binance.getMarket(element);
@@ -196,11 +204,12 @@ describe( 'Market', function() {
     });
 
     assert.isNotOk( binance.getMarket('ABCDEFG' ), WARN_SHOULD_BE_UNDEFINED );
-  } );
-} );
+    done();
+  }).timeout( TIMEOUT );
+});
 
 describe( 'Depth chart BNB', function() {
-  it( 'Get the depth chart information for BNBBTC', function() {
+  it( 'Get the depth chart information for BNBBTC', function( done ) {
     binance.depth( 'BNBBTC', ( error, depth, symbol ) => {
       //debug( error );
       //debug( depth );
@@ -216,43 +225,48 @@ describe( 'Depth chart BNB', function() {
       let members = ['lastUpdateId', 'asks', 'bids'];
       members.forEach( function( value ) {
         assert( Object.prototype.hasOwnProperty.call( depth, value ), WARN_SHOULD_HAVE_KEY + value );
-      } );
-    } );
-  } );
-} );
+      });
+      done();
+    });
+  }).timeout( TIMEOUT );
+});
 
 describe( 'Buy', function() {
-  it( 'Attempt to buy ETH', function() {
+  it( 'Attempt to buy ETH', function( done ) {
     let quantity = 1;
     let price = 0.069;
     assert( typeof ( binance.buy( 'ETHBTC', quantity, price ) ) === 'undefined', WARN_SHOULD_BE_UNDEFINED);
-  } );
-} );
+    done();
+  }).timeout( TIMEOUT );
+});
 
 describe( 'Sell', function() {
-  it( 'Attempt to sell ETH', function() {
+  it( 'Attempt to sell ETH', function( done ) {
     let quantity = 1;
     let price = 0.069;
     assert( typeof ( binance.sell( 'ETHBTC', quantity, price ) ) === 'undefined', WARN_SHOULD_BE_UNDEFINED);
-  } );
-} );
+    done();
+  }).timeout( TIMEOUT );
+});
 
 describe( 'MarketiBuy', function() {
-  it( 'Attempt to buy ETH at market price', function() {
+  it( 'Attempt to buy ETH at market price', function( done ) {
     let quantity = 1;
     assert( typeof ( binance.marketBuy( 'BNBBTC', quantity ) ) === 'undefined', WARN_SHOULD_BE_UNDEFINED);
-  } );
-} );
+    done();
+  }).timeout( TIMEOUT );
+});
 
 describe( 'MarketSell', function() {
-  it( 'Attempt to sell ETH at market price', function() {
+  it( 'Attempt to sell ETH at market price', function( done ) {
     let quantity = 1;
     assert( typeof ( binance.marketSell( 'ETHBTC', quantity ) ) === 'undefined', WARN_SHOULD_BE_UNDEFINED);
-  } );
-} );
+    done();
+  }).timeout( TIMEOUT );
+});
 
 describe( 'Buy order advanced', function() {
-  it( 'Attempt to buy BNB specifying order type', function() {
+  it( 'Attempt to buy BNB specifying order type', function( done ) {
     let quantity = 1;
     let price = 0.069;
     binance.buy( 'BNBETH', quantity, price, { type: 'LIMIT' }, ( error, response ) => {
@@ -265,30 +279,33 @@ describe( 'Buy order advanced', function() {
       assert( error.body === '{"code":-2010,"msg":"Account has insufficient balance for requested action."}' );
       assert( typeof ( response.orderId ) === 'undefined', WARN_SHOULD_BE_UNDEFINED);
       assert( Object.keys( response ).length === 0 );
-    } );
-  } );
-} );
+      done();
+    });
+  }).timeout( TIMEOUT );
+});
 
 describe( 'Sell Stop loess', function() {
-  it( 'Attempt to create a stop loss order', function() {
+  it( 'Attempt to create a stop loss order', function( done ) {
     let type = 'STOP_LOSS';
     let quantity = 1;
     let price = 0.069;
     let stopPrice = 0.068;
     assert( typeof ( binance.sell( 'ETHBTC', quantity, price, { stopPrice: stopPrice, type: type } ) ) === 'undefined', WARN_SHOULD_BE_UNDEFINED);
-  } );
-} );
+    done();
+  }).timeout( TIMEOUT );
+});
 
 describe( 'Iceberg sell order', function() {
-  it( 'Attempt to create a sell order', function() {
+  it( 'Attempt to create a sell order', function( done ) {
     let quantity = 1;
     let price = 0.069;
     assert( typeof ( binance.sell( 'ETHBTC', quantity, price, { icebergQty: 10 } ) ) === 'undefined', WARN_SHOULD_BE_UNDEFINED);
-  } );
-} );
+    done();
+  }).timeout( TIMEOUT );
+});
 
 describe( 'Cancel order', function() {
-  it( 'Attempt to cancel an order', function() {
+  it( 'Attempt to cancel an order', function( done ) {
     let orderid = '7610385';
     binance.cancel( 'ETHBTC', orderid, ( error, response, symbol ) => {
       //debug( error );
@@ -303,31 +320,30 @@ describe( 'Cancel order', function() {
       assert( error.body === '{"code":-2011,"msg":"UNKNOWN_ORDER"}' );
       assert( typeof ( response.orderId ) === 'undefined', WARN_SHOULD_BE_UNDEFINED);
       assert( Object.keys( response ).length === 0 );
-    } );
-  } );
-} );
+      done();
+    });
+  }).timeout( TIMEOUT );
+});
 
 describe( 'Cancel orders', function() {
-  it( 'Attempt to cancel all orders given a symbol', function() {
+  it( 'Attempt to cancel all orders given a symbol', function( done ) {
     binance.cancelOrders( 'XMRBTC', ( error, response, symbol ) => {
       //debug( error );
       //debug( response );
       //debug( symbol );
-      assert( typeof ( error ) === 'object', WARN_SHOULD_BE_OBJ );
+      assert( typeof ( error ) === 'string', WARN_SHOULD_BE_OBJ );
       assert( typeof ( response ) === 'object', WARN_SHOULD_BE_OBJ );
       assert( typeof ( symbol ) === 'string', WARN_SHOULD_BE_TYPE + 'string' );
       assert( symbol === 'XMRBTC' );
-      assert( error === null, WARN_SHOULD_BE_NULL );
-      assert( response !== 'XMRBTC' );
-      assert( error.body === '{"code":-2011,"msg":"UNKNOWN_ORDER"}' );
-      assert( typeof ( response.orderId ) === 'undefined', WARN_SHOULD_BE_UNDEFINED);
-      assert( Object.keys( response ).length === 0 );
+      assert( error !== null, WARN_SHOULD_BE_NOT_NULL );
+      assert( error === 'No orders present for this symbol', WARN_SHOULD_BE_TYPE + 'string' );
+      done();
     } );
-  } );
+  } ).timeout( TIMEOUT );
 } );
 
 describe( 'Open Orders', function() {
-  it( 'Attempt to show all orders to ETHBTC', function() {
+  it( 'Attempt to show all orders to ETHBTC', function( done ) {
     binance.openOrders( 'ETHBTC', ( error, openOrders, symbol ) => {
       //debug( error );
       //debug( openOrders );
@@ -340,12 +356,13 @@ describe( 'Open Orders', function() {
       assert( openOrders !== null, WARN_SHOULD_BE_NOT_NULL );
       assert( symbol !== null, WARN_SHOULD_BE_NOT_NULL );
       assert( Object.keys( openOrders ).length === 0 );
+      done();
     } );
-  } );
+  } ).timeout( TIMEOUT );
 } );
 
 describe( 'Open Orders', function() {
-  it( 'Attempt to show all orders for all symbols', function() {
+  it( 'Attempt to show all orders for all symbols', function( done ) {
     binance.openOrders( false, ( error, openOrders ) => {
       //debug( error );
       //debug( openOrders );
@@ -354,12 +371,13 @@ describe( 'Open Orders', function() {
       assert( error === null, WARN_SHOULD_BE_NULL );
       assert( openOrders !== null, WARN_SHOULD_BE_NOT_NULL );
       assert( Object.keys( openOrders ).length === 0 );
+      done();
     } );
-  } );
+  } ).timeout( TIMEOUT );
 } );
 
 describe( 'Order status', function() {
-  it( 'Attempt to get the order status for a given order id', function() {
+  it( 'Attempt to get the order status for a given order id', function( done ) {
     binance.orderStatus( 'ETHBTC', '1234567890', ( error, orderStatus, symbol ) => {
       //debug( error );
       //debug( orderStatus );
@@ -372,12 +390,13 @@ describe( 'Order status', function() {
       assert( orderStatus !== null, WARN_SHOULD_BE_NOT_NULL );
       assert( error.body === '{"code":-2013,"msg":"Order does not exist."}' );
       assert( Object.keys( orderStatus ).length === 0 );
+      done();
     } );
-  } );
+  } ).timeout( TIMEOUT );
 } );
 
 describe( 'trades', function() {
-  it( 'Attempt get all trade history for given symbol', function() {
+  it( 'Attempt get all trade history for given symbol', function( done ) {
     binance.trades( 'SNMBTC', ( error, trades, symbol ) => {
       //debug( error );
       //debug( trades );
@@ -389,12 +408,13 @@ describe( 'trades', function() {
       assert( error === null, WARN_SHOULD_BE_NULL );
       assert( trades !== null, WARN_SHOULD_BE_NOT_NULL );
       assert( Object.keys( trades ).length === 0 );
+      done();
     } );
-  } );
+  } ).timeout( TIMEOUT );
 } );
 
 describe( 'Orders', function() {
-  it( 'Attempt get all orders for given symbol', function() {
+  it( 'Attempt get all orders for given symbol', function( done ) {
     binance.allOrders( 'ETHBTC', ( error, orders, symbol ) => {
       //debug( error );
       //debug( orders );
@@ -406,13 +426,13 @@ describe( 'Orders', function() {
       assert( error === null, WARN_SHOULD_BE_NULL );
       assert( orders !== null, WARN_SHOULD_BE_NOT_NULL );
       assert( Object.keys( orders ).length === 0 );
+      done();
     } );
-  } );
+  } ).timeout( TIMEOUT );
 } );
 
 describe( 'Prevday all symbols', function() {
-  it( 'Attempt get prevday trade status for all symbols', function() {
-
+  it( 'Attempt get prevday trade status for all symbols', function( done ) {
     binance.prevDay( false, ( error, prevDay ) => {
       //debug( error );
       //debug( prevDay );
@@ -432,12 +452,13 @@ describe( 'Prevday all symbols', function() {
           assert( Object.prototype.hasOwnProperty.call( obj, key ), WARN_SHOULD_HAVE_KEY + key );
         } );
       } );
+      done();
     } );
-  } );
+  } ).timeout( TIMEOUT );
 } );
 
 describe( 'Prevday', function() {
-  it( 'Attempt get prevday trade status for given symbol', function() {
+  it( 'Attempt get prevday trade status for given symbol', function( done ) {
     binance.prevDay( 'BNBBTC', ( error, prevDay, symbol ) => {
       //debug( error );
       //debug( prevDay );
@@ -457,12 +478,13 @@ describe( 'Prevday', function() {
       members.forEach( function( key ) {
         assert( Object.prototype.hasOwnProperty.call( prevDay, key ), WARN_SHOULD_HAVE_KEY + key );
       } );
+      done();
     } );
-  } );
+  } ).timeout( TIMEOUT );
 } );
 
 describe( 'Candle sticks', function() {
-  it( 'Attempt get candlesticks for a given symbol', function() {
+  it( 'Attempt get candlesticks for a given symbol', function( done ) {
     binance.candlesticks( 'BNBBTC', '5m', ( error, ticks, symbol ) => {
       //debug( error );
       //debug( ticks );
@@ -477,101 +499,115 @@ describe( 'Candle sticks', function() {
       ticks.forEach( function( tick ) {
         assert( tick.length === 12 );
       } );
+      done();
     }, {
       limit: 500,
       endTime: 1514764800000
     } );
-  } );
+  } ).timeout( TIMEOUT );
 } );
 
 describe( 'Object keys', function() {
   describe( 'First', function() {
-    it( 'Gets the first key', function() {
+    it( 'Gets the first key', function( done ) {
       let first = binance.first( { first: '1', second: '2', third: '3' } );assert.strictEqual( 'first', first, 'should be first' );
-    });
+      done();
+    }).timeout( TIMEOUT );
   });
 
   describe( 'Last', function() {
-    it( 'Gets the last key', function() {
+    it( 'Gets the last key', function( done ) {
       let last = binance.last( { first: '1', second: '2', third: '3' } );assert.strictEqual( 'third', last, 'should be third' );
-    });
+      done();
+    }).timeout( TIMEOUT );
   });
 
   describe( 'slice', function() {
-    it( 'Gets slice of the object keys', function() {
+    it( 'Gets slice of the object keys', function( done ) {
       let slice = binance.slice( { first: '1', second: '2', third: '3' }, 2 );
       assert.deepEqual( ['third'], slice, 'should be ian array with the third' );
-    });
+      done();
+    }).timeout( TIMEOUT );
   });
 
   describe( 'Min', function() {
-    it( 'Gets the math min of object', function() {
+    it( 'Gets the math min of object', function( done ) {
       //debug( 'todo' );
-    });
+      done();
+    }).timeout( TIMEOUT );
   });
 
   describe( 'Max', function() {
-    it( 'Gets the math max of object', function() {
+    it( 'Gets the math max of object', function( done ) {
       //debug( 'todo' );
-    });
+      done();
+    }).timeout( TIMEOUT );
   });
 });
 
 describe( 'Set/Get options', function() {
-  it( 'Sets/Gets option to specified value', function() {
+  it( 'Sets/Gets option to specified value', function( done ) {
     binance.setOption( 'test', 'value' );
     assert.equal( binance.getOption( 'test' ), 'value', 'should be value' );
-  });
+    done();
+  }).timeout( TIMEOUT );
 });
 
 describe( 'Get options', function() {
-  it( 'Gets all options', function() {
+  it( 'Gets all options', function( done ) {
     assert( typeof ( binance.getOptions() ) === 'object' , 'should be object' );
-  });
+    done();
+  }).timeout( TIMEOUT );
 });
 
 describe( 'Percent', function() {
-  it( 'Get Percentage of two values', function() {
+  it( 'Get Percentage of two values', function( done ) {
     assert( binance.percent( 25, 100 ) === 25 , 'should be 25 percent' );
-  });
+    done();
+  }).timeout( TIMEOUT );
 });
 
 describe( 'Sum', function() {
-  it( 'Get sum of array of values', function() {
+  it( 'Get sum of array of values', function( done ) {
     assert( binance.sum( [1, 2, 3] ) === 6 , 'should be 6' );
-  });
+    done();
+  }).timeout( TIMEOUT );
 });
 
 describe( 'Reverse', function() {
-  it( 'Reverse the keys in an object', function() {
+  it( 'Reverse the keys in an object', function( done ) {
     assert( binance.reverse( { '3': 3, '2': 2, '1': 1 } ).toString() === {'1': 1, '2': 2, '3': 3 }.toString(), 'should be {\'1\': 1, \'2\': 2, \'3\': 3 }' );
-  });
+    done();
+  }).timeout( TIMEOUT );
 });
 
 describe( 'Array', function() {
-  it( 'Convert object to an array', function() {
+  it( 'Convert object to an array', function( done ) {
     let actual = binance.array( { 'a': 1, 'b': 2,'c': 3 } );
     let expected = [[NaN, 1], [NaN, 2], [NaN, 3]];
     assert.isArray( actual, 'should be an array' );
     assert( actual.length === 3, 'should be of lenght 3' );
-    assert.deepEqual( actual, expected, 'should be both arrays with same vlaues' )
-  });
+    assert.deepEqual( actual, expected, 'should be both arrays with same vlaues' );
+    done();
+  }).timeout( TIMEOUT );
 });
 
 describe( 'sortBids', function() {
-  it( 'Sorts symbols bids and reurns an object', function() {
+  it( 'Sorts symbols bids and reurns an object', function( done ) {
     /* let actual = binance.sortBids( 'BNBBTC' );
        //debug( actual ); */
     //debug( 'todo' );
+    done();
   });
 });
 
 describe( 'sortAsks', function() {
-  it( 'Sorts symbols asks and reurns an object', function() {
-    /* let actual = binance.sortBids( 'BNBBTC' );
-       //debug( actual ); */
+  it( 'Sorts symbols asks and returns an object', function( done ) {
+    //let actual = binance.sortBids( 'BNBBTC' );
+    //debug( actual ); */
     //debug( 'todo' );
-  });
+    done();
+  }).timeout( TIMEOUT );
 });
 
 describe( 'Exchange Info', function() {
@@ -600,7 +636,7 @@ describe( 'Exchange Info', function() {
         assert( Object.prototype.hasOwnProperty.call( symbol, member ), WARN_SHOULD_HAVE_KEY + member );
       });
     });
-  });
+  }).timeout( TIMEOUT );
 });
 
 describe( 'System status', function() {
@@ -629,11 +665,11 @@ describe( 'System status', function() {
     members.forEach( function( member ) {
       assert( Object.prototype.hasOwnProperty.call( async_data, member ), WARN_SHOULD_HAVE_KEY + member );
     });
-  });
+  }).timeout( TIMEOUT );
 });
 
 describe( 'Withdraw', function() {
-  it( 'Attempt to withdraw BNB to another address', function() {
+  it( 'Attempt to withdraw BNB to another address', function( done ) {
     binance.withdraw( 'BNBBTC', 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', '5', false, ( error, result ) => {
       //debug( error );
       //debug( result );
@@ -645,10 +681,11 @@ describe( 'Withdraw', function() {
       assert( result.msg === 'You don\'t have permission.' );
       assert( Object.prototype.hasOwnProperty.call( result, 'success' ), WARN_SHOULD_HAVE_KEY + 'success' );
       assert( result.success === false );
+      done();
     });
-  });
+  }).timeout( TIMEOUT );
 
-  it( 'Attempt to withdraw BNB to another address with address tag', function() {
+  it( 'Attempt to withdraw BNB to another address with address tag', function( done ) {
     binance.withdraw( 'BNBBTC', 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', '5', 'AQSWDEFRGT', ( error, result ) => {
       //debug( error );
       //debug( result );
@@ -660,12 +697,13 @@ describe( 'Withdraw', function() {
       assert( result.msg === 'You don\'t have permission.' );
       assert( Object.prototype.hasOwnProperty.call( result, 'success' ), WARN_SHOULD_HAVE_KEY + 'success' );
       assert( result.success === false );
+      done();
     });
-  });
+  }).timeout( TIMEOUT );
 });
 
 describe( 'Withdraw history', function() {
-  it( 'Attempt to get withdraw history for BTC', function() {
+  it( 'Attempt to get withdraw history for BTC', function( done ) {
     binance.withdrawHistory( ( error, result ) => {
       //debug( error );
       //debug( result );
@@ -677,10 +715,11 @@ describe( 'Withdraw history', function() {
       assert( Array.isArray( result.withdrawList ) );
       assert( Object.prototype.hasOwnProperty.call( result, 'success' ), WARN_SHOULD_HAVE_KEY + 'success' );
       assert( result.success === true );
+      done();
     }, 'BTC' );
-  });
+  }).timeout( TIMEOUT );
 
-  it( 'Attempt to get withdraw history for all assets', function() {
+  it( 'Attempt to get withdraw history for all assets', function( done ) {
     binance.withdrawHistory( ( error, result ) => {
       //debug( error );
       //debug( result );
@@ -692,13 +731,14 @@ describe( 'Withdraw history', function() {
       assert( Array.isArray( result.withdrawList ) );
       assert( Object.prototype.hasOwnProperty.call( result, 'success' ), WARN_SHOULD_HAVE_KEY + 'success' );
       assert( result.success === true );
+      done();
     });
-  });
+  }).timeout( TIMEOUT );
 });
 
 
 describe( 'Deposit history', function() {
-  it( 'Attempt to get deposit history for all assets', function() {
+  it( 'Attempt to get deposit history for all assets', function( done ) {
     binance.depositHistory( ( error, result ) => {
       //debug( error );
       //debug( result );
@@ -710,15 +750,16 @@ describe( 'Deposit history', function() {
       assert( Array.isArray( result.depositList ) );
       assert( Object.prototype.hasOwnProperty.call( result, 'success' ), WARN_SHOULD_HAVE_KEY + 'success' );
       assert( result.success === true );
+      done();
     });
-  });
+  }).timeout( TIMEOUT );
 });
 
 describe( 'Deposit address', function() {
-  it( 'Attempt to get deposit address for BNB', function() {
+  it( 'Attempt to get deposit address for BNB', function( done ) {
     binance.depositAddress( 'BTC', ( error, result ) => {
-      debug( error );
-      debug( result );
+      //debug( error );
+      //debug( result );
       assert( typeof ( error ) === 'object', WARN_SHOULD_BE_OBJ );
       assert( typeof ( result ) === 'object', WARN_SHOULD_BE_OBJ );
       assert( error === null, WARN_SHOULD_BE_NULL );
@@ -729,13 +770,14 @@ describe( 'Deposit address', function() {
       assert( Object.prototype.hasOwnProperty.call( result, 'asset' ), WARN_SHOULD_HAVE_KEY + 'asset' );
       assert( result.asset === 'BTC' );
       assert( result.success === true );
+      done();
     });
-  });
+  }).timeout( TIMEOUT );
 
-  it( 'Attempt to get deposit address for XYZ', function() {
+  it( 'Attempt to get deposit address for XYZ', function( done ) {
     binance.depositAddress( 'XYZ', ( error, result ) => {
-      debug( error );
-      debug( result );
+      //debug( error );
+      //debug( result );
       assert( typeof ( error ) === 'object', WARN_SHOULD_BE_OBJ );
       assert( typeof ( result ) === 'object', WARN_SHOULD_BE_OBJ );
       assert( error === null, WARN_SHOULD_BE_NULL );
@@ -744,27 +786,28 @@ describe( 'Deposit address', function() {
       assert( Object.prototype.hasOwnProperty.call( result, 'success' ), WARN_SHOULD_NOT_HAVE_KEY + 'success' );
       assert( Object.prototype.hasOwnProperty.call( result, 'addressTag' ) === false, WARN_SHOULD_NOT_HAVE_KEY + 'addressTag' );
       assert( Object.prototype.hasOwnProperty.call( result, 'asset' ) === false, WARN_SHOULD_NOT_HAVE_KEY + 'asset' );
-      assert( result.asset === 'BTC' );
       assert( result.success === false );
+      done();
     });
-  });
+  }).timeout( TIMEOUT );
 });
 
 describe( 'Account status', function() {
-  it( 'Attempt to get account status', function() {
+  it( 'Attempt to get account status', function( done ) {
     binance.accountStatus( ( error, data ) => {
-      debug( error );
-      debug( data );
+      //debug( error );
+      //debug( data );
       assert( typeof ( error ) === 'object', WARN_SHOULD_BE_OBJ );
       assert( typeof ( data ) === 'object', WARN_SHOULD_BE_OBJ );
       assert( error === null, WARN_SHOULD_BE_NULL );
       assert( data !== null, WARN_SHOULD_BE_NOT_NULL );
+      done();
     } );
-  } );
+  } ).timeout( TIMEOUT );
 });
 
 describe( 'Account', function() {
-  it( 'Attempt to get account information', function() {
+  it( 'Attempt to get account information', function( done ) {
     binance.account( ( error, data ) => {
       //debug( error );
       //debug( data );
@@ -772,21 +815,22 @@ describe( 'Account', function() {
       assert( typeof ( data ) === 'object', WARN_SHOULD_BE_OBJ );
       assert( error === null, WARN_SHOULD_BE_NULL );
       assert( data !== null, WARN_SHOULD_BE_NOT_NULL );
+      done();
     } );
-  } );
+  } ).timeout( TIMEOUT );
 });
 
 describe( 'Use Server Time', function() {
-  it( 'Todo', function() {
-    binance.useServerTime( ( error, data ) => {
+  it( 'Gets the server time and sets it ass the offset for http connections', function( done ) {
+    //binance.useServerTime( ( error, data ) => {
       // debug( data );
-      assert( Object.prototype.hasOwnProperty.call( data, 'timeOffset' ), WARN_SHOULD_HAVE_KEY + 'timeOffset' );
-    });
-  });
+      done();
+    //});
+  }).timeout( TIMEOUT );
 });
 
 describe( 'Time', function() {
-  it( 'Attempt to get server time', function() {
+  it( 'Attempt to get server time', function( done ) {
     binance.time( ( error, data ) => {
       //debug( error );
       //debug( data );
@@ -795,18 +839,20 @@ describe( 'Time', function() {
       assert( error === null, WARN_SHOULD_BE_NULL );
       assert( data !== null, WARN_SHOULD_BE_NOT_NULL );
       assert( Object.prototype.hasOwnProperty.call( data, 'serverTime' ), WARN_SHOULD_HAVE_KEY + 'serverTime' );
+      done();
     } );
-  } );
+  } ).timeout( TIMEOUT );
 });
 
 describe( 'Aggtrades', function() {
-  it( 'Todo', function() {
+  it( 'Todo', function( done ) {
     //debug( 'todo' );
-  });
+    done();
+  }).timeout( TIMEOUT );
 });
 
 describe( 'Recent Trades', function() {
-  it( 'Attempt get recent Trades for a given symbol', function() {
+  it( 'Attempt get recent Trades for a given symbol', function( done ) {
     binance.recentTrades( 'BNBBTC', ( error, data ) => {
       //debug( error );
       //debug( data );
@@ -823,12 +869,13 @@ describe( 'Recent Trades', function() {
         assert( Object.prototype.hasOwnProperty.call( obj, 'isBuyerMaker' ), WARN_SHOULD_HAVE_KEY + 'isBuyerMaker' );
         assert( Object.prototype.hasOwnProperty.call( obj, 'isBestMatch' ), WARN_SHOULD_HAVE_KEY + 'isBestMatch' );
       });
+      done();
     } );
-  } );
+  } ).timeout( TIMEOUT );
 });
 
 describe( 'Historical Trades', function() {
-  it( 'Attempt get Historical Trades for a given symbol', function() {
+  it( 'Attempt get Historical Trades for a given symbol', function( done ) {
     binance.historicalTrades( 'BNBBTC', ( error, data ) => {
       //debug( error );
       //debug( data );
@@ -845,19 +892,22 @@ describe( 'Historical Trades', function() {
         assert( Object.prototype.hasOwnProperty.call( obj, 'isBuyerMaker' ), WARN_SHOULD_HAVE_KEY + 'isBuyerMaker' );
         assert( Object.prototype.hasOwnProperty.call( obj, 'isBestMatch' ), WARN_SHOULD_HAVE_KEY + 'isBestMatch' );
       });
+      done();
     } );
-  } );
+  } ).timeout( TIMEOUT );
 });
 
 describe( 'Highstock', function() {
-  it( 'Todo', function() {
+  it( 'Todo', function( done ) {
     //debug( 'todo' );
-  });
+    done();
+  }).timeout( TIMEOUT );
 });
 
 describe( 'Ohlc', function() {
-  it( 'Todo', function() {
+  it( 'Todo', function( done ) {
     //debug( 'todo' );
-  });
+    done();
+  }).timeout( TIMEOUT );
 });
 
