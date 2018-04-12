@@ -963,7 +963,7 @@ describe( 'Websockets chart', function() {
     });
   });
 
-  it( 'Calls chart websocket', function() {
+  it( 'Calls chart websocket', function( done ) {
     assert( typeof ( chart ) === 'object', WARN_SHOULD_BE_OBJ );
     assert( typeof ( symbol ) === 'string', WARN_SHOULD_BE_OBJ );
     assert( typeof ( interval ) === 'string', WARN_SHOULD_BE_OBJ );
@@ -979,14 +979,21 @@ describe( 'Websockets chart', function() {
         assert( Object.prototype.hasOwnProperty.call( chart[c], key ), WARN_SHOULD_HAVE_KEY + key );
       });
     });
+
+    stopSockets();
+    done();
   });
 
-  it( 'Calls highstock with chart data', function() {
+  it( 'Calls highstock with chart data', function( done ) {
     binance.highstock( chart );
+    stopSockets();
+    done();
   });
 
-  it( 'Calls ohlc with chart data', function() {
+  it( 'Calls ohlc with chart data', function( done ) {
     binance.ohlc( chart );
+    stopSockets();
+    done();
   });
 });
 
