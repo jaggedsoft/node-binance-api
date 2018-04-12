@@ -67,6 +67,13 @@ describe( 'Construct', function() {
   } ).timeout( TIMEOUT );
 } );
 
+describe( 'UseServerTime', function() {
+  it( 'Call use server time', function( done ) {
+    binance.useServerTime();
+    done();
+  }).timeout( TIMEOUT );
+});
+
 describe( 'Prices', function() {
   it( 'Checks the price of BNBBTC', function( done ) {
     binance.prices( 'BNBBTC', ( error, ticker ) => {
@@ -129,6 +136,22 @@ describe( 'Book Ticker', function() {
       members.forEach( function( value ) {
         assert( Object.prototype.hasOwnProperty.call(ticker, value ), WARN_SHOULD_HAVE_KEY + value );
       });
+      done();
+    });
+  }).timeout( TIMEOUT );
+
+  it( 'Get all book tickers', function( done ) {
+    binance.bookTickers( false, ( error, ticker ) => {
+      /*
+      assert( error === null, WARN_SHOULD_BE_NULL );
+      assert( ticker !== null, WARN_SHOULD_BE_NOT_NULL );
+      assert( ticker );
+
+      let members = ['symbol', 'bidPrice', 'bidQty', 'askPrice', 'askQty'];
+      members.forEach( function( value ) {
+        assert( Object.prototype.hasOwnProperty.call(ticker, value ), WARN_SHOULD_HAVE_KEY + value );
+      });
+      */
       done();
     });
   }).timeout( TIMEOUT );
@@ -494,14 +517,14 @@ describe( 'Object keys', function() {
 
   describe( 'Min', function() {
     it( 'Gets the math min of object', function( done ) {
-      //debug( 'todo' );
+      binance.min( { first: '1', second: '2', third: '3' } );
       done();
     }).timeout( TIMEOUT );
   });
 
   describe( 'Max', function() {
     it( 'Gets the math max of object', function( done ) {
-      //debug( 'todo' );
+      binance.max( { first: '1', second: '2', third: '3' } );
       done();
     }).timeout( TIMEOUT );
   });
@@ -902,66 +925,6 @@ describe( 'Websockets miniticker', function() {
   });
 });
 
-/*
-describe( 'Websockets prevDay', function() {
-  let error;
-  let response;
-  beforeEach(function (done) {
-    binance.websockets.prevDay( false, (a_error, a_response) => {
-      stopSockets();
-      error = a_error;
-      response = a_response;
-      done();
-    })
-  });
-
-  it( 'Calls prevDay websocketi for symbol', function() {
-    assert( typeof ( error ) === 'object', WARN_SHOULD_BE_OBJ );
-    assert( error === null, WARN_SHOULD_BE_NULL );
-    assert( typeof ( response ) === 'object', WARN_SHOULD_BE_OBJ );
-    assert( response !== null, WARN_SHOULD_BE_NOT_NULL );
-    //assert( Object.keys( response ).length >= num_pairs, 'should at least ' + num_pairs + 'currency pairs?' );
-
-    let keys = [
-'eventType', 'eventTime', 'symbol', 'priceChange', 'percentChange', 'averagePrice', 'prevClose',
-'close', 'closeQty', 'bestBid', 'bestBidQty', 'bestAsk', 'bestAskQty', 'open', 'high',
-'low', 'volume', 'quoteVolume', 'openTime', 'closeTime', 'firstTradeId', 'lastTradeId', 'numTrades'
-];
-    response.forEach(function(obj) {
-      keys.forEach(function(key) {
-        assert( Object.prototype.hasOwnProperty.call( obj, key ), WARN_SHOULD_HAVE_KEY + key );
-      });
-    });
-  });
-
-  beforeEach(function (done) {
-    binance.websockets.prevDay( false, (a_error, a_response) => {
-      stopSockets();
-      error = a_error;
-      response = a_response;
-      done();
-    })
-  });
-
-  it( 'Calls prevDay websocket for all symbols', function() {
-    assert( typeof ( error ) === 'object', WARN_SHOULD_BE_OBJ );
-    assert( error === null, WARN_SHOULD_BE_NULL );
-    assert( typeof ( response ) === 'object', WARN_SHOULD_BE_OBJ );
-    assert( response !== null, WARN_SHOULD_BE_NOT_NULL );
-    //assert( Object.keys( response ).length >= num_pairs, 'should at least ' + num_pairs + 'currency pairs?' );
-
-    let keys = [
-'eventType', 'eventTime', 'symbol', 'priceChange', 'percentChange', 'averagePrice', 'prevClose',
-'close', 'closeQty', 'bestBid', 'bestBidQty', 'bestAsk', 'bestAskQty', 'open', 'high',
-'low', 'volume', 'quoteVolume', 'openTime', 'closeTime', 'firstTradeId', 'lastTradeId', 'numTrades'
-];
-    keys.forEach(function(key) {
-      assert( Object.prototype.hasOwnProperty.call( response, key ), WARN_SHOULD_HAVE_KEY + key );
-    });
-  });
-});
-*/
-
 describe( 'Websockets candlesticks', function() {
   let candlesticks;
   /*global beforeEach*/
@@ -1024,7 +987,70 @@ describe( 'Websockets chart', function() {
       });
     });
   });
+
+  it( 'Calls highstock with chart data', function() {
+    binance.highstock( chart );
+  });
+
+  it( 'Calls ohlc with chart data', function() {
+    binance.ohlc( chart );
+  });
 });
+
+describe( 'Websockets depth', function() {
+  let depth;
+  /*global beforeEach*/
+  beforeEach(function (done) {
+    this.timeout( TIMEOUT );
+    binance.websockets.depth(['BNBBTC'], e_depth => {
+      depth = e_depth;
+      stopSockets();
+      done();
+    });
+  });
+
+  it( 'Calls depth websocket', function() {
+    assert( typeof ( depth ) === 'object', WARN_SHOULD_BE_OBJ );
+    assert( depth !== null, WARN_SHOULD_BE_NOT_NULL );
+  });
+});
+
+describe( 'Websockets trades', function() {
+  let trades;
+  /*global beforeEach*/
+  beforeEach(function (done) {
+    this.timeout( TIMEOUT );
+    binance.websockets.trades(['BNBBTC', 'ETHBTC'], e_trades => {
+      trades = e_trades;
+      stopSockets();
+      done();
+    });
+  });
+
+  it( 'Calls trades websocket', function() {
+    assert( typeof ( trades ) === 'object', WARN_SHOULD_BE_OBJ );
+    assert( trades !== null, WARN_SHOULD_BE_NOT_NULL );
+  });
+});
+
+/*
+describe( 'Websockets userdata', function() {
+  let userdata;
+  beforeEach(function (done) {
+    this.timeout( TIMEOUT );
+    binance.websockets.userData( data => {
+      userdata = data;
+      stopSockets();
+      done();
+    });
+  });
+
+  it( 'Calls userdata websocket', function() {
+    assert( typeof ( userdata ) === 'object', WARN_SHOULD_BE_OBJ );
+    assert( userdata !== null, WARN_SHOULD_BE_NOT_NULL );
+  });
+});
+*/
 
 /*
 describe( 'Websockets depth', function() {
@@ -1074,57 +1100,61 @@ describe( 'Websockets depth', function() {
 });
 */
 
-describe( 'Websockets depth', function() {
-  let depth;
-  /*global beforeEach*/
+describe( 'Websockets prevDay', function() {
+  /*
+  let response;
+  
   beforeEach(function (done) {
-    this.timeout( TIMEOUT );
-    binance.websockets.depth(['BNBBTC'], e_depth => {
-      depth = e_depth;
+    binance.websockets.prevDay( false, a_response => {
       stopSockets();
+      response = a_response;
       done();
+    })
+  });
+
+  it( 'Calls prevDay websocket for symbol', function() {
+    assert( typeof ( error ) === 'object', WARN_SHOULD_BE_OBJ );
+    assert( error === null, WARN_SHOULD_BE_NULL );
+    assert( typeof ( response ) === 'object', WARN_SHOULD_BE_OBJ );
+    assert( response !== null, WARN_SHOULD_BE_NOT_NULL );
+    //assert( Object.keys( response ).length >= num_pairs, 'should at least ' + num_pairs + 'currency pairs?' );
+
+    let keys = [
+'eventType', 'eventTime', 'symbol', 'priceChange', 'percentChange', 'averagePrice', 'prevClose',
+'close', 'closeQty', 'bestBid', 'bestBidQty', 'bestAsk', 'bestAskQty', 'open', 'high',
+'low', 'volume', 'quoteVolume', 'openTime', 'closeTime', 'firstTradeId', 'lastTradeId', 'numTrades'
+];
+    response.forEach(function(obj) {
+      keys.forEach(function(key) {
+        assert( Object.prototype.hasOwnProperty.call( obj, key ), WARN_SHOULD_HAVE_KEY + key );
+      });
     });
   });
 
-  it( 'Calls depth websocket', function() {
-    assert( typeof ( depth ) === 'object', WARN_SHOULD_BE_OBJ );
-    assert( depth !== null, WARN_SHOULD_BE_NOT_NULL );
-  });
-});
-
-/*
-describe( 'Websockets userdata', function() {
-  let userdata;
+  
   beforeEach(function (done) {
-    this.timeout( TIMEOUT );
-    binance.websockets.userData( data => {
-      userdata = data;
+    binance.websockets.prevDay( 'BNBBTC', a_response => {
       stopSockets();
+      response = a_response;
       done();
+    })
+  });
+
+  it( 'Calls prevDay websocket for all symbols', function() {
+    assert( typeof ( error ) === 'object', WARN_SHOULD_BE_OBJ );
+    assert( error === null, WARN_SHOULD_BE_NULL );
+    assert( typeof ( response ) === 'object', WARN_SHOULD_BE_OBJ );
+    assert( response !== null, WARN_SHOULD_BE_NOT_NULL );
+    //assert( Object.keys( response ).length >= num_pairs, 'should at least ' + num_pairs + 'currency pairs?' );
+
+    let keys = [
+'eventType', 'eventTime', 'symbol', 'priceChange', 'percentChange', 'averagePrice', 'prevClose',
+'close', 'closeQty', 'bestBid', 'bestBidQty', 'bestAsk', 'bestAskQty', 'open', 'high',
+'low', 'volume', 'quoteVolume', 'openTime', 'closeTime', 'firstTradeId', 'lastTradeId', 'numTrades'
+];
+    keys.forEach(function(key) {
+      assert( Object.prototype.hasOwnProperty.call( response, key ), WARN_SHOULD_HAVE_KEY + key );
     });
   });
-
-  it( 'Calls userdata websocket', function() {
-    assert( typeof ( userdata ) === 'object', WARN_SHOULD_BE_OBJ );
-    assert( userdata !== null, WARN_SHOULD_BE_NOT_NULL );
-  });
-});
-*/
-
-describe( 'Websockets trades', function() {
-  let trades;
-  /*global beforeEach*/
-  beforeEach(function (done) {
-    this.timeout( TIMEOUT );
-    binance.websockets.trades(['BNBBTC', 'ETHBTC'], e_trades => {
-      trades = e_trades;
-      stopSockets();
-      done();
-    });
-  });
-
-  it( 'Calls trades websocket', function() {
-    assert( typeof ( trades ) === 'object', WARN_SHOULD_BE_OBJ );
-    assert( trades !== null, WARN_SHOULD_BE_NOT_NULL );
-  });
+  */
 });
