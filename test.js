@@ -1052,8 +1052,6 @@ describe( 'Websockets chart', function() {
     assert( symbol !== null, WARN_SHOULD_BE_NOT_NULL );
     assert( interval !== null, WARN_SHOULD_BE_NOT_NULL );
 
-    debug( chart);
-
     let keys = ['open', 'high', 'open', 'close', 'volume'];
     assert( Object.keys( chart ).length > 0, 'Should not be empty' );
 
@@ -1062,5 +1060,53 @@ describe( 'Websockets chart', function() {
         assert( Object.prototype.hasOwnProperty.call( chart[c], key ), WARN_SHOULD_HAVE_KEY + key );
       });
     });
+  });
+});
+
+/*
+describe( 'Websockets depth', function() {
+  let symbol;
+  let bids;
+  let asks;
+  beforeEach(function (done) {
+    this.timeout( TIMEOUT );
+    binance.websockets.depthCache(['BNBBTC'], (a_symbol, a_depth) => {
+      stopSockets();
+      bids = binance.sortBids(depth.bids);
+      asks = binance.sortAsks(depth.asks);
+      symbol = a_symbol;
+      done();
+    });
+  });
+
+  it( 'Calls depth websocket', function() {
+    assert( typeof ( bids ) === 'object', WARN_SHOULD_BE_OBJ );
+    assert( typeof ( asks ) === 'object', WARN_SHOULD_BE_OBJ );
+    assert( typeof ( symbol ) === 'string', WARN_SHOULD_BE_OBJ );
+    assert( bids !== null, WARN_SHOULD_BE_NOT_NULL );
+    assert( asks !== null, WARN_SHOULD_BE_NOT_NULL );
+    assert( symbol !== null, WARN_SHOULD_BE_NOT_NULL );
+
+    debug(bids);
+    debug(asks);
+  });
+});
+*/
+
+describe( 'Websockets trades', function() {
+  let trades;
+  /*global beforeEach*/
+  beforeEach(function (done) {
+    this.timeout( TIMEOUT );
+    binance.websockets.trades(['BNBBTC', 'ETHBTC'], (e_trades) => {
+      trades = e_trades;
+      stopSockets();
+      done();
+    });
+  });
+
+  it( 'Calls trades websocket', function() {
+    assert( typeof ( trades ) === 'object', WARN_SHOULD_BE_OBJ );
+    assert( trades !== null, WARN_SHOULD_BE_NOT_NULL );
   });
 });
