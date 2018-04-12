@@ -57,7 +57,7 @@ describe( 'Construct', function() {
       reconnect: false,
       verbose: true
     } );
-    //debug( binance );
+    debug( binance.getOptions() );
     assert( typeof ( binance ) === 'object', 'Binance is not an object' );
     done();
   } ).timeout( TIMEOUT );
@@ -593,7 +593,7 @@ describe( 'Array', function() {
 });
 
 describe( 'sortBids', function() {
-  it( 'Sorts symbols bids and reurns an object', function( done ) {
+  it( 'Sorts symbols bids and returns an object', function( done ) {
     /* let actual = binance.sortBids( 'BNBBTC' );
        //debug( actual ); */
     //debug( 'todo' );
@@ -910,4 +910,18 @@ describe( 'Ohlc', function() {
     done();
   }).timeout( TIMEOUT );
 });
+
+
+describe( 'Websockets miniticker', function() {
+  it( 'Calls miniticker websocket', function( done ) {
+    //debug( 'todo' );
+    binance.websockets.miniTicker(markets => {
+      console.log(markets);
+      stopSockets(); 	    
+      done();	    
+    });
+  }).timeout( TIMEOUT );
+});
+
+
 
