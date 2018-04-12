@@ -142,6 +142,7 @@ describe( 'Book Ticker', function() {
 
   it( 'Get all book tickers', function( done ) {
     binance.bookTickers( false, ( error, ticker ) => {
+      assert( ticker );
       /*
       assert( error === null, WARN_SHOULD_BE_NULL );
       assert( ticker !== null, WARN_SHOULD_BE_NOT_NULL );
@@ -1103,7 +1104,7 @@ describe( 'Websockets depth', function() {
 describe( 'Websockets prevDay', function() {
   /*
   let response;
-  
+
   beforeEach(function (done) {
     binance.websockets.prevDay( false, a_response => {
       stopSockets();
@@ -1131,7 +1132,7 @@ describe( 'Websockets prevDay', function() {
     });
   });
 
-  
+
   beforeEach(function (done) {
     binance.websockets.prevDay( 'BNBBTC', a_response => {
       stopSockets();
