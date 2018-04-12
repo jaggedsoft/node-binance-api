@@ -21,7 +21,6 @@ let chai = require( 'chai' );
 let assert = chai.assert;
 
 let path = require( 'path' );
-//var assert = require( "assert" ).strict;
 let binance = require( path.resolve( __dirname, 'node-binance-api.js' ) );
 let util = require( 'util' );
 let num_pairs = 299;
@@ -43,7 +42,7 @@ let debug = function( x ) {
 let stopSockets = function() {
   let endpoints = binance.websockets.subscriptions();
   for ( let endpoint in endpoints ) {
-    //console.log(endpoint);
+    console.log('Terminated ws endpoint' + endpoint);
     binance.websockets.terminate(endpoint);
   }
 }
