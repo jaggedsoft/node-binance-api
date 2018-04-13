@@ -1057,24 +1057,20 @@ describe( 'Websockets chart', function() {
     stopSockets();
   });
 });
+*/
 
 describe( 'Websockets miniticker', function() {
-  stopSocketsRunning = false;
-
   let markets;
   beforeEach(function (done) {
     this.timeout( TIMEOUT );
     binance.websockets.miniTicker( tick => {
       markets = tick;
       stopSockets();
-      if( stopSocketsRunning == true ) return;
       done();
     });
   });
 
-  stopSocketsRunning = false;
-
-  it( 'Calls miniticker websocket', function() {
+  it( 'check miniticker websocket', function() {
     assert( typeof ( markets ) === 'object', WARN_SHOULD_BE_OBJ );
     assert( markets !== null, WARN_SHOULD_BE_NOT_NULL );
     assert( Object.keys( markets ).length >= 0, 'should at least 1 currency pairs?' );
@@ -1091,6 +1087,7 @@ describe( 'Websockets miniticker', function() {
   });
 });
 
+/*
 describe( 'Websockets userdata', function() {
   let userdata;
   beforeEach(function (done) {
