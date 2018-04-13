@@ -887,6 +887,12 @@ LIMIT_MAKER
 
                 let symbolDepthInit = function(symbol) {
                     if ( typeof depthCacheContext[symbol] === 'undefined' ) depthCacheContext[symbol] = {};
+
+                    let context = depthCacheContext[symbol];
+                    context.snapshotUpdateId = null;
+                    context.lastEventUpdateId = null;
+                    context.messageQueue = [];
+
                     depthCache[symbol] = { bids: {}, asks: {} };
                 };
 
