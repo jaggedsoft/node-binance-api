@@ -1107,6 +1107,7 @@ describe( 'Websockets userdata', function() {
     assert( userdata !== null, WARN_SHOULD_BE_NOT_NULL );
   });
 });
+*/
 
 describe( 'Websockets depthcache', function() {
   let symbol;
@@ -1133,30 +1134,12 @@ describe( 'Websockets depthcache', function() {
     assert( bids !== null, WARN_SHOULD_BE_NOT_NULL );
     assert( asks !== null, WARN_SHOULD_BE_NOT_NULL );
     assert( symbol !== null, WARN_SHOULD_BE_NOT_NULL );
-
-    debug(bids);
-    debug(asks);
-
-    // true cases
-    assert( typeof( dc_true ) == "object" , "Should be an object" );
-    assert.notDeepEqual( dc_true , {bids: {}, asks: {}}, "should not be blank object with asks and bids keys only" );
-    assert( object.Keys( dc_true ).length == 2 );
-    assert( dc_true.hasOwnProperty( "asks" ), "missing asks property" );
-    assert( dc_true.hasOwnProperty( "bids" ), "missing bids property" );
-    assert( Object.keys( dc_true.asks ).length != 0, "should not be 0" );
-    assert( Object.keys( dc_true.bids ).length != 0, "should not be 0" );
-
-    // false cases
-    assert( typeof( dc_false ) == "object" , "Should be an object" );
-    assert.deepEqual( dc_false, {bids: {}, asks: {}}, "should be blank object with asks and bids keys" );
-    assert( object.Keys( dc_false ).length == 2 );
-    assert( dc_false.hasOwnProperty( "asks" ), "missing asks property" );
-    assert( dc_false.hasOwnProperty( "bids" ), "missing bids property" );
-    assert( Object.keys( dc_false.asks ).length = 0, "should be 0" );
-    assert( Object.keys( dc_false.bids ).length = 0, "should be 0" );
+    assert( Object.keys( asks ).length !== 0, 'should not be 0' );
+    assert( Object.keys( bids ).length !== 0, 'should not be 0' );
   });
 });
 
+/*
 describe( 'Websockets prevDay', function() {
   let response;
 
