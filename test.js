@@ -15,7 +15,7 @@ const WARN_SHOULD_HAVE_KEY = 'should have key ';
 const WARN_SHOULD_NOT_HAVE_KEY = 'should not have key ';
 const WARN_SHOULD_BE_UNDEFINED = 'should be undefined';
 const WARN_SHOULD_BE_TYPE = 'should be a string ';
-const TIMEOUT = 5000;
+const TIMEOUT = 10000;
 
 let chai = require( 'chai' );
 let assert = chai.assert;
@@ -995,6 +995,13 @@ describe( 'Websockets chart', function() {
     stopSockets();
     done();
   });
+
+  binance.websockets.chart(['BNBBTC','ETHBTC'], '1m', (a_symbol, a_interval, a_chart) => {
+    chart = a_chart;
+    interval = a_interval;
+    symbol = a_symbol;
+    stopSockets();
+  });
 });
 
 describe( 'Websockets depth', function() {
@@ -1078,23 +1085,24 @@ describe( 'Websockets userdata', function() {
     assert( userdata !== null, WARN_SHOULD_BE_NOT_NULL );
   });
 });
-*/
 
-/*
-describe( 'Websockets depth', function() {
+describe( 'Websockets depthcache', function() {
   let symbol;
   let bids;
   let asks;
   beforeEach(function (done) {
     this.timeout( TIMEOUT );
-    binance.websockets.depthCache(['BNBBTC'], (a_symbol, a_depth) => {
+    binance.websockets.depthCache('BNBBTC', (a_symbol, a_depth) => {
       stopSockets();
-      bids = binance.sortBids(depth.bids);
-      asks = binance.sortAsks(depth.asks);
       symbol = a_symbol;
+      bids = a_depth.bids;
+      asks = a_depth.asks;
       done();
     });
   });
+
+  bids = binance.sortBids(bids);
+  asks = binance.sortAsks(asks);
 
   it( 'Calls depth websocket', function() {
     assert( typeof ( bids ) === 'object', WARN_SHOULD_BE_OBJ );
@@ -1126,9 +1134,7 @@ describe( 'Websockets depth', function() {
     assert( Object.keys( dc_false.bids ).length = 0, "should be 0" );
   });
 });
-*/
 
-/*
 describe( 'Websockets prevDay', function() {
   let response;
 
