@@ -1109,7 +1109,7 @@ describe( 'Websockets userdata', function() {
 });
 */
 
-describe( 'Websockets depthcache', function() {
+describe( 'Websockets symbol depthcache', function() {
   let symbol;
   let bids;
   let asks;
@@ -1127,7 +1127,7 @@ describe( 'Websockets depthcache', function() {
   bids = binance.sortBids(bids);
   asks = binance.sortAsks(asks);
 
-  it( 'Calls depth websocket', function() {
+  it( 'check result of depth cache', function() {
     assert( typeof ( bids ) === 'object', WARN_SHOULD_BE_OBJ );
     assert( typeof ( asks ) === 'object', WARN_SHOULD_BE_OBJ );
     assert( typeof ( symbol ) === 'string', WARN_SHOULD_BE_OBJ );
@@ -1137,10 +1137,15 @@ describe( 'Websockets depthcache', function() {
     assert( Object.keys( asks ).length !== 0, 'should not be 0' );
     assert( Object.keys( bids ).length !== 0, 'should not be 0' );
   });
+});
 
+describe( 'Websockets array depthcache', function() {
+  let symbol;
+  let bids;
+  let asks;
   beforeEach(function (done) {
     this.timeout( TIMEOUT );
-    binance.websockets.depthCache('BNBBTC', (a_symbol, a_depth) => {
+    binance.websockets.depthCache(['BNBBTC','TRXBTC'], (a_symbol, a_depth) => {
       stopSockets();
       symbol = a_symbol;
       bids = a_depth.bids;
@@ -1152,7 +1157,7 @@ describe( 'Websockets depthcache', function() {
   bids = binance.sortBids(bids);
   asks = binance.sortAsks(asks);
 
-  it( 'Calls depth websocket with array of symbols', function() {
+  it( 'check result of symbols array depth cache', function() {
     assert( typeof ( bids ) === 'object', WARN_SHOULD_BE_OBJ );
     assert( typeof ( asks ) === 'object', WARN_SHOULD_BE_OBJ );
     assert( typeof ( symbol ) === 'string', WARN_SHOULD_BE_OBJ );
@@ -1162,7 +1167,6 @@ describe( 'Websockets depthcache', function() {
     assert( Object.keys( asks ).length !== 0, 'should not be 0' );
     assert( Object.keys( bids ).length !== 0, 'should not be 0' );
   });
-
 });
 
 /*
