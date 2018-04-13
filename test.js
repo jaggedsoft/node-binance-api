@@ -1024,6 +1024,14 @@ describe( 'Websockets chart', function() {
       });
     });
   });
+
+  it( 'Calls highstock on chart', function() {
+    binance.websockets.highstock( chart );
+  });
+
+  it( 'Calls ohlc on chart', function() {
+    binance.websockets.ohlc( chart );
+  });
 });
 
 describe( 'Websockets miniticker', function() {
