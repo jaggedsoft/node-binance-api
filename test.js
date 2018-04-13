@@ -986,29 +986,28 @@ describe( 'roundStep', function() {
   }).timeout( TIMEOUT );
 });
 
-/*
 describe( 'Websockets chart', function() {
-  stopSocketsRunning = false;
-  this.retries(3);
-
   let chart;
   let interval;
   let symbol;
+  let isdone = false;
   beforeEach(function (done) {
     this.timeout( TIMEOUT );
     binance.websockets.chart('BNBBTC', '1m', (a_symbol, a_interval, a_chart) => {
-      chart = a_chart;
-      interval = a_interval;
-      symbol = a_symbol;
+      if ( isdone === true ) return;
+      // chart always gets call twice before we can stop it.
+      if ( isdone === false ) {
+        isdone = true;
+        chart = a_chart;
+        interval = a_interval;
+        symbol = a_symbol;
+        done();
+      }
       stopSockets();
-      if( stopSocketsRunning == true ) return;
-      done();
     });
   });
 
-  stopSocketsRunning = false;
-
-  it( 'Calls chart websocket', function( done ) {
+  it( 'Calls chart websocket', function() {
     assert( typeof ( chart ) === 'object', WARN_SHOULD_BE_OBJ );
     assert( typeof ( symbol ) === 'string', WARN_SHOULD_BE_OBJ );
     assert( typeof ( interval ) === 'string', WARN_SHOULD_BE_OBJ );
@@ -1024,40 +1023,8 @@ describe( 'Websockets chart', function() {
         assert( Object.prototype.hasOwnProperty.call( chart[c], key ), WARN_SHOULD_HAVE_KEY + key );
       });
     });
-
-    stopSockets();
-    if( stopSocketsRunning == true ) return;
-    done();
-  });
-
-  stopSocketsRunning = false;
-
-  it( 'Calls highstock with chart data', function( done ) {
-    binance.highstock( chart );
-    stopSockets();
-    if( stopSocketsRunning == true ) return;
-    done();
-  });
-
-  stopSocketsRunning = false;
-
-  it( 'Calls ohlc with chart data', function( done ) {
-    binance.ohlc( chart );
-    stopSockets();
-    if( stopSocketsRunning == true ) return;
-    done();
-  });
-
-  stopSocketsRunning = false;
-
-  binance.websockets.chart(['BNBBTC','ETHBTC'], '1m', (a_symbol, a_interval, a_chart) => {
-    chart = a_chart;
-    interval = a_interval;
-    symbol = a_symbol;
-    stopSockets();
   });
 });
-*/
 
 describe( 'Websockets miniticker', function() {
   let markets;
