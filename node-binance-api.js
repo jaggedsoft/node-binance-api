@@ -852,6 +852,9 @@ LIMIT_MAKER
             subscribe: function(url, callback, reconnect = false) {
                 return subscribe(url, callback, reconnect);
             },
+            subscribeCombined: function(url, callback, reconnect = false) {
+                return subscribeCombined(url, callback, reconnect);
+            },
             subscriptions: function() {
                 return subscriptions;
             },
