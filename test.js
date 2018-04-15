@@ -837,9 +837,14 @@ describe( 'Time', function() {
 });
 
 describe( 'Aggtrades', function() {
-  it( 'Todo', function( done ) {
-    //debug( 'todo' );
-    done();
+  it( 'Attempt to get aggTrades for given symbol', function( done ) {
+    binance.aggTrades('BNBBTC', {limit:500}, (error, response) => {
+      assert( typeof ( error ) === 'object', WARN_SHOULD_BE_OBJ );
+      assert( typeof ( response ) === 'object', WARN_SHOULD_BE_OBJ );
+      assert( error === null, WARN_SHOULD_BE_NULL );
+      assert( response !== null, WARN_SHOULD_BE_NOT_NULL );
+      done();
+    } );
   }).timeout( TIMEOUT );
 });
 
@@ -1192,6 +1197,20 @@ describe( 'Websockets chart', function() {
         assert( Object.prototype.hasOwnProperty.call( chart[c], key ), WARN_SHOULD_HAVE_KEY + key );
       });
     });
+  });
+});
+
+describe( 'ohlc', function() {
+  let chart = [{'open': 1.11111, 'high':6.6666, 'low': 8.88888, 'close': 4.44444, 'volume': 3.333333},{'open': 1.11111, 'high':6.6666, 'low': 8.88888, 'close': 4.44444, 'volume': 3.333333}];
+  it( 'Calls ohlc', function() {
+    binance.ohlc( chart );
+  });
+});
+
+describe( 'highstock', function() {
+  let chart = [{'open': 1.11111, 'high':6.6666, 'low': 8.88888, 'close': 4.44444, 'volume': 3.333333},{'open': 1.11111, 'high':6.6666, 'low': 8.88888, 'close': 4.44444, 'volume': 3.333333}];
+  it( 'Calls highstock', function() {
+    binance.highstock( chart );
   });
 });
 
