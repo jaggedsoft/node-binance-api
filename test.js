@@ -72,6 +72,7 @@ describe( 'Construct', function() {
   } ).timeout( TIMEOUT );
 } );
 
+
 describe( 'UseServerTime', function() {
   it( 'Call use server time', function( done ) {
     binance.useServerTime();
@@ -1099,6 +1100,7 @@ describe( 'Websockets prevDay', function() {
   let cnt = 0;
 
   beforeEach(function (done) {
+    this.timeout( TIMEOUT );
     binance.websockets.prevDay( false, a_response => {
       cnt++;
       if ( cnt > 1 ) return;
@@ -1113,24 +1115,45 @@ describe( 'Websockets prevDay', function() {
   });
 });
 
-/*
-describe( 'Websockets userdata', function() {
-  let userdata;
+describe( 'Websockets prevDay array', function() {
+  let response;
+  let cnt = 0;
+
   beforeEach(function (done) {
     this.timeout( TIMEOUT );
-    binance.websockets.userData( data => {
-      userdata = data;
+    binance.websockets.prevDay( ['BNBBTC','TRXBTC'], a_response => {
+      cnt++;
+      if ( cnt > 1 ) return;
       stopSockets();
+      response = a_response;
       done();
-    });
+    })
   });
 
-  it( 'Calls userdata websocket', function() {
-    assert( typeof ( userdata ) === 'object', WARN_SHOULD_BE_OBJ );
-    assert( userdata !== null, WARN_SHOULD_BE_NOT_NULL );
+  it( 'Calls prevDay websocket for array of symbols', function() {
+    assert( typeof ( response ) === 'object', WARN_SHOULD_BE_OBJ );
   });
 });
-*/
+
+describe( 'Websockets prevDay single symbol', function() {
+  let response;
+  let cnt = 0;
+
+  beforeEach(function (done) {
+    this.timeout( TIMEOUT );
+    binance.websockets.prevDay( 'BNBBTC', a_response => {
+      cnt++;
+      if ( cnt > 1 ) return;
+      stopSockets();
+      response = a_response;
+      done();
+    })
+  });
+
+  it( 'Calls prevDay websocket for a single symbol', function() {
+    assert( typeof ( response ) === 'object', WARN_SHOULD_BE_OBJ );
+  });
+});
 
 describe( 'Websockets chart', function() {
   let chart;
@@ -1170,14 +1193,64 @@ describe( 'Websockets chart', function() {
       });
     });
   });
-
-  /*
-  it( 'Calls highstock on chart', function() {
-    binance.websockets.highstock( chart );
-  });
-
-  it( 'Calls ohlc on chart', function() {
-    binance.websockets.ohlc( chart );
-  });
-  */
 });
+
+describe( 'Websockets chart array', function() {
+  let chart;
+  let interval;
+  let symbol;
+  let cnt = 0;
+  beforeEach(function (done) {
+    this.timeout( TIMEOUT );
+    binance.websockets.chart(['BNBBTC','TRXBTC'], '1m', (a_symbol, a_interval, a_chart) => {
+      cnt++;
+      if ( cnt > 1 ) {
+        stopSockets();
+        return;
+      }
+      chart = a_chart;
+      interval = a_interval;
+      symbol = a_symbol;
+      stopSockets();
+      done();
+    });
+  });
+
+  it( 'Calls chart websocket array', function() {
+    assert( typeof ( chart ) === 'object', WARN_SHOULD_BE_OBJ );
+    assert( typeof ( symbol ) === 'string', WARN_SHOULD_BE_OBJ );
+    assert( typeof ( interval ) === 'string', WARN_SHOULD_BE_OBJ );
+    assert( chart !== null, WARN_SHOULD_BE_NOT_NULL );
+    assert( symbol !== null, WARN_SHOULD_BE_NOT_NULL );
+    assert( interval !== null, WARN_SHOULD_BE_NOT_NULL );
+
+    let keys = ['open', 'high', 'open', 'close', 'volume'];
+    assert( Object.keys( chart ).length > 0, 'Should not be empty' );
+
+    Object.keys(chart).forEach(function(c) {
+      keys.forEach(function(key) {
+        assert( Object.prototype.hasOwnProperty.call( chart[c], key ), WARN_SHOULD_HAVE_KEY + key );
+      });
+    });
+  });
+});
+
+
+/*
+describe( 'Websockets userdata', function() {
+  let userdata;
+  beforeEach(function (done) {
+    this.timeout( TIMEOUT );
+    binance.websockets.userData( data => {
+      userdata = data;
+      stopSockets();
+      done();
+    });
+  });
+
+  it( 'Calls userdata websocket', function() {
+    assert( typeof ( userdata ) === 'object', WARN_SHOULD_BE_OBJ );
+    assert( userdata !== null, WARN_SHOULD_BE_NOT_NULL );
+  });
+});
+*/
