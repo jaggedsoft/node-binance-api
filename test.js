@@ -17,16 +17,15 @@ const WARN_SHOULD_BE_UNDEFINED = 'should be undefined';
 const WARN_SHOULD_BE_TYPE = 'should be a string ';
 const TIMEOUT = 10000;
 
-//let stopSocketsRunning = false;
-
 let chai = require( 'chai' );
 let assert = chai.assert;
-
 let path = require( 'path' );
 let binance = require( path.resolve( __dirname, 'node-binance-api.js' ) );
 let util = require( 'util' );
+
 let num_pairs = 299;
 let num_currencies = 156;
+
 let logger = {
   log: function (msg){
     let logLineDetails = ((new Error().stack).split('at ')[3]).trim();
@@ -34,6 +33,7 @@ let logger = {
     console.log('DEBUG', logLineNum[1] + ':' + logLineNum[2], msg);
   }
 }
+
 let debug = function( x ) {
   if ( typeof ( process.env.node_binance_api ) === 'undefined' ) {
     return;
@@ -41,15 +41,17 @@ let debug = function( x ) {
   logger.log( typeof ( x ) );
   logger.log( util.inspect( x ) );
 }
-let stopSockets = function() {
+
+let stopSockets = function(log = false) {
   //stopSocketsRunning = true;
   let endpoints = binance.websockets.subscriptions();
   for ( let endpoint in endpoints ) {
-    console.log('Terminated ws endpoint' + endpoint);
+    if (log) console.log('Terminated ws endpoint: ' + endpoint);
     binance.websockets.terminate(endpoint);
   }
 }
-debug( 'Begin' );
+
+//debug( 'Begin' );
 
 /*global describe*/
 /*eslint no-undef: "error"*/
@@ -62,9 +64,9 @@ describe( 'Construct', function() {
       APISECRET: 'ZqePF1DcLb6Oa0CfcLWH0Tva59y8qBBIqu789JEY27jq0RkOKXpNl9992By1PN9Z',
       useServerTime: true,
       reconnect: false,
-      verbose: true
+      verbose: false,
+      log: debug
     } );
-    debug( binance.getOptions() );
     assert( typeof ( binance ) === 'object', 'Binance is not an object' );
     done();
   } ).timeout( TIMEOUT );
@@ -895,10 +897,13 @@ describe( 'getInfo', function() {
 
 describe( 'Websockets candlesticks', function() {
   let candlesticks;
+  let cnt = 0;
   /*global beforeEach*/
   beforeEach(function (done) {
     this.timeout( TIMEOUT );
     binance.websockets.candlesticks(['BNBBTC'], '1m', a_candlesticks => {
+      cnt++;
+      if ( cnt > 1 ) return;
       candlesticks = a_candlesticks;
       stopSockets();
       done();
@@ -924,10 +929,13 @@ describe( 'Websockets candlesticks', function() {
 
 describe( 'Websockets depth', function() {
   let depth;
+  let cnt = 0;
   /*global beforeEach*/
   beforeEach(function (done) {
     this.timeout( TIMEOUT );
     binance.websockets.depth(['BNBBTC'], e_depth => {
+      cnt++;
+      if ( cnt > 1 ) return;
       depth = e_depth;
       stopSockets();
       done();
@@ -942,10 +950,13 @@ describe( 'Websockets depth', function() {
 
 describe( 'Websockets trades', function() {
   let trades;
+  let cnt = 0;
   /*global beforeEach*/
   beforeEach(function (done) {
     this.timeout( TIMEOUT );
     binance.websockets.trades(['BNBBTC', 'ETHBTC'], e_trades => {
+      cnt++;
+      if ( cnt > 1 ) return;
       trades = e_trades;
       stopSockets();
       done();
@@ -986,59 +997,14 @@ describe( 'roundStep', function() {
   }).timeout( TIMEOUT );
 });
 
-describe( 'Websockets chart', function() {
-  let chart;
-  let interval;
-  let symbol;
-  let isdone = false;
-  beforeEach(function (done) {
-    this.timeout( TIMEOUT );
-    binance.websockets.chart('BNBBTC', '1m', (a_symbol, a_interval, a_chart) => {
-      if ( isdone === true ) return;
-      // chart always gets call twice before we can stop it.
-      if ( isdone === false ) {
-        isdone = true;
-        chart = a_chart;
-        interval = a_interval;
-        symbol = a_symbol;
-        done();
-      }
-      stopSockets();
-    });
-  });
-
-  it( 'Calls chart websocket', function() {
-    assert( typeof ( chart ) === 'object', WARN_SHOULD_BE_OBJ );
-    assert( typeof ( symbol ) === 'string', WARN_SHOULD_BE_OBJ );
-    assert( typeof ( interval ) === 'string', WARN_SHOULD_BE_OBJ );
-    assert( chart !== null, WARN_SHOULD_BE_NOT_NULL );
-    assert( symbol !== null, WARN_SHOULD_BE_NOT_NULL );
-    assert( interval !== null, WARN_SHOULD_BE_NOT_NULL );
-
-    let keys = ['open', 'high', 'open', 'close', 'volume'];
-    assert( Object.keys( chart ).length > 0, 'Should not be empty' );
-
-    Object.keys(chart).forEach(function(c) {
-      keys.forEach(function(key) {
-        assert( Object.prototype.hasOwnProperty.call( chart[c], key ), WARN_SHOULD_HAVE_KEY + key );
-      });
-    });
-  });
-
-  it( 'Calls highstock on chart', function() {
-    binance.websockets.highstock( chart );
-  });
-
-  it( 'Calls ohlc on chart', function() {
-    binance.websockets.ohlc( chart );
-  });
-});
-
 describe( 'Websockets miniticker', function() {
   let markets;
+  let cnt = 0;
   beforeEach(function (done) {
     this.timeout( TIMEOUT );
     binance.websockets.miniTicker( tick => {
+      cnt++;
+      if ( cnt > 1 ) return;
       markets = tick;
       stopSockets();
       done();
@@ -1062,33 +1028,17 @@ describe( 'Websockets miniticker', function() {
   });
 });
 
-/*
-describe( 'Websockets userdata', function() {
-  let userdata;
-  beforeEach(function (done) {
-    this.timeout( TIMEOUT );
-    binance.websockets.userData( data => {
-      userdata = data;
-      stopSockets();
-      done();
-    });
-  });
-
-  it( 'Calls userdata websocket', function() {
-    assert( typeof ( userdata ) === 'object', WARN_SHOULD_BE_OBJ );
-    assert( userdata !== null, WARN_SHOULD_BE_NOT_NULL );
-  });
-});
-*/
-
 describe( 'Websockets symbol depthcache', function() {
   let symbol;
   let bids;
   let asks;
+  let cnt = 0;
   beforeEach(function (done) {
     this.timeout( TIMEOUT );
     binance.websockets.depthCache('BNBBTC', (a_symbol, a_depth) => {
-      stopSockets();
+      cnt++;
+      if ( cnt > 1 ) return;
+      stopSockets( true );
       symbol = a_symbol;
       bids = a_depth.bids;
       asks = a_depth.asks;
@@ -1115,9 +1065,12 @@ describe( 'Websockets array depthcache', function() {
   let symbol;
   let bids;
   let asks;
+  let cnt = 0;
   beforeEach(function (done) {
     this.timeout( TIMEOUT );
     binance.websockets.depthCache(['BNBBTC','TRXBTC'], (a_symbol, a_depth) => {
+      cnt++;
+      if ( cnt > 1 ) return;
       stopSockets();
       symbol = a_symbol;
       bids = a_depth.bids;
@@ -1199,3 +1152,73 @@ describe( 'Websockets prevDay', function() {
   });
 });
 */
+
+
+/*
+describe( 'Websockets userdata', function() {
+  let userdata;
+  beforeEach(function (done) {
+    this.timeout( TIMEOUT );
+    binance.websockets.userData( data => {
+      userdata = data;
+      stopSockets();
+      done();
+    });
+  });
+
+  it( 'Calls userdata websocket', function() {
+    assert( typeof ( userdata ) === 'object', WARN_SHOULD_BE_OBJ );
+    assert( userdata !== null, WARN_SHOULD_BE_NOT_NULL );
+  });
+});
+*/
+
+describe( 'Websockets chart', function() {
+  let chart;
+  let interval;
+  let symbol;
+  let cnt = 0;
+  beforeEach(function (done) {
+    this.timeout( TIMEOUT * 2 );
+    binance.websockets.chart('BNBBTC', '1m', (a_symbol, a_interval, a_chart) => {
+      cnt++;
+      if ( cnt > 1 ) {
+        stopSockets();
+        return;
+      }
+      chart = a_chart;
+      interval = a_interval;
+      symbol = a_symbol;
+      stopSockets();
+      done();
+    });
+  });
+
+  it( 'Calls chart websocket', function() {
+    assert( typeof ( chart ) === 'object', WARN_SHOULD_BE_OBJ );
+    assert( typeof ( symbol ) === 'string', WARN_SHOULD_BE_OBJ );
+    assert( typeof ( interval ) === 'string', WARN_SHOULD_BE_OBJ );
+    assert( chart !== null, WARN_SHOULD_BE_NOT_NULL );
+    assert( symbol !== null, WARN_SHOULD_BE_NOT_NULL );
+    assert( interval !== null, WARN_SHOULD_BE_NOT_NULL );
+
+    let keys = ['open', 'high', 'open', 'close', 'volume'];
+    assert( Object.keys( chart ).length > 0, 'Should not be empty' );
+
+    Object.keys(chart).forEach(function(c) {
+      keys.forEach(function(key) {
+        assert( Object.prototype.hasOwnProperty.call( chart[c], key ), WARN_SHOULD_HAVE_KEY + key );
+      });
+    });
+  });
+
+  /*
+  it( 'Calls highstock on chart', function() {
+    binance.websockets.highstock( chart );
+  });
+
+  it( 'Calls ohlc on chart', function() {
+    binance.websockets.ohlc( chart );
+  });
+  */
+});
