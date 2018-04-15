@@ -1094,12 +1094,14 @@ describe( 'Websockets array depthcache', function() {
   });
 });
 
-/*
 describe( 'Websockets prevDay', function() {
   let response;
+  let cnt = 0;
 
   beforeEach(function (done) {
     binance.websockets.prevDay( false, a_response => {
+      cnt++;
+      if ( cnt > 1 ) return;
       stopSockets();
       response = a_response;
       done();
@@ -1107,52 +1109,9 @@ describe( 'Websockets prevDay', function() {
   });
 
   it( 'Calls prevDay websocket for symbol', function() {
-    assert( typeof ( error ) === 'object', WARN_SHOULD_BE_OBJ );
-    assert( error === null, WARN_SHOULD_BE_NULL );
     assert( typeof ( response ) === 'object', WARN_SHOULD_BE_OBJ );
-    assert( response !== null, WARN_SHOULD_BE_NOT_NULL );
-    //assert( Object.keys( response ).length >= num_pairs, 'should at least ' + num_pairs + 'currency pairs?' );
-
-    let keys = [
-'eventType', 'eventTime', 'symbol', 'priceChange', 'percentChange', 'averagePrice', 'prevClose',
-'close', 'closeQty', 'bestBid', 'bestBidQty', 'bestAsk', 'bestAskQty', 'open', 'high',
-'low', 'volume', 'quoteVolume', 'openTime', 'closeTime', 'firstTradeId', 'lastTradeId', 'numTrades'
-];
-    response.forEach(function(obj) {
-      keys.forEach(function(key) {
-        assert( Object.prototype.hasOwnProperty.call( obj, key ), WARN_SHOULD_HAVE_KEY + key );
-      });
-    });
-  });
-
-
-  beforeEach(function (done) {
-    binance.websockets.prevDay( 'BNBBTC', a_response => {
-      stopSockets();
-      response = a_response;
-      done();
-    })
-  });
-
-  it( 'Calls prevDay websocket for all symbols', function() {
-    assert( typeof ( error ) === 'object', WARN_SHOULD_BE_OBJ );
-    assert( error === null, WARN_SHOULD_BE_NULL );
-    assert( typeof ( response ) === 'object', WARN_SHOULD_BE_OBJ );
-    assert( response !== null, WARN_SHOULD_BE_NOT_NULL );
-    //assert( Object.keys( response ).length >= num_pairs, 'should at least ' + num_pairs + 'currency pairs?' );
-
-    let keys = [
-'eventType', 'eventTime', 'symbol', 'priceChange', 'percentChange', 'averagePrice', 'prevClose',
-'close', 'closeQty', 'bestBid', 'bestBidQty', 'bestAsk', 'bestAskQty', 'open', 'high',
-'low', 'volume', 'quoteVolume', 'openTime', 'closeTime', 'firstTradeId', 'lastTradeId', 'numTrades'
-];
-    keys.forEach(function(key) {
-      assert( Object.prototype.hasOwnProperty.call( response, key ), WARN_SHOULD_HAVE_KEY + key );
-    });
   });
 });
-*/
-
 
 /*
 describe( 'Websockets userdata', function() {
@@ -1179,7 +1138,7 @@ describe( 'Websockets chart', function() {
   let symbol;
   let cnt = 0;
   beforeEach(function (done) {
-    this.timeout( TIMEOUT * 2 );
+    this.timeout( TIMEOUT );
     binance.websockets.chart('BNBBTC', '1m', (a_symbol, a_interval, a_chart) => {
       cnt++;
       if ( cnt > 1 ) {
