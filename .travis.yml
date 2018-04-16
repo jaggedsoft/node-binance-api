@@ -23,14 +23,13 @@ notifications:
     webhooks: https://www.travisbuddy.com/?insertMode=update
 
 before_script:
-    - npm install
     - travis_retry npm install
     - travis_retry npm install coveralls istanbul mocha chai codecov codacy-coverage mocha-lcov-reporter eslint
     - travis_retry npm install -g coveralls istanbul mocha chai codecov codacy-coverage mocha-lcov-reporter eslint
 
 script:
-    - npm run test
-    - npm run lint  
+    - travis_retry npm run test
+    - travis_retry npm run lint  
 
 after_success:
     - if [[ $QUALITY == "yes" ]]; then travis_retry npm run cover; fi
