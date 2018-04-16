@@ -1,9 +1,23 @@
-sudo: required
-dist: trusty
 language: node_js
 node_js:
   - "9"
 
+os:
+  - linux
+  - osx
+
+matrix:
+  include:
+    - os: linux
+      dist: trusty
+      sudo: required
+    - os: linux
+      dist: precise
+      sudo: required
+    - os: osx
+      osx_image: xcode7.2
+  allow_failures:
+    - os: osx
 branches:
   only: master
 
