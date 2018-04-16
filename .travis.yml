@@ -33,7 +33,7 @@ script:
     - npm run lint  
 
 after_success:
-    - if [[ $QUALITY == "yes" ]]; then npm run cover; fi
-    - if [[ $QUALITY == "yes" ]]; then npm run coveralls; fi
-    - if [[ $QUALITY == "yes" ]]; then npm run codecov; fi
-    - if [[ $QUALITY == "yes" ]]; then npm run codacy; fi
+    - if [[ $QUALITY == "yes" ]]; then travis_retry npm run cover; fi
+    - if [[ $QUALITY == "yes" ]]; then travis_retry npm run coveralls; fi
+    - if [[ $QUALITY == "yes" ]]; then travis_retry npm run codecov; fi
+    - if [[ $QUALITY == "yes" ]]; then travis_retry npm run codacy; fi
