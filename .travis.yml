@@ -2,10 +2,6 @@ language: node_js
 node_js:
   - "9"
 
-os:
-  - linux
-  - osx
-
 matrix:
   include:
     - os: linux
@@ -18,6 +14,7 @@ matrix:
       osx_image: xcode7.2
   allow_failures:
     - os: osx
+    
 branches:
   only: master
 
