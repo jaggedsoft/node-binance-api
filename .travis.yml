@@ -32,7 +32,7 @@ script:
     - npm run lint  
 
 after_success:
-    - npm run cover
-    - npm run coveralls
-    - npm run codecov 
-    - npm run codacy   
+    - if [[ $TRAVIS_OS_NAME != "linux" ]]; then npm run cover; fi
+    - if [[ $TRAVIS_OS_NAME != "linux" ]]; then npm run coveralls; fi
+    - if [[ $TRAVIS_OS_NAME != "linux" ]]; then npm run codecov; fi
+    - if [[ $TRAVIS_OS_NAME != "linux" ]]; then npm run codacy; fi
