@@ -17,6 +17,9 @@ matrix:
     
 branches:
   only: master
+  
+notifications:
+    webhooks: https://www.travisbuddy.com/?insertMode=update
 
 before_script:
     - npm install
