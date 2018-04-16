@@ -7,6 +7,7 @@ matrix:
     - os: linux
       dist: trusty
       sudo: required
+      env: QUALITY=yes
     - os: linux
       dist: precise
       sudo: required
@@ -32,7 +33,7 @@ script:
     - npm run lint  
 
 after_success:
-    - if [[ $TRAVIS_OS_NAME != "linux" ]]; then npm run cover; fi
-    - if [[ $TRAVIS_OS_NAME != "linux" ]]; then npm run coveralls; fi
-    - if [[ $TRAVIS_OS_NAME != "linux" ]]; then npm run codecov; fi
-    - if [[ $TRAVIS_OS_NAME != "linux" ]]; then npm run codacy; fi
+    - if [[ $QUALITY == "yes" ]]; then npm run cover; fi
+    - if [[ $QUALITY == "yes" ]]; then npm run coveralls; fi
+    - if [[ $QUALITY == "yes" ]]; then npm run codecov; fi
+    - if [[ $QUALITY == "yes" ]]; then npm run codacy; fi
