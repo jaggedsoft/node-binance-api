@@ -1592,6 +1592,15 @@ binance.options({
 });
 ```
 
+### Proxy Support
+Both the standard REST api and the Websockets api honour the environmental variable "https_proxy"
+
+To begin using the proxy, such as on linux, set the variable
+```js
+export https_proxy=http://yourproxy.com:port
+# run your app
+```
+
 [![Views](http://hits.dwyl.io/jaggedsoft/node-binance-api.svg)](http://hits.dwyl.io/jaggedsoft/node-binance-api)
 
 Thank you to all contributors: dmzoneill, keith1024, vaielab, nickreese, Tuitio, grandmore, itnok, CollinEstes, sethyx, mstijak, MadDeveloper, balthazar, bitoiu, matthewwoop, robaleman, hems and others!
