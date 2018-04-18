@@ -51,7 +51,7 @@ let stopSockets = function(log = false) {
   }
 }
 
-//debug( 'Begin' );
+debug( 'Begin' );
 
 /*global describe*/
 /*eslint no-undef: "error"*/
@@ -83,8 +83,8 @@ describe( 'UseServerTime', function() {
 describe( 'Prices', function() {
   it( 'Checks the price of BNBBTC', function( done ) {
     binance.prices( 'BNBBTC', ( error, ticker ) => {
-      //debug( error );
-      //debug( ticker );
+      debug( error );
+      debug( ticker );
       assert( typeof ( error ) === 'object', WARN_SHOULD_BE_OBJ );
       assert( typeof ( ticker ) === 'object', WARN_SHOULD_BE_OBJ );
       assert( error === null, WARN_SHOULD_BE_NULL );
@@ -99,8 +99,8 @@ describe( 'Prices', function() {
 describe( 'All Prices', function() {
   it( 'Checks the prices of coin pairs', function( done ) {
     binance.prices( ( error, ticker ) => {
-      //debug( error );
-      //debug( ticker );
+      debug( error );
+      debug( ticker );
       assert( typeof ( error ) === 'object', WARN_SHOULD_BE_OBJ );
       assert( typeof ( ticker ) === 'object', WARN_SHOULD_BE_OBJ );
       assert( error === null, WARN_SHOULD_BE_NULL );
@@ -115,8 +115,8 @@ describe( 'All Prices', function() {
 describe( 'Balances', function() {
   it( 'Get the balances in the account', function( done ) {
     binance.balance( ( error, balances ) => {
-      //debug( error );
-      //debug( balances );
+      debug( error );
+      debug( balances );
       assert( error === null, WARN_SHOULD_BE_NULL );
       assert( balances !== null, WARN_SHOULD_BE_NOT_NULL );
       assert( balances );
@@ -132,8 +132,8 @@ describe( 'Balances', function() {
 describe( 'Book Ticker', function() {
   it( 'Get the BNB book ticker', function( done ) {
     binance.bookTickers( 'BNBBTC', ( error, ticker ) => {
-      //debug( error );
-      //debug( ticker );
+      debug( error );
+      debug( ticker );
       assert( error === null, WARN_SHOULD_BE_NULL );
       assert( ticker !== null, WARN_SHOULD_BE_NOT_NULL );
       assert( ticker );
@@ -167,8 +167,8 @@ describe( 'Book Ticker', function() {
 describe( 'Booker Tickers', function() {
   it( 'Get the tickers for all pairs', function( done ) {
     binance.bookTickers( ( error, ticker ) => {
-      //debug( error );
-      //debug( ticker );
+      debug( error );
+      debug( ticker );
       assert( typeof ( error ) === 'object', WARN_SHOULD_BE_OBJ );
       assert( typeof ( ticker ) === 'object', WARN_SHOULD_BE_OBJ );
       assert( error === null, WARN_SHOULD_BE_NULL );
@@ -203,9 +203,9 @@ describe( 'Market', function() {
 describe( 'Depth chart BNB', function() {
   it( 'Get the depth chart information for BNBBTC', function( done ) {
     binance.depth( 'BNBBTC', ( error, depth, symbol ) => {
-      //debug( error );
-      //debug( depth );
-      //debug( symbol );
+      debug( error );
+      debug( depth );
+      debug( symbol );
       assert( error === null, WARN_SHOULD_BE_NULL );
       assert( depth !== null, WARN_SHOULD_BE_NOT_NULL );
       assert( symbol !== null, WARN_SHOULD_BE_NOT_NULL );
@@ -262,8 +262,8 @@ describe( 'Buy order advanced', function() {
     let quantity = 1;
     let price = 0.069;
     binance.buy( 'BNBETH', quantity, price, { type: 'LIMIT' }, ( error, response ) => {
-      //debug( error );
-      //debug( response );
+      debug( error );
+      debug( response );
       assert( typeof ( error ) === 'object', WARN_SHOULD_BE_OBJ );
       assert( typeof ( response ) === 'object', WARN_SHOULD_BE_OBJ );
       assert( error !== null, WARN_SHOULD_BE_NOT_NULL );
@@ -300,9 +300,9 @@ describe( 'Cancel order', function() {
   it( 'Attempt to cancel an order', function( done ) {
     let orderid = '7610385';
     binance.cancel( 'ETHBTC', orderid, ( error, response, symbol ) => {
-      //debug( error );
-      //debug( response );
-      //debug( symbol );
+      debug( error );
+      debug( response );
+      debug( symbol );
       assert( typeof ( error ) === 'object', WARN_SHOULD_BE_OBJ );
       assert( typeof ( response ) === 'object', WARN_SHOULD_BE_OBJ );
       assert( typeof ( symbol ) === 'string', WARN_SHOULD_BE_TYPE + 'string' );
@@ -320,9 +320,9 @@ describe( 'Cancel order', function() {
 describe( 'Cancel orders', function() {
   it( 'Attempt to cancel all orders given a symbol', function( done ) {
     binance.cancelOrders( 'XMRBTC', ( error, response, symbol ) => {
-      //debug( error );
-      //debug( response );
-      //debug( symbol );
+      debug( error );
+      debug( response );
+      debug( symbol );
       assert( typeof ( error ) === 'string', WARN_SHOULD_BE_OBJ );
       assert( typeof ( response ) === 'object', WARN_SHOULD_BE_OBJ );
       assert( typeof ( symbol ) === 'string', WARN_SHOULD_BE_TYPE + 'string' );
@@ -337,9 +337,9 @@ describe( 'Cancel orders', function() {
 describe( 'Open Orders', function() {
   it( 'Attempt to show all orders to ETHBTC', function( done ) {
     binance.openOrders( 'ETHBTC', ( error, openOrders, symbol ) => {
-      //debug( error );
-      //debug( openOrders );
-      //debug( symbol );
+      debug( error );
+      debug( openOrders );
+      debug( symbol );
       assert( typeof ( error ) === 'object', WARN_SHOULD_BE_OBJ );
       assert( typeof ( openOrders ) === 'object', WARN_SHOULD_BE_OBJ );
       assert( typeof ( symbol ) === 'string', WARN_SHOULD_BE_TYPE + 'string' );
@@ -356,8 +356,8 @@ describe( 'Open Orders', function() {
 describe( 'Open Orders', function() {
   it( 'Attempt to show all orders for all symbols', function( done ) {
     binance.openOrders( false, ( error, openOrders ) => {
-      //debug( error );
-      //debug( openOrders );
+      debug( error );
+      debug( openOrders );
       assert( typeof ( error ) === 'object', WARN_SHOULD_BE_OBJ );
       assert( typeof ( openOrders ) === 'object', WARN_SHOULD_BE_OBJ );
       assert( error === null, WARN_SHOULD_BE_NULL );
@@ -371,9 +371,9 @@ describe( 'Open Orders', function() {
 describe( 'Order status', function() {
   it( 'Attempt to get the order status for a given order id', function( done ) {
     binance.orderStatus( 'ETHBTC', '1234567890', ( error, orderStatus, symbol ) => {
-      //debug( error );
-      //debug( orderStatus );
-      //debug( symbol );
+      debug( error );
+      debug( orderStatus );
+      debug( symbol );
       assert( typeof ( error ) === 'object', WARN_SHOULD_BE_OBJ );
       assert( typeof ( orderStatus ) === 'object', WARN_SHOULD_BE_OBJ );
       assert( typeof ( symbol ) === 'string', WARN_SHOULD_BE_TYPE + 'string' );
@@ -390,9 +390,9 @@ describe( 'Order status', function() {
 describe( 'trades', function() {
   it( 'Attempt get all trade history for given symbol', function( done ) {
     binance.trades( 'SNMBTC', ( error, trades, symbol ) => {
-      //debug( error );
-      //debug( trades );
-      //debug( symbol );
+      debug( error );
+      debug( trades );
+      debug( symbol );
       assert( typeof ( error ) === 'object', WARN_SHOULD_BE_OBJ );
       assert( typeof ( trades ) === 'object', WARN_SHOULD_BE_OBJ );
       assert( typeof ( symbol ) === 'string', WARN_SHOULD_BE_TYPE + 'string' );
@@ -408,9 +408,9 @@ describe( 'trades', function() {
 describe( 'Orders', function() {
   it( 'Attempt get all orders for given symbol', function( done ) {
     binance.allOrders( 'ETHBTC', ( error, orders, symbol ) => {
-      //debug( error );
-      //debug( orders );
-      //debug( symbol );
+      debug( error );
+      debug( orders );
+      debug( symbol );
       assert( typeof ( error ) === 'object', WARN_SHOULD_BE_OBJ );
       assert( typeof ( orders ) === 'object', WARN_SHOULD_BE_OBJ );
       assert( typeof ( symbol ) === 'string', WARN_SHOULD_BE_TYPE + 'string' );
@@ -426,8 +426,8 @@ describe( 'Orders', function() {
 describe( 'Prevday all symbols', function() {
   it( 'Attempt get prevday trade status for all symbols', function( done ) {
     binance.prevDay( false, ( error, prevDay ) => {
-      //debug( error );
-      //debug( prevDay );
+      debug( error );
+      debug( prevDay );
       assert( typeof ( error ) === 'object', WARN_SHOULD_BE_OBJ );
       assert( typeof ( prevDay ) === 'object', WARN_SHOULD_BE_OBJ );
       assert( error === null, WARN_SHOULD_BE_NULL );
@@ -452,9 +452,9 @@ describe( 'Prevday all symbols', function() {
 describe( 'Prevday', function() {
   it( 'Attempt get prevday trade status for given symbol', function( done ) {
     binance.prevDay( 'BNBBTC', ( error, prevDay, symbol ) => {
-      //debug( error );
-      //debug( prevDay );
-      //debug( symbol );
+      debug( error );
+      debug( prevDay );
+      debug( symbol );
       assert( typeof ( error ) === 'object', WARN_SHOULD_BE_OBJ );
       assert( typeof ( prevDay ) === 'object', WARN_SHOULD_BE_OBJ );
       assert( typeof ( symbol ) === 'string', WARN_SHOULD_BE_TYPE + 'string' );
@@ -478,9 +478,9 @@ describe( 'Prevday', function() {
 describe( 'Candle sticks', function() {
   it( 'Attempt get candlesticks for a given symbol', function( done ) {
     binance.candlesticks( 'BNBBTC', '5m', ( error, ticks, symbol ) => {
-      //debug( error );
-      //debug( ticks );
-      //debug( symbol );
+      debug( error );
+      debug( ticks );
+      debug( symbol );
       assert( typeof ( error ) === 'object', WARN_SHOULD_BE_OBJ );
       assert( typeof ( ticks ) === 'object', WARN_SHOULD_BE_OBJ );
       assert( typeof ( symbol ) === 'string', WARN_SHOULD_BE_TYPE + 'string' );
@@ -587,8 +587,8 @@ describe( 'Array', function() {
 describe( 'sortBids', function() {
   it( 'Sorts symbols bids and returns an object', function( done ) {
     /* let actual = binance.sortBids( 'BNBBTC' );
-       //debug( actual ); */
-    //debug( 'todo' );
+       debug( actual ); */
+    debug( 'todo' );
     done();
   });
 });
@@ -596,8 +596,7 @@ describe( 'sortBids', function() {
 describe( 'sortAsks', function() {
   it( 'Sorts symbols asks and returns an object', function( done ) {
     //let actual = binance.sortBids( 'BNBBTC' );
-    //debug( actual ); */
-    //debug( 'todo' );
+    debug( 'todo' );
     done();
   }).timeout( TIMEOUT );
 });
@@ -644,8 +643,8 @@ describe( 'System status', function() {
   });
 
   it( 'Gets the system status info as an object', function() {
-    //debug( async_error );
-    //debug( async_data );
+    debug( async_error );
+    debug( async_data );
     assert( typeof ( async_error ) === 'object', 'error should be object' );
     assert( async_error === null, 'Error should be null' );
     assert( typeof ( async_data ) === 'object', 'data should be object' );
@@ -663,8 +662,8 @@ describe( 'System status', function() {
 describe( 'Withdraw', function() {
   it( 'Attempt to withdraw BNB to another address', function( done ) {
     binance.withdraw( 'BNBBTC', 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', '5', false, ( error, result ) => {
-      //debug( error );
-      //debug( result );
+      debug( error );
+      debug( result );
       assert( typeof ( error ) === 'object', WARN_SHOULD_BE_OBJ );
       assert( typeof ( result ) === 'object', WARN_SHOULD_BE_OBJ );
       assert( error === null, WARN_SHOULD_BE_NULL );
@@ -679,8 +678,8 @@ describe( 'Withdraw', function() {
 
   it( 'Attempt to withdraw BNB to another address with address tag', function( done ) {
     binance.withdraw( 'BNBBTC', 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', '5', 'AQSWDEFRGT', ( error, result ) => {
-      //debug( error );
-      //debug( result );
+      debug( error );
+      debug( result );
       assert( typeof ( error ) === 'object', WARN_SHOULD_BE_OBJ );
       assert( typeof ( result ) === 'object', WARN_SHOULD_BE_OBJ );
       assert( error === null, WARN_SHOULD_BE_NULL );
@@ -697,8 +696,8 @@ describe( 'Withdraw', function() {
 describe( 'Withdraw history', function() {
   it( 'Attempt to get withdraw history for BTC', function( done ) {
     binance.withdrawHistory( ( error, result ) => {
-      //debug( error );
-      //debug( result );
+      debug( error );
+      debug( result );
       assert( typeof ( error ) === 'object', WARN_SHOULD_BE_OBJ );
       assert( typeof ( result ) === 'object', WARN_SHOULD_BE_OBJ );
       assert( error === null, WARN_SHOULD_BE_NULL );
@@ -713,8 +712,8 @@ describe( 'Withdraw history', function() {
 
   it( 'Attempt to get withdraw history for all assets', function( done ) {
     binance.withdrawHistory( ( error, result ) => {
-      //debug( error );
-      //debug( result );
+      debug( error );
+      debug( result );
       assert( typeof ( error ) === 'object', WARN_SHOULD_BE_OBJ );
       assert( typeof ( result ) === 'object', WARN_SHOULD_BE_OBJ );
       assert( error === null, WARN_SHOULD_BE_NULL );
@@ -732,8 +731,8 @@ describe( 'Withdraw history', function() {
 describe( 'Deposit history', function() {
   it( 'Attempt to get deposit history for all assets', function( done ) {
     binance.depositHistory( ( error, result ) => {
-      //debug( error );
-      //debug( result );
+      debug( error );
+      debug( result );
       assert( typeof ( error ) === 'object', WARN_SHOULD_BE_OBJ );
       assert( typeof ( result ) === 'object', WARN_SHOULD_BE_OBJ );
       assert( error === null, WARN_SHOULD_BE_NULL );
@@ -750,8 +749,8 @@ describe( 'Deposit history', function() {
 describe( 'Deposit address', function() {
   it( 'Attempt to get deposit address for BNB', function( done ) {
     binance.depositAddress( 'BTC', ( error, result ) => {
-      //debug( error );
-      //debug( result );
+      debug( error );
+      debug( result );
       assert( typeof ( error ) === 'object', WARN_SHOULD_BE_OBJ );
       assert( typeof ( result ) === 'object', WARN_SHOULD_BE_OBJ );
       assert( error === null, WARN_SHOULD_BE_NULL );
@@ -768,8 +767,8 @@ describe( 'Deposit address', function() {
 
   it( 'Attempt to get deposit address for XYZ', function( done ) {
     binance.depositAddress( 'XYZ', ( error, result ) => {
-      //debug( error );
-      //debug( result );
+      debug( error );
+      debug( result );
       assert( typeof ( error ) === 'object', WARN_SHOULD_BE_OBJ );
       assert( typeof ( result ) === 'object', WARN_SHOULD_BE_OBJ );
       assert( error === null, WARN_SHOULD_BE_NULL );
@@ -787,8 +786,8 @@ describe( 'Deposit address', function() {
 describe( 'Account status', function() {
   it( 'Attempt to get account status', function( done ) {
     binance.accountStatus( ( error, data ) => {
-      //debug( error );
-      //debug( data );
+      debug( error );
+      debug( data );
       assert( typeof ( error ) === 'object', WARN_SHOULD_BE_OBJ );
       assert( typeof ( data ) === 'object', WARN_SHOULD_BE_OBJ );
       assert( error === null, WARN_SHOULD_BE_NULL );
@@ -801,8 +800,8 @@ describe( 'Account status', function() {
 describe( 'Account', function() {
   it( 'Attempt to get account information', function( done ) {
     binance.account( ( error, data ) => {
-      //debug( error );
-      //debug( data );
+      debug( error );
+      debug( data );
       assert( typeof ( error ) === 'object', WARN_SHOULD_BE_OBJ );
       assert( typeof ( data ) === 'object', WARN_SHOULD_BE_OBJ );
       assert( error === null, WARN_SHOULD_BE_NULL );
@@ -824,8 +823,8 @@ describe( 'Use Server Time', function() {
 describe( 'Time', function() {
   it( 'Attempt to get server time', function( done ) {
     binance.time( ( error, data ) => {
-      //debug( error );
-      //debug( data );
+      debug( error );
+      debug( data );
       assert( typeof ( error ) === 'object', WARN_SHOULD_BE_OBJ );
       assert( typeof ( data ) === 'object', WARN_SHOULD_BE_OBJ );
       assert( error === null, WARN_SHOULD_BE_NULL );
@@ -851,8 +850,8 @@ describe( 'Aggtrades', function() {
 describe( 'Recent Trades', function() {
   it( 'Attempt get recent Trades for a given symbol', function( done ) {
     binance.recentTrades( 'BNBBTC', ( error, data ) => {
-      //debug( error );
-      //debug( data );
+      debug( error );
+      debug( data );
       assert( typeof ( error ) === 'object', WARN_SHOULD_BE_OBJ );
       assert( typeof ( data ) === 'object', WARN_SHOULD_BE_OBJ );
       assert( error === null, WARN_SHOULD_BE_NULL );
@@ -874,8 +873,8 @@ describe( 'Recent Trades', function() {
 describe( 'Historical Trades', function() {
   it( 'Attempt get Historical Trades for a given symbol', function( done ) {
     binance.historicalTrades( 'BNBBTC', ( error, data ) => {
-      //debug( error );
-      //debug( data );
+      debug( error );
+      debug( data );
       assert( typeof ( error ) === 'object', WARN_SHOULD_BE_OBJ );
       assert( typeof ( data ) === 'object', WARN_SHOULD_BE_OBJ );
       assert( error === null, WARN_SHOULD_BE_NULL );
