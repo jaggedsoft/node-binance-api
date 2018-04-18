@@ -256,7 +256,7 @@ LIMIT_MAKER
         let ws = false;
 
         if ( proxy !== false ) {
-            console.log('using proxy server %j', proxy);
+            if ( options.verbose ) options.log('using proxy server ' + proxy);
             let options = url.parse(proxy);
             let agent = new HttpsProxyAgent(options);
             ws = new WebSocket(stream+endpoint, { agent: agent });
@@ -288,7 +288,7 @@ LIMIT_MAKER
         let ws = false;
 
         if ( proxy !== false ) {
-            console.log('using proxy server %j', proxy);
+            if ( options.verbose ) options.log('using proxy server %j'+ proxy);
             let options = url.parse(proxy);
             let agent = new HttpsProxyAgent(options);
             ws = new WebSocket(combineStream+queryParams, { agent: agent });
