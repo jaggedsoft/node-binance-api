@@ -6,6 +6,10 @@
  * Released under the MIT License
  * ============================================================ */
 
+/**
+ * Node Binance Api
+ * @module jaggedsoft/node-binance-api
+ */
 module.exports = function() {
     'use strict';
     const WebSocket = require('ws');
@@ -41,6 +45,14 @@ module.exports = function() {
     let info = { timeOffset: 0 };
     let socketHeartbeatInterval;
 
+    /**
+     * Create a http request to the public API
+     * @param {string} url - The http endpoint
+     * @param {object} data - The data to send
+     * @param {function} callback - The callback method to call
+     * @param {string} method - the http method
+     * @return {undefined}
+     */
     const publicRequest = function(url, data, callback, method = 'GET') {
         if ( !data ) data = {};
         let opt = {
@@ -65,6 +77,11 @@ module.exports = function() {
         });
     };
 
+    /**
+     * Checks to see of the boject is iterable
+     * @param {object} obj - The object check
+     * @return {boolean} true or false is iterable
+     */
     const isIterable = function(obj) {
       // checks for null and undefined
       if (obj === null) {
@@ -73,6 +90,13 @@ module.exports = function() {
       return typeof obj[Symbol.iterator] === 'function';
     }
 
+    /**
+     * Create a http request to the public API
+     * @param {string} url - The http endpoint
+     * @param {function} callback - The callback method to call
+     * @param {string} method - the http method
+     * @return {undefined}
+     */
     const apiRequest = function(url, callback, method = 'GET') {
         if ( !options.APIKEY ) throw Error('apiRequest: Invalid API Key');
         let opt = {
@@ -97,6 +121,14 @@ module.exports = function() {
         });
     };
 
+    /**
+     * Make market request
+     * @param {string} url - The http endpoint
+     * @param {object} data - The data to send
+     * @param {function} callback - The callback method to call
+     * @param {string} method - the http method
+     * @return {undefined}
+     */
     const marketRequest = function(url, data, callback, method = 'GET') {
         if ( !data ) data = {};
         let query = Object.keys(data).reduce(function(a,k){a.push(k+'='+encodeURIComponent(data[k]));return a},[]).join('&');
@@ -122,6 +154,14 @@ module.exports = function() {
         });
     };
 
+    /**
+     * Create a signed http request to the signed API
+     * @param {string} url - The http endpoint
+     * @param {object} data - The data to send
+     * @param {function} callback - The callback method to call
+     * @param {string} method - the http method
+     * @return {undefined}
+     */
     const signedRequest = function(url, data, callback, method = 'GET') {
         if ( !options.APISECRET ) throw Error('signedRequest: Invalid API Secret');
         if ( !data ) data = {};
@@ -151,6 +191,16 @@ module.exports = function() {
         });
     };
 
+    /**
+     * Create a signed http request to the signed API
+     * @param {string} side - BUY or SELL
+     * @param {string} symbol - The symbol to buy or sell
+     * @param {string} quantity - The quantity to buy or sell
+     * @param {string} price - The price per unit to transact each unit at
+     * @param {object} flags - additional order settings
+     * @param {function} callback - the callback function
+     * @return {undefined}
+     */
     const order = function(side, symbol, quantity, price, flags = {}, callback = false) {
         let endpoint = 'v3/order';
         if ( options.test ) endpoint += '/test';
@@ -170,12 +220,12 @@ module.exports = function() {
         if ( typeof flags.newClientOrderId !== 'undefined' ) opt.newClientOrderId = flags.newClientOrderId;
 
         /*
-STOP_LOSS
-STOP_LOSS_LIMIT
-TAKE_PROFIT
-TAKE_PROFIT_LIMIT
-LIMIT_MAKER
-        */
+         * STOP_LOSS
+         * STOP_LOSS_LIMIT
+         * TAKE_PROFIT
+         * TAKE_PROFIT_LIMIT
+         * LIMIT_MAKER
+         */
         if ( typeof flags.icebergQty !== 'undefined' ) opt.icebergQty = flags.icebergQty;
         if ( typeof flags.stopPrice !== 'undefined' ) {
             opt.stopPrice = flags.stopPrice;
@@ -194,10 +244,19 @@ LIMIT_MAKER
             else options.log(side+'('+symbol+','+quantity+','+price+') ',response);
         }, 'POST');
     };
-    // reworked Tuitio's heartbeat code into a shared single interval tick
+
+    /**
+     * No-operation function
+     * @return {undefined}
+     */
     const noop = function() {
         // do nothing
     };
+
+    /**
+     * Reworked Tuitio's heartbeat code into a shared single interval tick
+     * @return {undefined}
+     */
     const socketHeartbeat = function() {
 
         /* sockets removed from `subscriptions` during a manual terminate()
@@ -213,6 +272,12 @@ LIMIT_MAKER
             }
         }
     };
+
+    /**
+     * Called when socket is opened, subscriptiosn are registered for later reference
+     * @param {function} opened_callback - a callback function
+     * @return {undefined}
+     */
     const handleSocketOpen = function(opened_callback) {
         this.isAlive = true;
         if (Object.keys(subscriptions).length === 0) {
@@ -221,6 +286,14 @@ LIMIT_MAKER
         subscriptions[this.endpoint] = this;
         if ( typeof opened_callback === 'function' ) opened_callback(this.endpoint);
     };
+
+    /**
+     * Called when socket is closed, subscriptiosn are deregistered for later reference
+     * @param {boolean} reconnect - true or false to reconnect the socket
+     * @param {string} code - code associated with the socket
+     * @param {string} reason - string with the response
+     * @return {undefined}
+     */
     const handleSocketClose = function(reconnect, code, reason) {
         delete subscriptions[this.endpoint];
         if (Object.keys(subscriptions).length === 0) {
@@ -239,6 +312,12 @@ LIMIT_MAKER
             }
         }
     };
+
+    /**
+     * Called when socket errors
+     * @param {object} error - error object message
+     * @return {undefined}
+     */
     const handleSocketError = function(error) {
 
         /* Errors ultimately result in a `close` event.
@@ -247,9 +326,23 @@ LIMIT_MAKER
             (error.code ? ' ('+error.code+')' : '')+
             (error.message ? ' '+error.message : ''));
     };
+
+    /**
+     * Called each time the socket heartsbeats
+     * @return {undefined}
+     */
     const handleSocketHeartbeat = function() {
         this.isAlive = true;
     };
+
+    /**
+     * Used to subscribe to a aingle websocket endpoint
+     * @param {string} endpoint - endpoint to connect to
+     * @param {function} callback - the function to called when infomration is received
+     * @param {boolean} reconnect - whether to reocnect on disconnect
+     * @param {object} opened_callback - the function to called when opened
+     * @return {WebSocket} - websocket reference
+     */
     const subscribe = function(endpoint, callback, reconnect = false, opened_callback = false) {
 
         let proxy = process.env.https_proxy || false;
@@ -281,6 +374,15 @@ LIMIT_MAKER
         });
         return ws;
     };
+
+    /**
+     * Used to subscribe to a combined websocket endpoint
+     * @param {string} streams - streams to connect to
+     * @param {function} callback - the function to called when infomration is received
+     * @param {boolean} reconnect - whether to reocnect on disconnect
+     * @param {object} opened_callback - the function to called when opened
+     * @return {WebSocket} - websocket reference
+     */
     const subscribeCombined = function(streams, callback, reconnect = false, opened_callback = false) {
 
         let proxy = process.env.https_proxy || false;
@@ -315,6 +417,12 @@ LIMIT_MAKER
         });
         return ws;
     };
+
+    /**
+     * Used as part of the userdata websockets callback
+     * @param {object} data - user data callback data type
+     * @return {undefined}
+     */
     const userDataHandler = function(data) {
         let type = data.e;
         if ( type === 'outboundAccountInfo' ) {
@@ -325,6 +433,13 @@ LIMIT_MAKER
             options.log('Unexpected userData: '+type);
         }
     };
+
+    /**
+     * Parses the previous day stream and calls the user callback with fiendly object
+     * @param {object} data - user data callback data type
+     * @param {function} callback - user data callback data type
+     * @return {undefined}
+     */
     const prevDayStreamHandler = function(data, callback) {
         let {
             e:eventType,
@@ -377,7 +492,12 @@ LIMIT_MAKER
             numTrades
         });
     };
-    ////////////////////////////
+
+    /**
+     * Gets the price of a given symbol or symbols
+     * @param {array} data - array of symbols
+     * @return {array} - symbols with their current prices
+     */
     const priceData = function(data) {
         const prices = {};
         if ( Array.isArray(data) ) {
