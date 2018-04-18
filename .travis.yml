@@ -26,13 +26,7 @@ before_script:
     - travis_retry npm install
     - travis_retry npm install coveralls istanbul mocha chai codecov codacy-coverage mocha-lcov-reporter eslint
     - travis_retry npm install -g coveralls istanbul mocha chai codecov codacy-coverage mocha-lcov-reporter eslint
-    - travis_retry sudo apt-get install asciidoc build-essential
-    - git clone https://github.com/tinyproxy/tinyproxy.git
-    - cd tinyproxy
-    - ./autogen.sh
-    - ./configure
-    - make
-    - ./src/tinyproxy    
+    - travis_retry sudo apt-get install tinyproxy 
 
 script:
     - travis_retry npm run test
