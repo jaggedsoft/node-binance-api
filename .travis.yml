@@ -26,8 +26,9 @@ before_script:
     - travis_retry npm install
     - travis_retry npm install coveralls istanbul mocha chai codecov codacy-coverage mocha-lcov-reporter eslint
     - travis_retry npm install -g coveralls istanbul mocha chai codecov codacy-coverage mocha-lcov-reporter eslint
-    - travis_retry sudo apt-get install tinyproxy 
+    - travis_retry sudo apt-get install tinyproxy curl
     - tinyproxy
+    - travis_retry curl -v -I --proxy http://127.0.0.1:8888 https://www.google.com    
 
 script:
     - travis_retry npm run test
