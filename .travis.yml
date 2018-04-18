@@ -27,6 +27,7 @@ before_script:
     - travis_retry npm install coveralls istanbul mocha chai codecov codacy-coverage mocha-lcov-reporter eslint
     - travis_retry npm install -g coveralls istanbul mocha chai codecov codacy-coverage mocha-lcov-reporter eslint
     - travis_retry sudo apt-get install tinyproxy 
+    - tinyproxy
 
 script:
     - travis_retry npm run test
