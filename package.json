@@ -4,6 +4,7 @@
   "description": "Binance API for node https://github.com/jaggedsoft/node-binance-api",
   "main": "node-binance-api.js",
   "dependencies": {
+    "https-proxy-agent": "^2.2.1",
     "request": "^2.85.0",
     "string-hash": "^1.1.3",
     "ws": "^4.1.0"

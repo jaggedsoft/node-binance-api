@@ -12,6 +12,8 @@ module.exports = function() {
     const request = require('request');
     const crypto = require('crypto');
     const file = require('fs');
+    const url = require('url');
+    const HttpsProxyAgent = require('https-proxy-agent');
     const stringHash = require('string-hash');
     const base = 'https://api.binance.com/api/';
     const wapi = 'https://api.binance.com/wapi/';
@@ -249,8 +251,20 @@ LIMIT_MAKER
         this.isAlive = true;
     };
     const subscribe = function(endpoint, callback, reconnect = false, opened_callback = false) {
+
+        let proxy = process.env.https_proxy || false;
+        let ws = false;
+
+        if ( proxy !== false ) {
+            console.log('using proxy server %j', proxy);
+            let options = url.parse(proxy);
+            let agent = new HttpsProxyAgent(options);
+            ws = new WebSocket(stream+endpoint, { agent: agent });
+        } else {
+            ws = new WebSocket(stream+endpoint);
+        }
+
         if ( options.verbose ) options.log('Subscribed to '+endpoint);
-        const ws = new WebSocket(stream+endpoint);
         ws.reconnect = options.reconnect;
         ws.endpoint = endpoint;
         ws.isAlive = false;
@@ -268,12 +282,26 @@ LIMIT_MAKER
         return ws;
     };
     const subscribeCombined = function(streams, callback, reconnect = false, opened_callback = false) {
+
+        let proxy = process.env.https_proxy || false;
         const queryParams = streams.join('/');
-        const ws = new WebSocket(combineStream+queryParams);
+        let ws = false;
+
+        if ( proxy !== false ) {
+            console.log('using proxy server %j', proxy);
+            let options = url.parse(proxy);
+            let agent = new HttpsProxyAgent(options);
+            ws = new WebSocket(combineStream+queryParams, { agent: agent });
+        } else {
+            ws = new WebSocket(combineStream+queryParams);
+        }
+
         ws.reconnect = options.reconnect;
         ws.endpoint = stringHash(queryParams);
         ws.isAlive = false;
-        if ( options.verbose ) options.log('CombinedStream: Subscribed to ['+ws.endpoint+'] '+queryParams);
+        if ( options.verbose ) {
+            options.log('CombinedStream: Subscribed to ['+ws.endpoint+'] '+queryParams);
+        }
         ws.on('open', handleSocketOpen.bind(ws, opened_callback));
         ws.on('pong', handleSocketHeartbeat);
         ws.on('error', handleSocketError);
