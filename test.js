@@ -64,7 +64,7 @@ describe( 'Construct', function() {
       APISECRET: 'ZqePF1DcLb6Oa0CfcLWH0Tva59y8qBBIqu789JEY27jq0RkOKXpNl9992By1PN9Z',
       useServerTime: true,
       reconnect: false,
-      verbose: false,
+      verbose: true,
       log: debug
     } );
     assert( typeof ( binance ) === 'object', 'Binance is not an object' );
