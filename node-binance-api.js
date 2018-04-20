@@ -1868,8 +1868,6 @@ module.exports = function() {
 
             /**
             * Websocket miniticker
-            * @param {array/string} symbols - an array or string of symbols to query
-            * @param {string} interval - the time interval
             * @param {function} callback - callback function
             * @return {string} the websocket endpoint
             */
