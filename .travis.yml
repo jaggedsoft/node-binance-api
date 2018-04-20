@@ -40,7 +40,7 @@ after_success:
     - if [[ $QUALITY == "yes" ]]; then travis_retry npm run coveralls; fi
     - if [[ $QUALITY == "yes" ]]; then travis_retry npm run codecov; fi
     - if [[ $QUALITY == "yes" ]]; then travis_retry npm run codacy; fi
-    - if [[ $QUALITY == "yes" ]]; then mv docs/docs.sh .; cd docs; rm -rvf ./*; mv ../docs.sh .; chmod +x docs.sh; docs.sh; fi    
+    - if [[ $QUALITY == "yes" ]]; then mv docs/docs.sh .; cd docs; rm -rvf ./*; mv ../docs.sh .; chmod +x docs.sh; ./docs.sh; fi    
     
 env:
   global:
