@@ -418,7 +418,7 @@ module.exports = function() {
     };
 
     /**
-     * Used to subscribe to a aingle websocket endpoint
+     * Used to subscribe to a single websocket endpoint
      * @param {string} endpoint - endpoint to connect to
      * @param {function} callback - the function to called when infomration is received
      * @param {boolean} reconnect - whether to reocnect on disconnect
@@ -1563,6 +1563,13 @@ module.exports = function() {
             else if ( symbol.substr(-4) === 'USDT' ) return 'USDT';
         },
         websockets: {
+            /**
+            * Userdata websockets function
+            * @param {function} callback - the callback function
+            * @param {function} execution_callback - optional execution callback
+            * @param {function} subscribed_callback - subscription callback
+            * @return {undefined}
+            */
             userData: function userData(callback, execution_callback = false, subscribed_callback = false) {
                 let reconnect = function() {
                     if ( options.reconnect ) userData(callback, execution_callback, subscribed_callback);
@@ -1585,15 +1592,42 @@ module.exports = function() {
                     if ( subscribed_callback ) subscribed_callback(subscription.endpoint);
                 }, 'POST');
             },
+
+            /**
+            * Subscribe to a generic websocket
+            * @param {string} url - the websocket endpoint
+            * @param {function} callback - optional execution callback
+            * @param {boolean} reconnect - subscription callback
+            * @return {WebSocket} the websocket reference
+            */
             subscribe: function(url, callback, reconnect = false) {
                 return subscribe(url, callback, reconnect);
             },
+
+            /**
+            * Subscribe to a generic combined websocket
+            * @param {string} url - the websocket endpoint
+            * @param {function} callback - optional execution callback
+            * @param {boolean} reconnect - subscription callback
+            * @return {WebSocket} the websocket reference
+            */
             subscribeCombined: function(url, callback, reconnect = false) {
                 return subscribeCombined(url, callback, reconnect);
             },
+
+            /**
+            * Returns the known websockets subscriptions
+            * @return {array} array of web socket subscriptions
+            */
             subscriptions: function() {
                 return subscriptions;
             },
+
+            /**
+            * Terminates a web socket
+            * @param {string} endpoint - the string associated with the endpoint
+            * @return {undefined}
+            */
             terminate: function(endpoint) {
                 let ws = subscriptions[endpoint];
                 if ( !ws ) return;
@@ -1601,6 +1635,13 @@ module.exports = function() {
                 ws.reconnect = false;
                 ws.terminate();
             },
+
+            /**
+            * Websocket depth chart
+            * @param {array/string} symbols - an array or string of symbols to query
+            * @param {function} callback - callback function
+            * @return {string} the websocket endpoint
+            */
             depth: function depth(symbols, callback) {
                 let reconnect = function() {
                     if ( options.reconnect ) depth(symbols, callback);
@@ -1619,6 +1660,14 @@ module.exports = function() {
                 }
                 return subscription.endpoint;
             },
+
+            /**
+            * Websocket depth cache
+            * @param {array/string} symbols - an array or string of symbols to query
+            * @param {function} callback - callback function
+            * @param {int} limit - the number of entires
+            * @return {string} the websocket endpoint
+            */
             depthCache: function depthCacheFunction(symbols, callback, limit = 500) {
                 let reconnect = function() {
                     if ( options.reconnect ) depthCacheFunction(symbols, callback, limit);
@@ -1695,6 +1744,13 @@ module.exports = function() {
                 }
                 return subscription.endpoint;
             },
+
+            /**
+            * Websocket trades
+            * @param {array/string} symbols - an array or string of symbols to query
+            * @param {function} callback - callback function
+            * @return {string} the websocket endpoint
+            */
             trades: function trades(symbols, callback) {
                 let reconnect = function() {
                     if ( options.reconnect ) trades(symbols, callback);
@@ -1713,6 +1769,14 @@ module.exports = function() {
                 }
                 return subscription.endpoint;
             },
+
+            /**
+            * Websocket trades
+            * @param {array/string} symbols - an array or string of symbols to query
+            * @param {string} interval - the time interval
+            * @param {function} callback - callback function
+            * @return {string} the websocket endpoint
+            */
             chart: function chart(symbols, interval, callback) {
                 let reconnect = function() {
                     if ( options.reconnect ) chart(symbols, interval, callback);
@@ -1772,6 +1836,14 @@ module.exports = function() {
                 }
                 return subscription.endpoint;
             },
+
+            /**
+            * Websocket candle sticks
+            * @param {array/string} symbols - an array or string of symbols to query
+            * @param {string} interval - the time interval
+            * @param {function} callback - callback function
+            * @return {string} the websocket endpoint
+            */
             candlesticks: function candlesticks(symbols, interval, callback) {
                 let reconnect = function() {
                     if ( options.reconnect ) candlesticks(symbols, interval, callback);
@@ -1793,6 +1865,14 @@ module.exports = function() {
                 }
                 return subscription.endpoint;
             },
+
+            /**
+            * Websocket miniticker
+            * @param {array/string} symbols - an array or string of symbols to query
+            * @param {string} interval - the time interval
+            * @param {function} callback - callback function
+            * @return {string} the websocket endpoint
+            */
             miniTicker: function miniTicker(callback) {
                 let reconnect = function() {
                     if ( options.reconnect ) miniTicker(callback);
@@ -1814,6 +1894,13 @@ module.exports = function() {
                 }, reconnect);
                 return subscription.endpoint;
             },
+
+            /**
+            * Websocket prevday percentage
+            * @param {array/string} symbols - an array or string of symbols to query
+            * @param {function} callback - callback function
+            * @return {string} the websocket endpoint
+            */
             prevDay: function prevDay(symbols, callback) {
                 let reconnect = function() {
                     if ( options.reconnect ) prevDay(symbols, callback);
