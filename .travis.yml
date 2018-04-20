@@ -40,3 +40,9 @@ after_success:
     - if [[ $QUALITY == "yes" ]]; then travis_retry npm run codecov; fi
     - if [[ $QUALITY == "yes" ]]; then travis_retry npm run codacy; fi
     - if [[ $QUALITY == "yes" ]]; then jsdoc --debug --verbose node-binance-api.js -d docs; fi    
+    
+env:
+  global:
+    - GH_REPO_NAME: node-binance-api
+    - GH_REPO_REF: github.com/jaggedsoft/node-binance-api.git
+    - JSDOC_FILES: $TRAVIS_BUILD_DIR/node-binance-api.js
