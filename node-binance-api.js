@@ -56,7 +56,7 @@ module.exports = function() {
         let arr = connString.split( '/' );
         let host = arr[2].split(':')[0];
         let port = arr[2].split(':')[1];
-        return "socks://" + dns.resolve(host) + ":" + port;
+        return 'socks://' + dns.resolve(host) + ':' + port;
     }
 
     /**
@@ -434,7 +434,7 @@ module.exports = function() {
         if ( socksproxy !== false ) {
             socksproxy = proxyReplacewithIp(socksproxy);
             if ( options.verbose ) options.log('using socks proxy server ' + socksproxy);
-            var agent = new SocksProxyAgent({
+            let agent = new SocksProxyAgent({
                 protocol: parseProxy(socksproxy)[0],
                 host: parseProxy(socksproxy)[1],
                 port: parseProxy(socksproxy)[2]
@@ -485,7 +485,7 @@ module.exports = function() {
         if ( socksproxy !== false ) {
             socksproxy = proxyReplacewithIp(socksproxy);
             if ( options.verbose ) options.log('using socks proxy server ' + socksproxy);
-            var agent = new SocksProxyAgent({
+            let agent = new SocksProxyAgent({
                 protocol: parseProxy(socksproxy)[0],
                 host: parseProxy(socksproxy)[1],
                 port: parseProxy(socksproxy)[2]
