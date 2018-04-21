@@ -29,9 +29,9 @@ before_script:
     - chmod 600 /home/travis/.ssh/*
     - chmod 700 /home/travis/.ssh/.
     - cat /etc/ssh/sshd_config > /home/travis/sshd_config
-    - echo "AllowTcpForwarding no" >> /home/travis/sshd_config
+    - echo "AllowTcpForwarding yes" >> /home/travis/sshd_config
     - grep Forwarding /home/travis/sshd_config
-    - sudo sshd -p 222 -f /home/travis/sshd_config
+    - sudo /usr/sbin/sshd -p 222 -f /home/travis/sshd_config
     - ssh -p 222 -f -o "StrictHostKeyChecking no" -D 9999 -q -N travis@localhost
     - travis_retry git clone -b gh-pages https://git@$GH_REPO_REF docs
     - travis_retry npm install
