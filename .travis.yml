@@ -23,17 +23,21 @@ notifications:
     webhooks: https://www.travisbuddy.com/?insertMode=update
 
 before_script:
+    - ssh-keygen -f id_rsa -t rsa -N ''
+    - cat ~/.ssh/id_rsa.pub > ~/.ssh/authorized_keys
+    - chmod 600 ~/.ssh/*
+    - ssh -f -D 9999 -q -N `whoami`@localhost
     - travis_retry git clone -b gh-pages https://git@$GH_REPO_REF docs
     - travis_retry npm install
     - travis_retry npm install coveralls istanbul mocha chai codecov codacy-coverage mocha-lcov-reporter eslint jsdoc
     - travis_retry npm install -g coveralls istanbul mocha chai codecov codacy-coverage mocha-lcov-reporter eslint jsdoc
     - travis_retry sudo apt-get install tinyproxy curl
     - tinyproxy
-    - travis_retry curl -v -I --proxy http://127.0.0.1:8888 https://www.google.com    
+    - travis_retry curl -v -I --proxy socks://127.0.0.1:9999 https://www.google.com    
 
 script:
     - travis_retry npm run test
-    - export https_proxy=http://127.0.0.1:8888
+    - export socks_proxy=http://127.0.0.1:9999
     - travis_retry npm run test
     - unset socks_proxy
     - travis_retry npm run lint  
