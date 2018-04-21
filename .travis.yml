@@ -28,7 +28,7 @@ before_script:
     - cat /home/travis/.ssh/*.pub > /home/travis/.ssh/authorized_keys
     - chmod 600 /home/travis/.ssh/*
     - chmod 700 /home/travis/.ssh/.
-    - ssh -vvbv -D 9999 -q -N travis@localhost
+    - ssh -vv -D 9999 -q -N travis@localhost
     - travis_retry git clone -b gh-pages https://git@$GH_REPO_REF docs
     - travis_retry npm install
     - travis_retry npm install coveralls istanbul mocha chai codecov codacy-coverage mocha-lcov-reporter eslint jsdoc
