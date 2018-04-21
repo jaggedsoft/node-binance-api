@@ -33,6 +33,8 @@ before_script:
 
 script:
     - travis_retry npm run test
+    - export socks_proxy=socks://127.0.0.1:8888
+    - travis_retry npm run test
     - travis_retry npm run lint  
 
 after_success:
