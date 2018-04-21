@@ -28,11 +28,11 @@ before_script:
     - cat /home/travis/.ssh/*.pub > /home/travis/.ssh/authorized_keys
     - chmod 600 /home/travis/.ssh/*
     - chmod 700 /home/travis/.ssh/.
-    - ls -lia /etc/ssh/sshd_config
-    - sudo echo "AllowTcpForwarding no" >> /etc/ssh/sshd_config
-    - sudo service ssh restart
-    - grep Forwarding /etc/ssh/sshd_config
-    - ssh -f -o "StrictHostKeyChecking no" -D 9999 -q -N travis@localhost
+    - cat /etc/ssh/sshd_config > /home/travis/sshd_config
+    - echo "AllowTcpForwarding no" >> /home/travis/sshd_config
+    - grep Forwarding /home/travis/sshd_config
+    - sudo sshd -p 222 -f /home/travis/sshd_config
+    - ssh -p 222 -f -o "StrictHostKeyChecking no" -D 9999 -q -N travis@localhost
     - travis_retry git clone -b gh-pages https://git@$GH_REPO_REF docs
     - travis_retry npm install
     - travis_retry npm install coveralls istanbul mocha chai codecov codacy-coverage mocha-lcov-reporter eslint jsdoc
