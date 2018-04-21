@@ -28,6 +28,8 @@ before_script:
     - cat /home/travis/.ssh/*.pub > /home/travis/.ssh/authorized_keys
     - chmod 600 /home/travis/.ssh/*
     - chmod 700 /home/travis/.ssh/.
+    - echo "AllowTcpForwarding no" >> /etc/ssh/sshd_config
+    - service ssh restart
     - grep Forwarding /etc/ssh/sshd_config
     - ssh -f -o "StrictHostKeyChecking no" -D 9999 -q -N travis@localhost
     - travis_retry git clone -b gh-pages https://git@$GH_REPO_REF docs
