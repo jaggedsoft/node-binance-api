@@ -23,10 +23,12 @@ notifications:
     webhooks: https://www.travisbuddy.com/?insertMode=update
 
 before_script:
-    - ssh-keygen -f id_rsa -t rsa -N ''
-    - cat ~/.ssh/id_rsa.pub > ~/.ssh/authorized_keys
-    - chmod 600 ~/.ssh/*
-    - ssh -f -D 9999 -q -N `whoami`@localhost
+    - mkdir -vp /home/travis/.ssh/
+    - ssh-keygen -f /home/travis/.ssh/id_ecdsa -t ecdsa -N ''
+    - cat /home/travis/.ssh/*.pub > /home/travis/.ssh/authorized_keys
+    - chmod 600 /home/travis/.ssh/*
+    - chmod 700 /home/travis/.ssh/.
+    - ssh -f -D 9999 -q -N travis@localhost
     - travis_retry git clone -b gh-pages https://git@$GH_REPO_REF docs
     - travis_retry npm install
     - travis_retry npm install coveralls istanbul mocha chai codecov codacy-coverage mocha-lcov-reporter eslint jsdoc
