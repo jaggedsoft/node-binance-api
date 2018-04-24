@@ -17,7 +17,9 @@ module.exports = function() {
     const crypto = require('crypto');
     const file = require('fs');
     const url = require('url');
+    const dns = require('dns-sync');
     const HttpsProxyAgent = require('https-proxy-agent');
+    const SocksProxyAgent = require('socks-proxy-agent');
     const stringHash = require('string-hash');
     const base = 'https://api.binance.com/api/';
     const wapi = 'https://api.binance.com/wapi/';
@@ -46,6 +48,30 @@ module.exports = function() {
     let socketHeartbeatInterval;
 
     /**
+     * Replaces socks connection uri hostname with IP address
+     * @param {string} connString - socks conection string
+     * @return {string} modified string with ip address
+     */
+    const proxyReplacewithIp = function(connString) {
+        let arr = connString.split( '/' );
+        let host = arr[2].split(':')[0];
+        let port = arr[2].split(':')[1];
+        return 'socks://' + dns.resolve(host) + ':' + port;
+    }
+
+    /**
+     * returns an array in the form of [host, port]
+     * @param {string} connString - conection string
+     * @return {array} array of host and port
+     */
+    const parseProxy = function(connString) {
+        let arr = connString.split( '/' );
+        let host = arr[2].split(':')[0];
+        let port = arr[2].split(':')[1];
+        return [arr[0],host,port];
+    }
+
+    /**
      * Create a http request to the public API
      * @param {string} url - The http endpoint
      * @param {object} data - The data to send
@@ -55,17 +81,31 @@ module.exports = function() {
      */
     const publicRequest = function(url, data, callback, method = 'GET') {
         if ( !data ) data = {};
+
+        let socksproxy = process.env.socks_proxy || false;
+
         let opt = {
             url: url,
             qs: data,
             method: method,
             timeout: options.recvWindow,
-            agent: false,
             headers: {
                 'User-Agent': userAgent,
                 'Content-type': contentType
             }
         };
+
+        if ( socksproxy !== false ) {
+            socksproxy = proxyReplacewithIp(socksproxy);
+            if ( options.verbose ) options.log('using socks proxy server ' + socksproxy);
+            opt.agentClass = SocksProxyAgent;
+            opt.agentOptions = {
+                protocol: parseProxy(socksproxy)[0],
+                host: parseProxy(socksproxy)[1],
+                port: parseProxy(socksproxy)[2]
+            }
+        }
+
         request(opt, function(error, response, body) {
             if ( !callback ) return;
 
@@ -99,17 +139,31 @@ module.exports = function() {
      */
     const apiRequest = function(url, callback, method = 'GET') {
         if ( !options.APIKEY ) throw Error('apiRequest: Invalid API Key');
+
+        let socksproxy = process.env.socks_proxy || false;
+
         let opt = {
             url: url,
             method: method,
             timeout: options.recvWindow,
-            agent: false,
             headers: {
                 'User-Agent': userAgent,
                 'Content-type': contentType,
                 'X-MBX-APIKEY': options.APIKEY
             }
         };
+
+        if ( socksproxy !== false ) {
+            socksproxy = proxyReplacewithIp(socksproxy);
+            if ( options.verbose ) options.log('using socks proxy server ' + socksproxy);
+            opt.agentClass = SocksProxyAgent;
+            opt.agentOptions = {
+                protocol: parseProxy(socksproxy)[0],
+                host: parseProxy(socksproxy)[1],
+                port: parseProxy(socksproxy)[2]
+            }
+        }
+
         request(opt, function(error, response, body) {
             if ( !callback ) return;
 
@@ -132,17 +186,31 @@ module.exports = function() {
     const marketRequest = function(url, data, callback, method = 'GET') {
         if ( !data ) data = {};
         let query = Object.keys(data).reduce(function(a,k){a.push(k+'='+encodeURIComponent(data[k]));return a},[]).join('&');
+
+        let socksproxy = process.env.socks_proxy || false;
+
         let opt = {
             url: url+'?'+query,
             method: method,
             timeout: options.recvWindow,
-            agent: false,
             headers: {
                 'User-Agent': userAgent,
                 'Content-type': contentType,
                 'X-MBX-APIKEY': options.APIKEY
             }
         };
+
+        if ( socksproxy !== false ) {
+            socksproxy = proxyReplacewithIp(socksproxy);
+            if ( options.verbose ) options.log('using socks proxy server ' + socksproxy);
+            opt.agentClass = SocksProxyAgent;
+            opt.agentOptions = {
+                protocol: parseProxy(socksproxy)[0],
+                host: parseProxy(socksproxy)[1],
+                port: parseProxy(socksproxy)[2]
+            }
+        }
+
         request(opt, function(error, response, body) {
             if ( !callback ) return;
 
@@ -169,17 +237,31 @@ module.exports = function() {
         if ( typeof data.recvWindow === 'undefined' ) data.recvWindow = options.recvWindow;
         let query = Object.keys(data).reduce(function(a,k){a.push(k+'='+encodeURIComponent(data[k]));return a},[]).join('&');
         let signature = crypto.createHmac('sha256', options.APISECRET).update(query).digest('hex'); // set the HMAC hash header
+
+        let socksproxy = process.env.socks_proxy || false;
+
         let opt = {
             url: url+'?'+query+'&signature='+signature,
             method: method,
             timeout: options.recvWindow,
-            agent: false,
             headers: {
                 'User-Agent': userAgent,
                 'Content-type': contentType,
                 'X-MBX-APIKEY': options.APIKEY
             }
         };
+
+        if ( socksproxy !== false ) {
+            socksproxy = proxyReplacewithIp(socksproxy);
+            if ( options.verbose ) options.log('using socks proxy server ' + socksproxy);
+            opt.agentClass = SocksProxyAgent;
+            opt.agentOptions = {
+                protocol: parseProxy(socksproxy)[0],
+                host: parseProxy(socksproxy)[1],
+                port: parseProxy(socksproxy)[2]
+            }
+        }
+
         request(opt, function(error, response, body) {
             if ( !callback ) return;
 
@@ -336,7 +418,7 @@ module.exports = function() {
     };
 
     /**
-     * Used to subscribe to a aingle websocket endpoint
+     * Used to subscribe to a single websocket endpoint
      * @param {string} endpoint - endpoint to connect to
      * @param {function} callback - the function to called when infomration is received
      * @param {boolean} reconnect - whether to reocnect on disconnect
@@ -345,13 +427,23 @@ module.exports = function() {
      */
     const subscribe = function(endpoint, callback, reconnect = false, opened_callback = false) {
 
-        let proxy = process.env.https_proxy || false;
+        let httpsproxy = process.env.https_proxy || false;
+        let socksproxy = process.env.socks_proxy || false;
         let ws = false;
 
-        if ( proxy !== false ) {
-            if ( options.verbose ) options.log('using proxy server ' + proxy);
-            let options = url.parse(proxy);
-            let agent = new HttpsProxyAgent(options);
+        if ( socksproxy !== false ) {
+            socksproxy = proxyReplacewithIp(socksproxy);
+            if ( options.verbose ) options.log('using socks proxy server ' + socksproxy);
+            let agent = new SocksProxyAgent({
+                protocol: parseProxy(socksproxy)[0],
+                host: parseProxy(socksproxy)[1],
+                port: parseProxy(socksproxy)[2]
+            });
+            ws = new WebSocket(stream+endpoint, { agent: agent });
+        } else if ( httpsproxy !== false ) {
+            if ( options.verbose ) options.log('using proxy server ' + agent);
+            let config = url.parse(httpsproxy);
+            let agent = new HttpsProxyAgent(config);
             ws = new WebSocket(stream+endpoint, { agent: agent });
         } else {
             ws = new WebSocket(stream+endpoint);
@@ -385,14 +477,24 @@ module.exports = function() {
      */
     const subscribeCombined = function(streams, callback, reconnect = false, opened_callback = false) {
 
-        let proxy = process.env.https_proxy || false;
+        let httpsproxy = process.env.https_proxy || false;
+        let socksproxy = process.env.socks_proxy || false;
         const queryParams = streams.join('/');
         let ws = false;
 
-        if ( proxy !== false ) {
-            if ( options.verbose ) options.log('using proxy server %j'+ proxy);
-            let options = url.parse(proxy);
-            let agent = new HttpsProxyAgent(options);
+        if ( socksproxy !== false ) {
+            socksproxy = proxyReplacewithIp(socksproxy);
+            if ( options.verbose ) options.log('using socks proxy server ' + socksproxy);
+            let agent = new SocksProxyAgent({
+                protocol: parseProxy(socksproxy)[0],
+                host: parseProxy(socksproxy)[1],
+                port: parseProxy(socksproxy)[2]
+            });
+            ws = new WebSocket(combineStream+queryParams, { agent: agent });
+        } else if ( httpsproxy !== false ) {
+            if ( options.verbose ) options.log('using proxy server ' + httpsproxy);
+            let config = url.parse(httpsproxy);
+            let agent = new HttpsProxyAgent(config);
             ws = new WebSocket(combineStream+queryParams, { agent: agent });
         } else {
             ws = new WebSocket(combineStream+queryParams);
@@ -1113,7 +1215,26 @@ module.exports = function() {
         prices: function(symbol, callback = false) {
             const params = typeof symbol === 'string' ? '?symbol='+symbol : '';
             if ( typeof symbol === 'function' ) callback = symbol; // backwards compatibility
-            request(base+'v3/ticker/price'+params, function(error, response, body) {
+
+            let socksproxy = process.env.socks_proxy || false;
+
+            let opt = {
+                url: base+'v3/ticker/price'+params,
+                timeout: options.recvWindow
+            };
+
+            if ( socksproxy !== false ) {
+                socksproxy = proxyReplacewithIp(socksproxy);
+                if ( options.verbose ) options.log('using socks proxy server ' + socksproxy);
+                opt.agentClass = SocksProxyAgent;
+                opt.agentOptions = {
+                    protocol: parseProxy(socksproxy)[0],
+                    host: parseProxy(socksproxy)[1],
+                    port: parseProxy(socksproxy)[2]
+                }
+            }
+
+            request(opt, function(error, response, body) {
                 if ( !callback ) return;
 
                 if ( error ) return callback( error );
@@ -1133,7 +1254,26 @@ module.exports = function() {
         bookTickers: function(symbol, callback) {
             const params = typeof symbol === 'string' ? '?symbol='+symbol : '';
             if ( typeof symbol === 'function' ) callback = symbol; // backwards compatibility
-            request(base+'v3/ticker/bookTicker'+params, function(error, response, body) {
+
+            let socksproxy = process.env.socks_proxy || false;
+
+            let opt = {
+                url: base+'v3/ticker/bookTicker'+params,
+                timeout: options.recvWindow
+            };
+
+            if ( socksproxy !== false ) {
+                socksproxy = proxyReplacewithIp(socksproxy);
+                if ( options.verbose ) options.log('using socks proxy server ' + socksproxy);
+                opt.agentClass = SocksProxyAgent;
+                opt.agentOptions = {
+                    protocol: parseProxy(socksproxy)[0],
+                    host: parseProxy(socksproxy)[1],
+                    port: parseProxy(socksproxy)[2]
+                }
+            }
+
+            request(opt, function(error, response, body) {
                 if ( !callback ) return;
 
                 if ( error ) return callback( error );
@@ -1423,6 +1563,13 @@ module.exports = function() {
             else if ( symbol.substr(-4) === 'USDT' ) return 'USDT';
         },
         websockets: {
+            /**
+            * Userdata websockets function
+            * @param {function} callback - the callback function
+            * @param {function} execution_callback - optional execution callback
+            * @param {function} subscribed_callback - subscription callback
+            * @return {undefined}
+            */
             userData: function userData(callback, execution_callback = false, subscribed_callback = false) {
                 let reconnect = function() {
                     if ( options.reconnect ) userData(callback, execution_callback, subscribed_callback);
@@ -1445,15 +1592,42 @@ module.exports = function() {
                     if ( subscribed_callback ) subscribed_callback(subscription.endpoint);
                 }, 'POST');
             },
+
+            /**
+            * Subscribe to a generic websocket
+            * @param {string} url - the websocket endpoint
+            * @param {function} callback - optional execution callback
+            * @param {boolean} reconnect - subscription callback
+            * @return {WebSocket} the websocket reference
+            */
             subscribe: function(url, callback, reconnect = false) {
                 return subscribe(url, callback, reconnect);
             },
+
+            /**
+            * Subscribe to a generic combined websocket
+            * @param {string} url - the websocket endpoint
+            * @param {function} callback - optional execution callback
+            * @param {boolean} reconnect - subscription callback
+            * @return {WebSocket} the websocket reference
+            */
             subscribeCombined: function(url, callback, reconnect = false) {
                 return subscribeCombined(url, callback, reconnect);
             },
+
+            /**
+            * Returns the known websockets subscriptions
+            * @return {array} array of web socket subscriptions
+            */
             subscriptions: function() {
                 return subscriptions;
             },
+
+            /**
+            * Terminates a web socket
+            * @param {string} endpoint - the string associated with the endpoint
+            * @return {undefined}
+            */
             terminate: function(endpoint) {
                 let ws = subscriptions[endpoint];
                 if ( !ws ) return;
@@ -1461,6 +1635,13 @@ module.exports = function() {
                 ws.reconnect = false;
                 ws.terminate();
             },
+
+            /**
+            * Websocket depth chart
+            * @param {array/string} symbols - an array or string of symbols to query
+            * @param {function} callback - callback function
+            * @return {string} the websocket endpoint
+            */
             depth: function depth(symbols, callback) {
                 let reconnect = function() {
                     if ( options.reconnect ) depth(symbols, callback);
@@ -1479,6 +1660,14 @@ module.exports = function() {
                 }
                 return subscription.endpoint;
             },
+
+            /**
+            * Websocket depth cache
+            * @param {array/string} symbols - an array or string of symbols to query
+            * @param {function} callback - callback function
+            * @param {int} limit - the number of entires
+            * @return {string} the websocket endpoint
+            */
             depthCache: function depthCacheFunction(symbols, callback, limit = 500) {
                 let reconnect = function() {
                     if ( options.reconnect ) depthCacheFunction(symbols, callback, limit);
@@ -1555,6 +1744,13 @@ module.exports = function() {
                 }
                 return subscription.endpoint;
             },
+
+            /**
+            * Websocket trades
+            * @param {array/string} symbols - an array or string of symbols to query
+            * @param {function} callback - callback function
+            * @return {string} the websocket endpoint
+            */
             trades: function trades(symbols, callback) {
                 let reconnect = function() {
                     if ( options.reconnect ) trades(symbols, callback);
@@ -1573,6 +1769,14 @@ module.exports = function() {
                 }
                 return subscription.endpoint;
             },
+
+            /**
+            * Websocket trades
+            * @param {array/string} symbols - an array or string of symbols to query
+            * @param {string} interval - the time interval
+            * @param {function} callback - callback function
+            * @return {string} the websocket endpoint
+            */
             chart: function chart(symbols, interval, callback) {
                 let reconnect = function() {
                     if ( options.reconnect ) chart(symbols, interval, callback);
@@ -1632,6 +1836,14 @@ module.exports = function() {
                 }
                 return subscription.endpoint;
             },
+
+            /**
+            * Websocket candle sticks
+            * @param {array/string} symbols - an array or string of symbols to query
+            * @param {string} interval - the time interval
+            * @param {function} callback - callback function
+            * @return {string} the websocket endpoint
+            */
             candlesticks: function candlesticks(symbols, interval, callback) {
                 let reconnect = function() {
                     if ( options.reconnect ) candlesticks(symbols, interval, callback);
@@ -1653,6 +1865,12 @@ module.exports = function() {
                 }
                 return subscription.endpoint;
             },
+
+            /**
+            * Websocket miniticker
+            * @param {function} callback - callback function
+            * @return {string} the websocket endpoint
+            */
             miniTicker: function miniTicker(callback) {
                 let reconnect = function() {
                     if ( options.reconnect ) miniTicker(callback);
@@ -1674,6 +1892,13 @@ module.exports = function() {
                 }, reconnect);
                 return subscription.endpoint;
             },
+
+            /**
+            * Websocket prevday percentage
+            * @param {array/string} symbols - an array or string of symbols to query
+            * @param {function} callback - callback function
+            * @return {string} the websocket endpoint
+            */
             prevDay: function prevDay(symbols, callback) {
                 let reconnect = function() {
                     if ( options.reconnect ) prevDay(symbols, callback);

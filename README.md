@@ -1593,11 +1593,33 @@ binance.options({
 ```
 
 ### Proxy Support
-Both the standard REST api and the Websockets api honour the environmental variable "https_proxy"
+For the standard REST API the https_proxy or socks_proxy variable is honoured
 
-To begin using the proxy, such as on linux, set the variable
-```js
+**Linux**
+```bash
 export https_proxy=http://yourproxy.com:port
+#export socks_proxy=socks://yourproxy.com:port
+# run your app
+```
+
+**Windows**
+```bash
+set https_proxy=http://yourproxy.com:port
+#set socks_proxy=socks://yourproxy.com:port
+# run your app
+```
+
+For web sockets currently only the socks method is functional at this time
+
+**linux**
+```bash
+export socks_proxy=socks://yourproxy.com:port
+# run your app
+```
+
+**windows**
+```bash
+set socks_proxy=socks://yourproxy.com:port
 # run your app
 ```
 
