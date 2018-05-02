@@ -123,9 +123,7 @@ module.exports = function() {
      * @param {string} method - the http method
      * @return {undefined}
      */
-    const publicRequest = function(url, data, callback, method = 'GET') {
-        if ( !data ) data = {};
-
+    const publicRequest = function(url, data = {}, callback, method = 'GET') {
         let opt = {
             url: url,
             qs: data,
@@ -172,8 +170,7 @@ module.exports = function() {
      * @param {string} method - the http method
      * @return {undefined}
      */
-    const marketRequest = function(url, data, callback, method = 'GET') {
-        if ( !data ) data = {};
+    const marketRequest = function(url, data = {}, callback, method = 'GET') {
         let query = Object.keys(data).reduce(function(a,k){a.push(k+'='+encodeURIComponent(data[k]));return a},[]).join('&');
 
         let opt = {
@@ -198,9 +195,8 @@ module.exports = function() {
      * @param {string} method - the http method
      * @return {undefined}
      */
-    const signedRequest = function(url, data, callback, method = 'GET') {
+    const signedRequest = function(url, data = {}, callback, method = 'GET') {
         if ( !options.APISECRET ) throw Error('signedRequest: Invalid API Secret');
-        if ( !data ) data = {};
         data.timestamp = new Date().getTime() + info.timeOffset;
         if ( typeof data.recvWindow === 'undefined' ) data.recvWindow = options.recvWindow;
         let query = Object.keys(data).reduce(function(a,k){a.push(k+'='+encodeURIComponent(data[k]));return a},[]).join('&');
