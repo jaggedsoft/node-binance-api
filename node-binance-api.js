@@ -112,6 +112,9 @@ module.exports = function() {
       return cb( null, JSON.parse(body) );
     }
 
+    const proxyRequest = (opt, callback) => 
+      request(addProxy(opt), reqHandler(callback));
+
     /**
      * Create a http request to the public API
      * @param {string} url - The http endpoint
@@ -134,7 +137,7 @@ module.exports = function() {
             }
         };
 
-        request(addProxy(opt), reqHandler(callback));
+        proxyRequest(opt, callback);
     };
 
     /**
@@ -158,7 +161,7 @@ module.exports = function() {
             }
         };
 
-        request(addProxy(opt), reqHandler(callback));
+        proxyRequest(opt, callback);
     };
 
     /**
@@ -184,7 +187,7 @@ module.exports = function() {
             }
         };
 
-        request(addProxy(opt), reqHandler(callback));
+        proxyRequest(opt, callback);
     };
 
     /**
@@ -214,7 +217,7 @@ module.exports = function() {
             }
         };
 
-        request(addProxy(opt), reqHandler(callback));
+        proxyRequest(opt, callback);
     };
 
     /**
