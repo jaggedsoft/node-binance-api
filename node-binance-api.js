@@ -110,7 +110,7 @@ module.exports = function() {
       return cb( null, JSON.parse(body) );
     }
 
-    const proxyRequest = (opt, callback) => request(addProxy(opt), reqHandler(callback));
+    const proxyRequest = (opt, cb) => request(addProxy(opt), reqHandler(cb));
 
     /**
      * Create a http request to the public API
