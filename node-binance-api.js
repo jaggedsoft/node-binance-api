@@ -147,7 +147,12 @@ module.exports = function() {
      */
     const apiRequest = function(url, data = {}, callback, method = 'GET') {
         if ( !options.APIKEY ) throw Error('apiRequest: Invalid API Key');
-        let opt = reqObj(url, data, method, options.APIKEY);
+        let opt = reqObj(
+          url, 
+          data, 
+          method, 
+          options.APIKEY
+        );
         proxyRequest(opt, callback);
     };
 
@@ -160,26 +165,15 @@ module.exports = function() {
      * @return {undefined}
      */
     const marketRequest = function(url, data = {}, callback, method = 'GET') {
+        if ( !options.APIKEY ) throw Error('apiRequest: Invalid API Key');
         let query = Object.keys(data).reduce(function(a,k){a.push(k+'='+encodeURIComponent(data[k]));return a},[]).join('&');
 
-        // let opt = reqObj(
-        //   url+(query ? '?'+query : ''),
-        //   data, 
-        //   method
-        // );
-        // opt.headers = addKey(opt.headers);
-
-        let opt = {
-            url: url+'?'+query,
-            method: method,
-            timeout: options.recvWindow,
-            headers: {
-                'User-Agent': userAgent,
-                'Content-type': contentType,
-                'X-MBX-APIKEY': options.APIKEY
-            }
-        };
-
+        let opt = reqObj(
+          url+(query ? '?'+query : ''),
+          data, 
+          method,
+          options.APIKEY
+        );
         proxyRequest(opt, callback);
     };
 
