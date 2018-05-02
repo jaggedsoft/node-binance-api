@@ -72,6 +72,19 @@ module.exports = function() {
     }
 
     /**
+     * Checks to see of the boject is iterable
+     * @param {object} obj - The object check
+     * @return {boolean} true or false is iterable
+     */
+    const isIterable = function(obj) {
+      // checks for null and undefined
+      if (obj === null) {
+        return false;
+      }
+      return typeof obj[Symbol.iterator] === 'function';
+    }
+
+    /**
      * Create a http request to the public API
      * @param {string} url - The http endpoint
      * @param {object} data - The data to send
@@ -116,19 +129,6 @@ module.exports = function() {
             return callback( null, JSON.parse(body) );
         });
     };
-
-    /**
-     * Checks to see of the boject is iterable
-     * @param {object} obj - The object check
-     * @return {boolean} true or false is iterable
-     */
-    const isIterable = function(obj) {
-      // checks for null and undefined
-      if (obj === null) {
-        return false;
-      }
-      return typeof obj[Symbol.iterator] === 'function';
-    }
 
     /**
      * Create a http request to the public API
