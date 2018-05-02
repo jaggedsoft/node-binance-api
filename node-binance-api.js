@@ -112,6 +112,17 @@ module.exports = function() {
 
     const proxyRequest = (opt, cb) => request(addProxy(opt), reqHandler(cb));
 
+    const reqObj = (url, data = {}, method = 'GET') => ({
+      url: url,
+      qs: data,
+      method: method,
+      timeout: options.recvWindow,
+      headers: {
+          'User-Agent': userAgent,
+          'Content-type': contentType
+      }
+    })
+
     /**
      * Create a http request to the public API
      * @param {string} url - The http endpoint
@@ -121,17 +132,7 @@ module.exports = function() {
      * @return {undefined}
      */
     const publicRequest = function(url, data = {}, callback, method = 'GET') {
-        let opt = {
-            url: url,
-            qs: data,
-            method: method,
-            timeout: options.recvWindow,
-            headers: {
-                'User-Agent': userAgent,
-                'Content-type': contentType
-            }
-        };
-
+        let opt = reqObj(url, data, method);
         proxyRequest(opt, callback);
     };
 
@@ -145,19 +146,8 @@ module.exports = function() {
      */
     const apiRequest = function(url, data = {}, callback, method = 'GET') {
         if ( !options.APIKEY ) throw Error('apiRequest: Invalid API Key');
-
-        let opt = {
-            url: url,
-            qs: data,
-            method: method,
-            timeout: options.recvWindow,
-            headers: {
-                'User-Agent': userAgent,
-                'Content-type': contentType,
-                'X-MBX-APIKEY': options.APIKEY
-            }
-        };
-
+        let opt = reqObj(url, data, method);
+        opt.headers['X-MBX-APIKEY'] = options.APIKEY;
         proxyRequest(opt, callback);
     };
 
