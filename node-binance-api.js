@@ -120,7 +120,7 @@ module.exports = function() {
       headers: {
           'User-Agent': userAgent,
           'Content-type': contentType,
-          'X-MBX-APIKEY': key || undefined
+          'X-MBX-APIKEY': key || ''
       }
     })
 
@@ -148,9 +148,9 @@ module.exports = function() {
     const apiRequest = function(url, data = {}, callback, method = 'GET') {
         if ( !options.APIKEY ) throw Error('apiRequest: Invalid API Key');
         let opt = reqObj(
-          url, 
-          data, 
-          method, 
+          url,
+          data,
+          method,
           options.APIKEY
         );
         proxyRequest(opt, callback);
@@ -170,7 +170,7 @@ module.exports = function() {
 
         let opt = reqObj(
           url+(query ? '?'+query : ''),
-          data, 
+          data,
           method,
           options.APIKEY
         );
@@ -194,8 +194,8 @@ module.exports = function() {
         let signature = crypto.createHmac('sha256', options.APISECRET).update(query).digest('hex'); // set the HMAC hash header
 
         let opt = reqObj(
-          url+'?'+query+'&signature='+signature, 
-          data, 
+          url+'?'+query+'&signature='+signature,
+          data,
           method,
           options.APIKEY
         );
