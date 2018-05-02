@@ -145,7 +145,7 @@ module.exports = function() {
      * @param {string} method - the http method
      * @return {undefined}
      */
-    const apiRequest = function(url, callback, method = 'GET') {
+    const apiRequest = function(url, data = {}, callback, method = 'GET') {
         if ( !options.APIKEY ) throw Error('apiRequest: Invalid API Key');
 
         let opt = {
@@ -992,7 +992,7 @@ module.exports = function() {
             if ( typeof options.log === 'undefined' ) options.log = default_options.log;
             if ( typeof options.verbose === 'undefined' ) options.verbose = default_options.verbose;
             if ( options.useServerTime ) {
-                apiRequest(base+'v1/time', function(error, response) {
+                apiRequest(base+'v1/time', {}, function(error, response) {
                     info.timeOffset = response.serverTime - new Date().getTime();
                     //options.log("server time set: ", response.serverTime, info.timeOffset);
                     if ( callback ) callback();
@@ -1358,7 +1358,7 @@ module.exports = function() {
         * @return {undefined}
         */
         useServerTime: function(callback = false) {
-            apiRequest(base+'v1/time', function(error, response) {
+            apiRequest(base+'v1/time', {}, function(error, response) {
                 info.timeOffset = response.serverTime - new Date().getTime();
                 //options.log("server time set: ", response.serverTime, info.timeOffset);
                 if ( callback ) callback();
@@ -1371,7 +1371,7 @@ module.exports = function() {
         * @return {undefined}
         */
         time: function(callback) {
-            apiRequest(base+'v1/time', callback);
+            apiRequest(base+'v1/time', {}, callback);
         },
 
         /**
@@ -1517,11 +1517,11 @@ module.exports = function() {
                 let reconnect = function() {
                     if ( options.reconnect ) userData(callback, execution_callback, subscribed_callback);
                 };
-                apiRequest(base+'v1/userDataStream', function(error, response) {
+                apiRequest(base+'v1/userDataStream', {}, function(error, response) {
                     options.listenKey = response.listenKey;
                     setTimeout(function userDataKeepAlive() { // keepalive
                         try {
-                            apiRequest(base+'v1/userDataStream?listenKey='+options.listenKey, function(err) {
+                            apiRequest(base+'v1/userDataStream?listenKey='+options.listenKey, {}, function(err) {
                                 if ( err ) setTimeout(userDataKeepAlive, 60000); // retry in 1 minute
                                 else setTimeout(userDataKeepAlive, 60 * 30 * 1000); // 30 minute keepalive
                             }, 'PUT');
