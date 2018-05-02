@@ -84,6 +84,18 @@ module.exports = function() {
       return typeof obj[Symbol.iterator] === 'function';
     }
 
+    const reqHandler = cb => (error, response, body) => {
+      if ( !cb ) return;
+
+      if ( error ) return cb( error, {});
+
+      if ( response && response.statusCode !== 200 )
+        // passing error
+        return cb( response, {} );
+
+      return cb( null, JSON.parse(body) );
+    }
+
     /**
      * Create a http request to the public API
      * @param {string} url - The http endpoint
@@ -119,15 +131,7 @@ module.exports = function() {
             }
         }
 
-        request(opt, function(error, response, body) {
-            if ( !callback ) return;
-
-            if ( error ) return callback( error, {});
-
-            if ( response && response.statusCode !== 200 ) return callback( response, {} );
-
-            return callback( null, JSON.parse(body) );
-        });
+        request(opt, reqHandler(callback));
     };
 
     /**
