@@ -168,15 +168,7 @@ module.exports = function() {
             }
         }
 
-        request(opt, function(error, response, body) {
-            if ( !callback ) return;
-
-            if ( error ) return callback( error, {} );
-
-            if ( response && response.statusCode !== 200 ) return callback( response, {} );
-
-            return callback( null, JSON.parse(body) );
-        });
+        request(opt, reqHandler(callback));
     };
 
     /**
@@ -215,15 +207,7 @@ module.exports = function() {
             }
         }
 
-        request(opt, function(error, response, body) {
-            if ( !callback ) return;
-
-            if ( error ) return callback( error, {} );
-
-            if ( response && response.statusCode !== 200 ) return callback( response, {} );
-
-            return callback( null, JSON.parse(body) );
-        });
+        request(opt, reqHandler(callback));
     };
 
     /**
@@ -266,15 +250,7 @@ module.exports = function() {
             }
         }
 
-        request(opt, function(error, response, body) {
-            if ( !callback ) return;
-
-            if ( error ) return callback( error, {} );
-
-            if ( response && response.statusCode !== 200 ) return callback( response, {} );
-
-            return callback( null, JSON.parse(body) );
-        });
+        request(opt, reqHandler(callback));
     };
 
     /**
