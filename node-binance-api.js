@@ -103,11 +103,11 @@ module.exports = function() {
     const reqHandler = cb => (error, response, body) => {
       if ( !cb ) return;
 
-      if ( error ) return cb( error, {});
+      if ( error ) return cb(error, {});
 
-      if ( response && response.statusCode !== 200 ) return cb( response, {} );
+      if ( response && response.statusCode !== 200 ) return cb(response, {});
 
-      return cb( null, JSON.parse(body) );
+      return cb(null, JSON.parse(body));
     }
 
     const proxyRequest = (opt, cb) => request(addProxy(opt), reqHandler(cb));
