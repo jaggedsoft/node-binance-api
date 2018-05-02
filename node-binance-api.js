@@ -84,6 +84,22 @@ module.exports = function() {
       return typeof obj[Symbol.iterator] === 'function';
     }
 
+    const addProxy = opt => {
+      let socksproxy = process.env.socks_proxy || false;
+      if ( socksproxy === false ) return opt;
+      socksproxy = proxyReplacewithIp(socksproxy);
+
+      if ( options.verbose ) options.log('using socks proxy server ' + socksproxy);
+
+      opt.agentClass = SocksProxyAgent;
+      opt.agentOptions = {
+          protocol: parseProxy(socksproxy)[0],
+          host: parseProxy(socksproxy)[1],
+          port: parseProxy(socksproxy)[2]
+      }
+      return opt;
+    }
+
     const reqHandler = cb => (error, response, body) => {
       if ( !cb ) return;
 
@@ -107,8 +123,6 @@ module.exports = function() {
     const publicRequest = function(url, data, callback, method = 'GET') {
         if ( !data ) data = {};
 
-        let socksproxy = process.env.socks_proxy || false;
-
         let opt = {
             url: url,
             qs: data,
@@ -120,18 +134,7 @@ module.exports = function() {
             }
         };
 
-        if ( socksproxy !== false ) {
-            socksproxy = proxyReplacewithIp(socksproxy);
-            if ( options.verbose ) options.log('using socks proxy server ' + socksproxy);
-            opt.agentClass = SocksProxyAgent;
-            opt.agentOptions = {
-                protocol: parseProxy(socksproxy)[0],
-                host: parseProxy(socksproxy)[1],
-                port: parseProxy(socksproxy)[2]
-            }
-        }
-
-        request(opt, reqHandler(callback));
+        request(addProxy(opt), reqHandler(callback));
     };
 
     /**
@@ -144,8 +147,6 @@ module.exports = function() {
     const apiRequest = function(url, callback, method = 'GET') {
         if ( !options.APIKEY ) throw Error('apiRequest: Invalid API Key');
 
-        let socksproxy = process.env.socks_proxy || false;
-
         let opt = {
             url: url,
             method: method,
@@ -157,18 +158,7 @@ module.exports = function() {
             }
         };
 
-        if ( socksproxy !== false ) {
-            socksproxy = proxyReplacewithIp(socksproxy);
-            if ( options.verbose ) options.log('using socks proxy server ' + socksproxy);
-            opt.agentClass = SocksProxyAgent;
-            opt.agentOptions = {
-                protocol: parseProxy(socksproxy)[0],
-                host: parseProxy(socksproxy)[1],
-                port: parseProxy(socksproxy)[2]
-            }
-        }
-
-        request(opt, reqHandler(callback));
+        request(addProxy(opt), reqHandler(callback));
     };
 
     /**
@@ -183,8 +173,6 @@ module.exports = function() {
         if ( !data ) data = {};
         let query = Object.keys(data).reduce(function(a,k){a.push(k+'='+encodeURIComponent(data[k]));return a},[]).join('&');
 
-        let socksproxy = process.env.socks_proxy || false;
-
         let opt = {
             url: url+'?'+query,
             method: method,
@@ -196,18 +184,7 @@ module.exports = function() {
             }
         };
 
-        if ( socksproxy !== false ) {
-            socksproxy = proxyReplacewithIp(socksproxy);
-            if ( options.verbose ) options.log('using socks proxy server ' + socksproxy);
-            opt.agentClass = SocksProxyAgent;
-            opt.agentOptions = {
-                protocol: parseProxy(socksproxy)[0],
-                host: parseProxy(socksproxy)[1],
-                port: parseProxy(socksproxy)[2]
-            }
-        }
-
-        request(opt, reqHandler(callback));
+        request(addProxy(opt), reqHandler(callback));
     };
 
     /**
@@ -226,8 +203,6 @@ module.exports = function() {
         let query = Object.keys(data).reduce(function(a,k){a.push(k+'='+encodeURIComponent(data[k]));return a},[]).join('&');
         let signature = crypto.createHmac('sha256', options.APISECRET).update(query).digest('hex'); // set the HMAC hash header
 
-        let socksproxy = process.env.socks_proxy || false;
-
         let opt = {
             url: url+'?'+query+'&signature='+signature,
             method: method,
@@ -239,18 +214,7 @@ module.exports = function() {
             }
         };
 
-        if ( socksproxy !== false ) {
-            socksproxy = proxyReplacewithIp(socksproxy);
-            if ( options.verbose ) options.log('using socks proxy server ' + socksproxy);
-            opt.agentClass = SocksProxyAgent;
-            opt.agentOptions = {
-                protocol: parseProxy(socksproxy)[0],
-                host: parseProxy(socksproxy)[1],
-                port: parseProxy(socksproxy)[2]
-            }
-        }
-
-        request(opt, reqHandler(callback));
+        request(addProxy(opt), reqHandler(callback));
     };
 
     /**
