@@ -186,30 +186,19 @@ module.exports = function() {
      * @return {undefined}
      */
     const signedRequest = function(url, data = {}, callback, method = 'GET') {
+        if ( !options.APIKEY ) throw Error('apiRequest: Invalid API Key');
         if ( !options.APISECRET ) throw Error('signedRequest: Invalid API Secret');
         data.timestamp = new Date().getTime() + info.timeOffset;
         if ( typeof data.recvWindow === 'undefined' ) data.recvWindow = options.recvWindow;
         let query = Object.keys(data).reduce(function(a,k){a.push(k+'='+encodeURIComponent(data[k]));return a},[]).join('&');
         let signature = crypto.createHmac('sha256', options.APISECRET).update(query).digest('hex'); // set the HMAC hash header
 
-        // let opt = reqObj(
-        //   url+'?'+query+'&signature='+signature, 
-        //   data, 
-        //   method
-        // );
-        // opt.headers = addKey(opt.headers);
-
-        let opt = {
-            url: url+'?'+query+'&signature='+signature,
-            method: method,
-            timeout: options.recvWindow,
-            headers: {
-                'User-Agent': userAgent,
-                'Content-type': contentType,
-                'X-MBX-APIKEY': options.APIKEY
-            }
-        };
-
+        let opt = reqObj(
+          url+'?'+query+'&signature='+signature, 
+          data, 
+          method,
+          options.APIKEY
+        );
         proxyRequest(opt, callback);
     };
 
