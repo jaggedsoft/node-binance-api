@@ -105,15 +105,12 @@ module.exports = function() {
 
       if ( error ) return cb( error, {});
 
-      if ( response && response.statusCode !== 200 )
-        // passing error
-        return cb( response, {} );
+      if ( response && response.statusCode !== 200 ) return cb( response, {} );
 
       return cb( null, JSON.parse(body) );
     }
 
-    const proxyRequest = (opt, callback) => 
-      request(addProxy(opt), reqHandler(callback));
+    const proxyRequest = (opt, callback) => request(addProxy(opt), reqHandler(callback));
 
     /**
      * Create a http request to the public API
@@ -141,6 +138,7 @@ module.exports = function() {
     /**
      * Create a http request to the public API
      * @param {string} url - The http endpoint
+     * @param {object} data - The data to send
      * @param {function} callback - The callback method to call
      * @param {string} method - the http method
      * @return {undefined}
@@ -150,6 +148,7 @@ module.exports = function() {
 
         let opt = {
             url: url,
+            qs: data,
             method: method,
             timeout: options.recvWindow,
             headers: {
