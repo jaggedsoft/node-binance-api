@@ -112,14 +112,15 @@ module.exports = function() {
 
     const proxyRequest = (opt, cb) => request(addProxy(opt), reqHandler(cb));
 
-    const reqObj = (url, data = {}, method = 'GET') => ({
+    const reqObj = (url, data = {}, method = 'GET', key) => ({
       url: url,
       qs: data,
       method: method,
       timeout: options.recvWindow,
       headers: {
           'User-Agent': userAgent,
-          'Content-type': contentType
+          'Content-type': contentType,
+          'X-MBX-APIKEY': key || undefined
       }
     })
 
@@ -146,8 +147,7 @@ module.exports = function() {
      */
     const apiRequest = function(url, data = {}, callback, method = 'GET') {
         if ( !options.APIKEY ) throw Error('apiRequest: Invalid API Key');
-        let opt = reqObj(url, data, method);
-        opt.headers['X-MBX-APIKEY'] = options.APIKEY;
+        let opt = reqObj(url, data, method, options.APIKEY);
         proxyRequest(opt, callback);
     };
 
@@ -161,6 +161,13 @@ module.exports = function() {
      */
     const marketRequest = function(url, data = {}, callback, method = 'GET') {
         let query = Object.keys(data).reduce(function(a,k){a.push(k+'='+encodeURIComponent(data[k]));return a},[]).join('&');
+
+        // let opt = reqObj(
+        //   url+(query ? '?'+query : ''),
+        //   data, 
+        //   method
+        // );
+        // opt.headers = addKey(opt.headers);
 
         let opt = {
             url: url+'?'+query,
@@ -190,6 +197,13 @@ module.exports = function() {
         if ( typeof data.recvWindow === 'undefined' ) data.recvWindow = options.recvWindow;
         let query = Object.keys(data).reduce(function(a,k){a.push(k+'='+encodeURIComponent(data[k]));return a},[]).join('&');
         let signature = crypto.createHmac('sha256', options.APISECRET).update(query).digest('hex'); // set the HMAC hash header
+
+        // let opt = reqObj(
+        //   url+'?'+query+'&signature='+signature, 
+        //   data, 
+        //   method
+        // );
+        // opt.headers = addKey(opt.headers);
 
         let opt = {
             url: url+'?'+query+'&signature='+signature,
