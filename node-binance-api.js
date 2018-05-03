@@ -72,52 +72,6 @@ module.exports = function() {
     }
 
     /**
-     * Create a http request to the public API
-     * @param {string} url - The http endpoint
-     * @param {object} data - The data to send
-     * @param {function} callback - The callback method to call
-     * @param {string} method - the http method
-     * @return {undefined}
-     */
-    const publicRequest = function(url, data, callback, method = 'GET') {
-        if ( !data ) data = {};
-
-        let socksproxy = process.env.socks_proxy || false;
-
-        let opt = {
-            url: url,
-            qs: data,
-            method: method,
-            timeout: options.recvWindow,
-            headers: {
-                'User-Agent': userAgent,
-                'Content-type': contentType
-            }
-        };
-
-        if ( socksproxy !== false ) {
-            socksproxy = proxyReplacewithIp(socksproxy);
-            if ( options.verbose ) options.log('using socks proxy server ' + socksproxy);
-            opt.agentClass = SocksProxyAgent;
-            opt.agentOptions = {
-                protocol: parseProxy(socksproxy)[0],
-                host: parseProxy(socksproxy)[1],
-                port: parseProxy(socksproxy)[2]
-            }
-        }
-
-        request(opt, function(error, response, body) {
-            if ( !callback ) return;
-
-            if ( error ) return callback( error, {});
-
-            if ( response && response.statusCode !== 200 ) return callback( response, {} );
-
-            return callback( null, JSON.parse(body) );
-        });
-    };
-
-    /**
      * Checks to see of the boject is iterable
      * @param {object} obj - The object check
      * @return {boolean} true or false is iterable
@@ -130,49 +84,76 @@ module.exports = function() {
       return typeof obj[Symbol.iterator] === 'function';
     }
 
+    const addProxy = opt => {
+      let socksproxy = process.env.socks_proxy || false;
+      if ( socksproxy === false ) return opt;
+      socksproxy = proxyReplacewithIp(socksproxy);
+
+      if ( options.verbose ) options.log('using socks proxy server ' + socksproxy);
+
+      opt.agentClass = SocksProxyAgent;
+      opt.agentOptions = {
+          protocol: parseProxy(socksproxy)[0],
+          host: parseProxy(socksproxy)[1],
+          port: parseProxy(socksproxy)[2]
+      }
+      return opt;
+    }
+
+    const reqHandler = cb => (error, response, body) => {
+      if ( !cb ) return;
+
+      if ( error ) return cb(error, {});
+
+      if ( response && response.statusCode !== 200 ) return cb(response, {});
+
+      return cb(null, JSON.parse(body));
+    }
+
+    const proxyRequest = (opt, cb) => request(addProxy(opt), reqHandler(cb));
+
+    const reqObj = (url, data = {}, method = 'GET', key) => ({
+      url: url,
+      qs: data,
+      method: method,
+      timeout: options.recvWindow,
+      headers: {
+          'User-Agent': userAgent,
+          'Content-type': contentType,
+          'X-MBX-APIKEY': key || ''
+      }
+    })
+
     /**
      * Create a http request to the public API
      * @param {string} url - The http endpoint
+     * @param {object} data - The data to send
      * @param {function} callback - The callback method to call
      * @param {string} method - the http method
      * @return {undefined}
      */
-    const apiRequest = function(url, callback, method = 'GET') {
+    const publicRequest = function(url, data = {}, callback, method = 'GET') {
+        let opt = reqObj(url, data, method);
+        proxyRequest(opt, callback);
+    };
+
+    /**
+     * Create a http request to the public API
+     * @param {string} url - The http endpoint
+     * @param {object} data - The data to send
+     * @param {function} callback - The callback method to call
+     * @param {string} method - the http method
+     * @return {undefined}
+     */
+    const apiRequest = function(url, data = {}, callback, method = 'GET') {
         if ( !options.APIKEY ) throw Error('apiRequest: Invalid API Key');
-
-        let socksproxy = process.env.socks_proxy || false;
-
-        let opt = {
-            url: url,
-            method: method,
-            timeout: options.recvWindow,
-            headers: {
-                'User-Agent': userAgent,
-                'Content-type': contentType,
-                'X-MBX-APIKEY': options.APIKEY
-            }
-        };
-
-        if ( socksproxy !== false ) {
-            socksproxy = proxyReplacewithIp(socksproxy);
-            if ( options.verbose ) options.log('using socks proxy server ' + socksproxy);
-            opt.agentClass = SocksProxyAgent;
-            opt.agentOptions = {
-                protocol: parseProxy(socksproxy)[0],
-                host: parseProxy(socksproxy)[1],
-                port: parseProxy(socksproxy)[2]
-            }
-        }
-
-        request(opt, function(error, response, body) {
-            if ( !callback ) return;
-
-            if ( error ) return callback( error, {} );
-
-            if ( response && response.statusCode !== 200 ) return callback( response, {} );
-
-            return callback( null, JSON.parse(body) );
-        });
+        let opt = reqObj(
+          url,
+          data,
+          method,
+          options.APIKEY
+        );
+        proxyRequest(opt, callback);
     };
 
     /**
@@ -183,43 +164,17 @@ module.exports = function() {
      * @param {string} method - the http method
      * @return {undefined}
      */
-    const marketRequest = function(url, data, callback, method = 'GET') {
-        if ( !data ) data = {};
+    const marketRequest = function(url, data = {}, callback, method = 'GET') {
+        if ( !options.APIKEY ) throw Error('apiRequest: Invalid API Key');
         let query = Object.keys(data).reduce(function(a,k){a.push(k+'='+encodeURIComponent(data[k]));return a},[]).join('&');
 
-        let socksproxy = process.env.socks_proxy || false;
-
-        let opt = {
-            url: url+'?'+query,
-            method: method,
-            timeout: options.recvWindow,
-            headers: {
-                'User-Agent': userAgent,
-                'Content-type': contentType,
-                'X-MBX-APIKEY': options.APIKEY
-            }
-        };
-
-        if ( socksproxy !== false ) {
-            socksproxy = proxyReplacewithIp(socksproxy);
-            if ( options.verbose ) options.log('using socks proxy server ' + socksproxy);
-            opt.agentClass = SocksProxyAgent;
-            opt.agentOptions = {
-                protocol: parseProxy(socksproxy)[0],
-                host: parseProxy(socksproxy)[1],
-                port: parseProxy(socksproxy)[2]
-            }
-        }
-
-        request(opt, function(error, response, body) {
-            if ( !callback ) return;
-
-            if ( error ) return callback( error, {} );
-
-            if ( response && response.statusCode !== 200 ) return callback( response, {} );
-
-            return callback( null, JSON.parse(body) );
-        });
+        let opt = reqObj(
+          url+(query ? '?'+query : ''),
+          data,
+          method,
+          options.APIKEY
+        );
+        proxyRequest(opt, callback);
     };
 
     /**
@@ -230,47 +185,21 @@ module.exports = function() {
      * @param {string} method - the http method
      * @return {undefined}
      */
-    const signedRequest = function(url, data, callback, method = 'GET') {
+    const signedRequest = function(url, data = {}, callback, method = 'GET') {
+        if ( !options.APIKEY ) throw Error('apiRequest: Invalid API Key');
         if ( !options.APISECRET ) throw Error('signedRequest: Invalid API Secret');
-        if ( !data ) data = {};
         data.timestamp = new Date().getTime() + info.timeOffset;
         if ( typeof data.recvWindow === 'undefined' ) data.recvWindow = options.recvWindow;
         let query = Object.keys(data).reduce(function(a,k){a.push(k+'='+encodeURIComponent(data[k]));return a},[]).join('&');
         let signature = crypto.createHmac('sha256', options.APISECRET).update(query).digest('hex'); // set the HMAC hash header
 
-        let socksproxy = process.env.socks_proxy || false;
-
-        let opt = {
-            url: url+'?'+query+'&signature='+signature,
-            method: method,
-            timeout: options.recvWindow,
-            headers: {
-                'User-Agent': userAgent,
-                'Content-type': contentType,
-                'X-MBX-APIKEY': options.APIKEY
-            }
-        };
-
-        if ( socksproxy !== false ) {
-            socksproxy = proxyReplacewithIp(socksproxy);
-            if ( options.verbose ) options.log('using socks proxy server ' + socksproxy);
-            opt.agentClass = SocksProxyAgent;
-            opt.agentOptions = {
-                protocol: parseProxy(socksproxy)[0],
-                host: parseProxy(socksproxy)[1],
-                port: parseProxy(socksproxy)[2]
-            }
-        }
-
-        request(opt, function(error, response, body) {
-            if ( !callback ) return;
-
-            if ( error ) return callback( error, {} );
-
-            if ( response && response.statusCode !== 200 ) return callback( response, {} );
-
-            return callback( null, JSON.parse(body) );
-        });
+        let opt = reqObj(
+          url+'?'+query+'&signature='+signature,
+          data,
+          method,
+          options.APIKEY
+        );
+        proxyRequest(opt, callback);
     };
 
     /**
@@ -1049,7 +978,7 @@ module.exports = function() {
             if ( typeof options.log === 'undefined' ) options.log = default_options.log;
             if ( typeof options.verbose === 'undefined' ) options.verbose = default_options.verbose;
             if ( options.useServerTime ) {
-                apiRequest(base+'v1/time', function(error, response) {
+                apiRequest(base+'v1/time', {}, function(error, response) {
                     info.timeOffset = response.serverTime - new Date().getTime();
                     //options.log("server time set: ", response.serverTime, info.timeOffset);
                     if ( callback ) callback();
@@ -1415,7 +1344,7 @@ module.exports = function() {
         * @return {undefined}
         */
         useServerTime: function(callback = false) {
-            apiRequest(base+'v1/time', function(error, response) {
+            apiRequest(base+'v1/time', {}, function(error, response) {
                 info.timeOffset = response.serverTime - new Date().getTime();
                 //options.log("server time set: ", response.serverTime, info.timeOffset);
                 if ( callback ) callback();
@@ -1428,7 +1357,7 @@ module.exports = function() {
         * @return {undefined}
         */
         time: function(callback) {
-            apiRequest(base+'v1/time', callback);
+            apiRequest(base+'v1/time', {}, callback);
         },
 
         /**
@@ -1574,11 +1503,11 @@ module.exports = function() {
                 let reconnect = function() {
                     if ( options.reconnect ) userData(callback, execution_callback, subscribed_callback);
                 };
-                apiRequest(base+'v1/userDataStream', function(error, response) {
+                apiRequest(base+'v1/userDataStream', {}, function(error, response) {
                     options.listenKey = response.listenKey;
                     setTimeout(function userDataKeepAlive() { // keepalive
                         try {
-                            apiRequest(base+'v1/userDataStream?listenKey='+options.listenKey, function(err) {
+                            apiRequest(base+'v1/userDataStream?listenKey='+options.listenKey, {}, function(err) {
                                 if ( err ) setTimeout(userDataKeepAlive, 60000); // retry in 1 minute
                                 else setTimeout(userDataKeepAlive, 60 * 30 * 1000); // 30 minute keepalive
                             }, 'PUT');
