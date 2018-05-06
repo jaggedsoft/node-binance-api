@@ -744,9 +744,8 @@ module.exports = function() {
      * @return {boolean} - true or false
      */
     const isArrayUnique = function(array) {
-        return array.every(function(el, pos, arr) {
-            return arr.indexOf(el) === pos;
-        });
+        let s = new Set(array);
+        return s.size == array.length;
     };
     return {
 
