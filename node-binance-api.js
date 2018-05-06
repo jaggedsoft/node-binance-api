@@ -1698,7 +1698,7 @@ module.exports = function() {
                 }
                 return subscription.endpoint;
             },
-            
+
             /**
             * Websocket raw trades
             * @param {array/string} symbols - an array or string of symbols to query
@@ -1707,7 +1707,7 @@ module.exports = function() {
             */
             rawTrades: function rawTrades(symbols, callback) {
                 let reconnect = function() {
-                    if ( options.reconnect ) trades(symbols, callback);
+                    if ( options.reconnect ) rawTrades(symbols, callback);
                 };
 
                 let subscription;
@@ -1723,7 +1723,7 @@ module.exports = function() {
                 }
                 return subscription.endpoint;
             },
-
+            
             /**
             * Websocket klines
             * @param {array/string} symbols - an array or string of symbols to query
