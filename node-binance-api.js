@@ -1723,7 +1723,7 @@ module.exports = function() {
                 }
                 return subscription.endpoint;
             },
-            
+
             /**
             * Websocket klines
             * @param {array/string} symbols - an array or string of symbols to query
