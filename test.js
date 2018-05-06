@@ -974,6 +974,28 @@ describe( 'Websockets trades', function() {
   });
 });
 
+
+describe( 'Websockets raw trades', function() {
+  let trades;
+  let cnt = 0;
+  /*global beforeEach*/
+  beforeEach(function (done) {
+    this.timeout( TIMEOUT );
+    binance.websockets.rawTrades(['BNBBTC', 'ETHBTC'], e_trades => {
+      cnt++;
+      if ( cnt > 1 ) return;
+      trades = e_trades;
+      stopSockets();
+      done();
+    });
+  });
+
+  it( 'Calls trades websocket', function() {
+    assert( typeof ( trades ) === 'object', WARN_SHOULD_BE_OBJ );
+    assert( trades !== null, WARN_SHOULD_BE_NOT_NULL );
+  });
+});
+
 describe( 'depthCache', function() {
   it( 'depthCache', function( done ) {
     binance.depthCache( 'BNBBTC' );

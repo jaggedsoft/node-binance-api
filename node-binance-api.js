@@ -1675,7 +1675,7 @@ module.exports = function() {
             },
 
             /**
-            * Websocket trades
+            * Websocket aggregated trades
             * @param {array/string} symbols - an array or string of symbols to query
             * @param {function} callback - callback function
             * @return {string} the websocket endpoint
@@ -1700,7 +1700,32 @@ module.exports = function() {
             },
 
             /**
-            * Websocket trades
+            * Websocket raw trades
+            * @param {array/string} symbols - an array or string of symbols to query
+            * @param {function} callback - callback function
+            * @return {string} the websocket endpoint
+            */
+            rawTrades: function rawTrades(symbols, callback) {
+                let reconnect = function() {
+                    if ( options.reconnect ) rawTrades(symbols, callback);
+                };
+
+                let subscription;
+                if ( Array.isArray(symbols) ) {
+                    if ( !isArrayUnique(symbols) ) throw Error('trades: "symbols" cannot contain duplicate elements.');
+                    let streams = symbols.map(function(symbol) {
+                        return symbol.toLowerCase()+'@trade';
+                    });
+                    subscription = subscribeCombined(streams, callback, reconnect);
+                } else {
+                    let symbol = symbols;
+                    subscription = subscribe(symbol.toLowerCase()+'@trade', callback, reconnect);
+                }
+                return subscription.endpoint;
+            },
+
+            /**
+            * Websocket klines
             * @param {array/string} symbols - an array or string of symbols to query
             * @param {string} interval - the time interval
             * @param {function} callback - callback function
