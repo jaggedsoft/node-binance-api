@@ -106,7 +106,7 @@ module.exports = {
             "error",
             "unix"
         ],
-        "lines-around-comment": "error",
+        "lines-around-comment": "off",
         "lines-around-directive": "off",
         "lines-between-class-members": "error",
         "max-depth": "error",
@@ -117,13 +117,13 @@ module.exports = {
         "max-statements": "off",
         "max-statements-per-line": "off",
         "multiline-comment-style": [
-            "error",
+            "off",
             "bare-block"
         ],
         "new-cap": "error",
         "new-parens": "error",
         "newline-after-var": [
-            "error",
+            "off",
             "never"
         ],
         "newline-before-return": "off",
@@ -131,7 +131,7 @@ module.exports = {
         "no-alert": "error",
         "no-array-constructor": "error",
         "no-await-in-loop": "error",
-        "no-bitwise": "error",
+        "no-bitwise": "off",
         "no-buffer-constructor": "error",
         "no-caller": "error",
         "no-catch-shadow": "off",
@@ -140,6 +140,7 @@ module.exports = {
             "warn",
             {
                 allow: [
+                    "log",
                     "warn",
                     "error"
                 ]
@@ -198,7 +199,7 @@ module.exports = {
         "no-param-reassign": "off",
         "no-path-concat": "error",
         "no-plusplus": "off",
-        "no-process-env": "error",
+        "no-process-env": "off",
         "no-process-exit": "error",
         "no-proto": "error",
         "no-prototype-builtins": "error",
@@ -215,7 +216,7 @@ module.exports = {
         "no-shadow": "off",
         "no-shadow-restricted-names": "error",
         "no-spaced-func": "error",
-        "no-sync": "error",
+        "no-sync": "off",
         "no-tabs": "off",
         "no-template-curly-in-string": "error",
         "no-ternary": "off",

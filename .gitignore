@@ -51,3 +51,7 @@ node_modules
 # VSCode #
 ##########
 .vscode
+
+# code coverage"
+coverage
+
