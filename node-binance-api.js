@@ -1679,7 +1679,7 @@ module.exports = function() {
             * @param {function} callback - callback function
             * @return {string} the websocket endpoint
             */
-            trades: function trades(symbols, callback) {
+            aggTrades: function trades(symbols, callback) {
                 let reconnect = function() {
                     if ( options.reconnect ) trades(symbols, callback);
                 };
@@ -1704,9 +1704,9 @@ module.exports = function() {
             * @param {function} callback - callback function
             * @return {string} the websocket endpoint
             */
-            rawTrades: function rawTrades(symbols, callback) {
+            trades: function trades(symbols, callback) {
                 let reconnect = function() {
-                    if ( options.reconnect ) rawTrades(symbols, callback);
+                    if ( options.reconnect ) trades(symbols, callback);
                 };
 
                 let subscription;
