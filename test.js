@@ -953,13 +953,13 @@ describe( 'Websockets depth', function() {
   });
 });
 
-describe( 'Websockets trades', function() {
+describe( 'Websockets aggregated trades', function() {
   let trades;
   let cnt = 0;
   /*global beforeEach*/
   beforeEach(function (done) {
     this.timeout( TIMEOUT );
-    binance.websockets.trades(['BNBBTC', 'ETHBTC'], e_trades => {
+    binance.websockets.aggTrades(['BNBBTC', 'ETHBTC'], e_trades => {
       cnt++;
       if ( cnt > 1 ) return;
       trades = e_trades;
@@ -975,13 +975,13 @@ describe( 'Websockets trades', function() {
 });
 
 
-describe( 'Websockets raw trades', function() {
+describe( 'Websockets (raw) trades', function() {
   let trades;
   let cnt = 0;
   /*global beforeEach*/
   beforeEach(function (done) {
     this.timeout( TIMEOUT );
-    binance.websockets.rawTrades(['BNBBTC', 'ETHBTC'], e_trades => {
+    binance.websockets.trades(['BNBBTC', 'ETHBTC'], e_trades => {
       cnt++;
       if ( cnt > 1 ) return;
       trades = e_trades;
