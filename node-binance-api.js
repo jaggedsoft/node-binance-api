@@ -450,6 +450,20 @@ module.exports = function() {
     };
 
     /**
+     * Used to terminate a web socket
+     * @param {string} endpoint - endpoint identifier associated with the web socket
+     * @param {boolean} reconnect - auto reconnect after termination
+     * @return {undefined}
+     */
+    const terminate = function(endpoint, reconnect = false) {
+        let ws = subscriptions[endpoint];
+        if ( !ws ) return;
+        ws.removeAllListeners('message');
+        ws.reconnect = reconnect;
+        ws.terminate();
+    }
+
+    /**
      * Used as part of the userdata websockets callback
      * @param {object} data - user data callback data type
      * @return {undefined}
@@ -673,21 +687,8 @@ module.exports = function() {
     const depthHandler = function(depth) {
         let symbol = depth.s, obj;
         let context = depthCacheContext[symbol];
-        // This now conforms 100% to the Binance docs constraints on managing a local order book
-        if ( !context.lastEventUpdateId && (depth.U > context.snapshotUpdateId + 1 || depth.u < context.snapshotUpdateId + 1 )) {
 
-            /* I think if the count exceeded 1 we could deem the cache out of sync. But we'll
-               be lenient and give the cache up to a count of 3 before calling it out of sync. */
-            if ( ++context.skipCount > 2 ) {
-                const msg = 'depthHandler: ['+symbol+'] Skip count exceeded. The depth cache is out of sync.';
-                if ( options.verbose ) options.log(msg);
-                throw new Error(msg);
-            }
-        } else if ( context.lastEventUpdateId && depth.U !== context.lastEventUpdateId + 1 ) {
-            const msg = 'depthHandler: ['+symbol+'] Incorrect update ID. The depth cache is out of sync.';
-            if ( options.verbose ) options.log(msg);
-            throw new Error(msg);
-        } else {
+        let updateDepthCache = function() {
             for ( obj of depth.b ) { //bids
                 depthCache[symbol].bids[obj[0]] = parseFloat(obj[1]);
                 if ( obj[1] === '0.00000000' ) {
@@ -702,6 +703,34 @@ module.exports = function() {
             }
             context.skipCount = 0;
             context.lastEventUpdateId = depth.u;
+        }
+
+        // This now conforms 100% to the Binance docs constraints on managing a local order book
+        if ( context.lastEventUpdateId ) {
+            const expectedUpdateId = context.lastEventUpdateId + 1;
+            if ( depth.U <= expectedUpdateId ) {
+                updateDepthCache();
+            } else {
+                let msg = 'depthHandler: ['+symbol+'] The depth cache is out of sync.';
+                msg += ' Symptom: Unexpected Update ID. Expected "'+expectedUpdateId+'", got "'+depth.U+'"';
+                if ( options.verbose ) options.log(msg);
+                throw new Error(msg);
+            }
+        } else if ( depth.U > context.snapshotUpdateId + 1 ) {
+            /* In this case we have a gap between the data of the stream and the snapshot.
+               This is an out of sync error, and the connection must be torn down and reconnected. */
+            let msg = 'depthHandler: ['+symbol+'] The depth cache is out of sync.';
+            msg += ' Symptom: Gap between snapshot and first stream data.';
+            if ( options.verbose ) options.log(msg);
+            throw new Error(msg);
+        } else if ( depth.u < context.snapshotUpdateId + 1 ) {
+            /* In this case we've received data that we've already had since the snapshot.
+               This isn't really an issue, and we can just update the cache again, or ignore it entirely. */
+
+            // do nothing
+        } else {
+            // This is our first legal update from the stream data
+            updateDepthCache();
         }
     };
 
@@ -1557,11 +1586,8 @@ module.exports = function() {
             * @return {undefined}
             */
             terminate: function(endpoint) {
-                let ws = subscriptions[endpoint];
-                if ( !ws ) return;
-                options.log('WebSocket terminated:', endpoint);
-                ws.reconnect = false;
-                ws.terminate();
+                if ( options.verbose ) options.log('WebSocket terminating:', endpoint);
+                return terminate(endpoint);
             },
 
             /**
@@ -1612,6 +1638,13 @@ module.exports = function() {
                     depthCache[symbol] = { bids: {}, asks: {} };
                 };
 
+                let assignEndpointIdToContext = function(symbol, endpointId) {
+                    if ( depthCacheContext[symbol] ) {
+                        let context = depthCacheContext[symbol];
+                        context.endpointId = endpointId;
+                    }
+                }
+
                 let handleDepthStreamData = function(depth) {
                     let symbol = depth.s;
                     let context = depthCacheContext[symbol];
@@ -1620,10 +1653,10 @@ module.exports = function() {
                     } else {
                         try {
                             depthHandler(depth);
-                            if ( callback ) callback(symbol, depthCache[symbol]);
                         } catch (err) {
-                            reconnect();
+                            return terminate(context.endpointId, true);
                         }
+                        if ( callback ) callback(symbol, depthCache[symbol]);
                     }
                 };
 
@@ -1663,12 +1696,14 @@ module.exports = function() {
                     subscription = subscribeCombined(streams, handleDepthStreamData, reconnect, function() {
                         symbols.forEach(getSymbolDepthSnapshot);
                     });
+                    symbols.forEach(s => assignEndpointIdToContext(s, subscription.endpoint));
                 } else {
                     let symbol = symbols;
                     symbolDepthInit(symbol);
                     subscription = subscribe(symbol.toLowerCase()+'@depth', handleDepthStreamData, reconnect, function() {
                         getSymbolDepthSnapshot(symbol);
                     });
+                    assignEndpointIdToContext(symbol, subscription.endpoint);
                 }
                 return subscription.endpoint;
             },
