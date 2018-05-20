@@ -716,23 +716,21 @@ module.exports = function() {
                 if ( options.verbose ) options.log(msg);
                 throw new Error(msg);
             }
-        } else {
-            if ( depth.U > context.snapshotUpdateId + 1 ) {
-                /* In this case we have a gap between the data of the stream and the snapshot.
-                   This is an out of sync error, and the connection must be torn down and reconnected. */
-                let msg = 'depthHandler: ['+symbol+'] The depth cache is out of sync.';
-                msg += ' Symptom: Gap between snapshot and first stream data.';
-                if ( options.verbose ) options.log(msg);
-                throw new Error(msg);
-            } else if ( depth.u < context.snapshotUpdateId + 1 ) {
-                /* In this case we've received data that we've already had since the snapshot.
-                   This isn't really an issue, and we can just update the cache again, or ignore it entirely. */
+        } else if ( depth.U > context.snapshotUpdateId + 1 ) {
+            /* In this case we have a gap between the data of the stream and the snapshot.
+               This is an out of sync error, and the connection must be torn down and reconnected. */
+            let msg = 'depthHandler: ['+symbol+'] The depth cache is out of sync.';
+            msg += ' Symptom: Gap between snapshot and first stream data.';
+            if ( options.verbose ) options.log(msg);
+            throw new Error(msg);
+        } else if ( depth.u < context.snapshotUpdateId + 1 ) {
+            /* In this case we've received data that we've already had since the snapshot.
+               This isn't really an issue, and we can just update the cache again, or ignore it entirely. */
 
-                // do nothing
-            } else {
-                // This is our first legal update from the stream data
-                updateDepthCache();
-            }
+            // do nothing
+        } else {
+            // This is our first legal update from the stream data
+            updateDepthCache();
         }
     };
 
@@ -1698,9 +1696,7 @@ module.exports = function() {
                     subscription = subscribeCombined(streams, handleDepthStreamData, reconnect, function() {
                         symbols.forEach(getSymbolDepthSnapshot);
                     });
-                    symbols.forEach(s =>
-                        assignEndpointIdToContext(s, subscription.endpoint)
-                    );
+                    symbols.forEach(s => assignEndpointIdToContext(s, subscription.endpoint));
                 } else {
                     let symbol = symbols;
                     symbolDepthInit(symbol);
