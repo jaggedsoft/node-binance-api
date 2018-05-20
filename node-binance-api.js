@@ -708,7 +708,7 @@ module.exports = function() {
         // This now conforms 100% to the Binance docs constraints on managing a local order book
         if ( context.lastEventUpdateId ) {
             const expectedUpdateId = context.lastEventUpdateId + 1;
-            if ( depth.U === expectedUpdateId ) {
+            if ( depth.U <= expectedUpdateId ) {
                 updateDepthCache();
             } else {
                 let msg = 'depthHandler: ['+symbol+'] The depth cache is out of sync.';
