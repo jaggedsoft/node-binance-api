@@ -1657,7 +1657,7 @@ module.exports = function() {
                         } catch (err) {
                             return terminate(context.endpointId, true);
                         }
-                        if ( callback ) callback(symbol, depthCache[symbol], context.lastEventUpdateTime);
+                        if ( callback ) callback(symbol, depthCache[symbol], context);
                     }
                 };
 
