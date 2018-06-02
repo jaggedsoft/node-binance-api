@@ -798,7 +798,7 @@ module.exports = function() {
 
         /**
         * Count decimal places
-        * @param {float} float - get the price precision point 
+        * @param {float} float - get the price precision point
         * @return {int} - number of place
         */
 		getPrecision: function(float) { //
