@@ -703,6 +703,7 @@ module.exports = function() {
             }
             context.skipCount = 0;
             context.lastEventUpdateId = depth.u;
+	    context.lastEventUpdateTime = depth.E;
         }
 
         // This now conforms 100% to the Binance docs constraints on managing a local order book
@@ -1656,7 +1657,7 @@ module.exports = function() {
                         } catch (err) {
                             return terminate(context.endpointId, true);
                         }
-                        if ( callback ) callback(symbol, depthCache[symbol]);
+                        if ( callback ) callback(symbol, depthCache[symbol], context);
                     }
                 };
 
