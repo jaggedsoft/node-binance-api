@@ -10,7 +10,8 @@
  * Node Binance Api
  * @module jaggedsoft/node-binance-api
  */
-module.exports = function() {
+function Binance() {
+    if (!(this instanceof Binance)) { return new Binance(); }
     'use strict';
     const WebSocket = require('ws');
     const request = require('request');
@@ -34,7 +35,7 @@ module.exports = function() {
     let klineQueue = {};
     let ohlc = {};
     const default_options = {
-        recvWindow: 60000, // to be lowered to 5000 in v0.5
+        recvWindow: 5000,
         useServerTime: false,
         reconnect: true,
         verbose: false,
@@ -703,6 +704,7 @@ module.exports = function() {
             }
             context.skipCount = 0;
             context.lastEventUpdateId = depth.u;
+            context.lastEventUpdateTime = depth.E;
         }
 
         // This now conforms 100% to the Binance docs constraints on managing a local order book
@@ -1012,6 +1014,7 @@ module.exports = function() {
                     if ( callback ) callback();
                 });
             } else if ( callback ) callback();
+            return this;
         },
 
         /**
@@ -1656,7 +1659,7 @@ module.exports = function() {
                         } catch (err) {
                             return terminate(context.endpointId, true);
                         }
-                        if ( callback ) callback(symbol, depthCache[symbol]);
+                        if ( callback ) callback(symbol, depthCache[symbol], context);
                     }
                 };
 
@@ -1920,5 +1923,6 @@ module.exports = function() {
             }
         }
     };
-}();
+};
+module.exports = Binance;
 //https://github.com/binance-exchange/binance-official-api-docs
