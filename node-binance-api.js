@@ -9,9 +9,12 @@
 /**
  * Node Binance Api
  * @module jaggedsoft/node-binance-api
+ * @return instance to class object
  */
 function Binance() {
-    if (!(this instanceof Binance)) { return new Binance(); }
+    if (!(this instanceof Binance)) {
+        return new Binance();
+    }
     'use strict';
     const WebSocket = require('ws');
     const request = require('request');
@@ -1923,6 +1926,7 @@ function Binance() {
             }
         }
     };
-};
+    return this;
+}
 module.exports = Binance;
 //https://github.com/binance-exchange/binance-official-api-docs
