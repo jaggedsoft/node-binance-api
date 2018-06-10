@@ -35,11 +35,15 @@
  * ============================================================ */
 
 /**
- * Node Binance Api
+ * Node Binance API
  * @module jaggedsoft/node-binance-api
+ * @return {object} instance to class object
  */
-module.exports = function() {
+let api = function Binance() {
     'use strict';
+    if (!(this instanceof Binance)) {
+        return new Binance();
+    }
     const WebSocket = require('ws');
     const request = require('request');
     const crypto = require('crypto');
@@ -62,7 +66,7 @@ module.exports = function() {
     let klineQueue = {};
     let ohlc = {};
     const default_options = {
-        recvWindow: 60000, // to be lowered to 5000 in v0.5
+        recvWindow: 5000,
         useServerTime: false,
         reconnect: true,
         verbose: false,
@@ -478,6 +482,20 @@ module.exports = function() {
     };
 
     /**
+     * Used to terminate a web socket
+     * @param {string} endpoint - endpoint identifier associated with the web socket
+     * @param {boolean} reconnect - auto reconnect after termination
+     * @return {undefined}
+     */
+    const terminate = function(endpoint, reconnect = false) {
+        let ws = subscriptions[endpoint];
+        if ( !ws ) return;
+        ws.removeAllListeners('message');
+        ws.reconnect = reconnect;
+        ws.terminate();
+    }
+
+    /**
      * Used as part of the userdata websockets callback
      * @param {object} data - user data callback data type
      * @return {undefined}
@@ -701,21 +719,8 @@ module.exports = function() {
     const depthHandler = function(depth) {
         let symbol = depth.s, obj;
         let context = depthCacheContext[symbol];
-        // This now conforms 100% to the Binance docs constraints on managing a local order book
-        if ( !context.lastEventUpdateId &amp;&amp; (depth.U > context.snapshotUpdateId + 1 || depth.u &lt; context.snapshotUpdateId + 1 )) {
 
-            /* I think if the count exceeded 1 we could deem the cache out of sync. But we'll
-               be lenient and give the cache up to a count of 3 before calling it out of sync. */
-            if ( ++context.skipCount > 2 ) {
-                const msg = 'depthHandler: ['+symbol+'] Skip count exceeded. The depth cache is out of sync.';
-                if ( options.verbose ) options.log(msg);
-                throw new Error(msg);
-            }
-        } else if ( context.lastEventUpdateId &amp;&amp; depth.U !== context.lastEventUpdateId + 1 ) {
-            const msg = 'depthHandler: ['+symbol+'] Incorrect update ID. The depth cache is out of sync.';
-            if ( options.verbose ) options.log(msg);
-            throw new Error(msg);
-        } else {
+        let updateDepthCache = function() {
             for ( obj of depth.b ) { //bids
                 depthCache[symbol].bids[obj[0]] = parseFloat(obj[1]);
                 if ( obj[1] === '0.00000000' ) {
@@ -730,6 +735,35 @@ module.exports = function() {
             }
             context.skipCount = 0;
             context.lastEventUpdateId = depth.u;
+            context.lastEventUpdateTime = depth.E;
+        }
+
+        // This now conforms 100% to the Binance docs constraints on managing a local order book
+        if ( context.lastEventUpdateId ) {
+            const expectedUpdateId = context.lastEventUpdateId + 1;
+            if ( depth.U &lt;= expectedUpdateId ) {
+                updateDepthCache();
+            } else {
+                let msg = 'depthHandler: ['+symbol+'] The depth cache is out of sync.';
+                msg += ' Symptom: Unexpected Update ID. Expected "'+expectedUpdateId+'", got "'+depth.U+'"';
+                if ( options.verbose ) options.log(msg);
+                throw new Error(msg);
+            }
+        } else if ( depth.U > context.snapshotUpdateId + 1 ) {
+            /* In this case we have a gap between the data of the stream and the snapshot.
+               This is an out of sync error, and the connection must be torn down and reconnected. */
+            let msg = 'depthHandler: ['+symbol+'] The depth cache is out of sync.';
+            msg += ' Symptom: Gap between snapshot and first stream data.';
+            if ( options.verbose ) options.log(msg);
+            throw new Error(msg);
+        } else if ( depth.u &lt; context.snapshotUpdateId + 1 ) {
+            /* In this case we've received data that we've already had since the snapshot.
+               This isn't really an issue, and we can just update the cache again, or ignore it entirely. */
+
+            // do nothing
+        } else {
+            // This is our first legal update from the stream data
+            updateDepthCache();
         }
     };
 
@@ -772,9 +806,8 @@ module.exports = function() {
      * @return {boolean} - true or false
      */
     const isArrayUnique = function(array) {
-        return array.every(function(el, pos, arr) {
-            return arr.indexOf(el) === pos;
-        });
+        let s = new Set(array);
+        return s.size === array.length;
     };
     return {
 
@@ -798,12 +831,12 @@ module.exports = function() {
 
         /**
         * Count decimal places
-        * @param {float} float - get depch volume for this symbol
+        * @param {float} float - get the price precision point
         * @return {int} - number of place
         */
-		getPrecision: function(float) { //
-			return float.toString().split('.')[1].length || 0;
-		},
+        getPrecision: function(float) { //
+            return float.toString().split('.')[1].length || 0;
+        },
 
         /**
         * rounds number with given step
@@ -1012,6 +1045,7 @@ module.exports = function() {
                     if ( callback ) callback();
                 });
             } else if ( callback ) callback();
+            return this;
         },
 
         /**
@@ -1586,11 +1620,8 @@ module.exports = function() {
             * @return {undefined}
             */
             terminate: function(endpoint) {
-                let ws = subscriptions[endpoint];
-                if ( !ws ) return;
-                options.log('WebSocket terminated:', endpoint);
-                ws.reconnect = false;
-                ws.terminate();
+                if ( options.verbose ) options.log('WebSocket terminating:', endpoint);
+                return terminate(endpoint);
             },
 
             /**
@@ -1641,6 +1672,13 @@ module.exports = function() {
                     depthCache[symbol] = { bids: {}, asks: {} };
                 };
 
+                let assignEndpointIdToContext = function(symbol, endpointId) {
+                    if ( depthCacheContext[symbol] ) {
+                        let context = depthCacheContext[symbol];
+                        context.endpointId = endpointId;
+                    }
+                }
+
                 let handleDepthStreamData = function(depth) {
                     let symbol = depth.s;
                     let context = depthCacheContext[symbol];
@@ -1649,10 +1687,10 @@ module.exports = function() {
                     } else {
                         try {
                             depthHandler(depth);
-                            if ( callback ) callback(symbol, depthCache[symbol]);
                         } catch (err) {
-                            reconnect();
+                            return terminate(context.endpointId, true);
                         }
+                        if ( callback ) callback(symbol, depthCache[symbol], context);
                     }
                 };
 
@@ -1692,23 +1730,25 @@ module.exports = function() {
                     subscription = subscribeCombined(streams, handleDepthStreamData, reconnect, function() {
                         symbols.forEach(getSymbolDepthSnapshot);
                     });
+                    symbols.forEach(s => assignEndpointIdToContext(s, subscription.endpoint));
                 } else {
                     let symbol = symbols;
                     symbolDepthInit(symbol);
                     subscription = subscribe(symbol.toLowerCase()+'@depth', handleDepthStreamData, reconnect, function() {
                         getSymbolDepthSnapshot(symbol);
                     });
+                    assignEndpointIdToContext(symbol, subscription.endpoint);
                 }
                 return subscription.endpoint;
             },
 
             /**
-            * Websocket trades
+            * Websocket aggregated trades
             * @param {array/string} symbols - an array or string of symbols to query
             * @param {function} callback - callback function
             * @return {string} the websocket endpoint
             */
-            trades: function trades(symbols, callback) {
+            aggTrades: function trades(symbols, callback) {
                 let reconnect = function() {
                     if ( options.reconnect ) trades(symbols, callback);
                 };
@@ -1728,7 +1768,32 @@ module.exports = function() {
             },
 
             /**
-            * Websocket trades
+            * Websocket raw trades
+            * @param {array/string} symbols - an array or string of symbols to query
+            * @param {function} callback - callback function
+            * @return {string} the websocket endpoint
+            */
+            trades: function trades(symbols, callback) {
+                let reconnect = function() {
+                    if ( options.reconnect ) trades(symbols, callback);
+                };
+
+                let subscription;
+                if ( Array.isArray(symbols) ) {
+                    if ( !isArrayUnique(symbols) ) throw Error('trades: "symbols" cannot contain duplicate elements.');
+                    let streams = symbols.map(function(symbol) {
+                        return symbol.toLowerCase()+'@trade';
+                    });
+                    subscription = subscribeCombined(streams, callback, reconnect);
+                } else {
+                    let symbol = symbols;
+                    subscription = subscribe(symbol.toLowerCase()+'@trade', callback, reconnect);
+                }
+                return subscription.endpoint;
+            },
+
+            /**
+            * Websocket klines
             * @param {array/string} symbols - an array or string of symbols to query
             * @param {string} interval - the time interval
             * @param {function} callback - callback function
@@ -1889,7 +1954,8 @@ module.exports = function() {
             }
         }
     };
-}();
+}
+module.exports = api;
 //https://github.com/binance-exchange/binance-official-api-docs
 </code></pre>
         </article>
@@ -1907,7 +1973,7 @@ module.exports = function() {
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.5</a> on Thu May 03 2018 18:45:32 GMT+0000 (UTC)
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.5</a> on Sun Jun 10 2018 04:38:43 GMT+0000 (UTC)
 </footer>
 
 <script> prettyPrint(); </script>
