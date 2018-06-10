@@ -7,15 +7,15 @@
  * ============================================================ */
 
 /**
- * Node Binance Api
+ * Node Binance API
  * @module jaggedsoft/node-binance-api
- * @return instance to class object
+ * @return {object} instance to class object
  */
-function Binance() {
+var api = Binance() {
+    'use strict';
     if (!(this instanceof Binance)) {
         return new Binance();
     }
-    'use strict';
     const WebSocket = require('ws');
     const request = require('request');
     const crypto = require('crypto');
@@ -806,9 +806,9 @@ function Binance() {
         * @param {float} float - get the price precision point
         * @return {int} - number of place
         */
-		getPrecision: function(float) { //
-			return float.toString().split('.')[1].length || 0;
-		},
+        getPrecision: function(float) { //
+            return float.toString().split('.')[1].length || 0;
+        },
 
         /**
         * rounds number with given step
@@ -1926,7 +1926,6 @@ function Binance() {
             }
         }
     };
-    return this;
 }
-module.exports = Binance;
+module.exports = api;
 //https://github.com/binance-exchange/binance-official-api-docs
