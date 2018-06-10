@@ -11,7 +11,7 @@
  * @module jaggedsoft/node-binance-api
  * @return {object} instance to class object
  */
-var api = function Binance() {
+let api = function Binance() {
     'use strict';
     if (!(this instanceof Binance)) {
         return new Binance();
