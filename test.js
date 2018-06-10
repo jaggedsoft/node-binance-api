@@ -20,7 +20,8 @@ const TIMEOUT = 10000;
 let chai = require( 'chai' );
 let assert = chai.assert;
 let path = require( 'path' );
-let binance = require( path.resolve( __dirname, 'node-binance-api.js' ) );
+let Binance = require( path.resolve( __dirname, 'node-binance-api.js' ) );
+let binance = new Binance();
 let util = require( 'util' );
 
 let num_pairs = 299;
