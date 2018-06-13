@@ -25,7 +25,7 @@ let api = function Binance() {
     const HttpsProxyAgent = require('https-proxy-agent');
     const SocksProxyAgent = require('socks-proxy-agent');
     const stringHash = require('string-hash');
-    const async = require("async");
+    const async = require('async');
     const base = 'https://api.binance.com/api/';
     const wapi = 'https://api.binance.com/wapi/';
     const stream = 'wss://stream.binance.com:9443/ws/';
@@ -1667,22 +1667,21 @@ let api = function Binance() {
                     }
                 };
 
-                let getSymbolDepthSnapshot = async function(symbol){
-                   return new Promise((resolve, reject) => {
+                let getSymbolDepthSnapshot = function(symbol,cb){
+
                        publicRequest(base+'v1/depth', { symbol:symbol, limit:limit }, function(error, json) {
                            if (error) {
-                               return reject (error);
+                               return cb(error,null);
                            }
                            // Store symbol next use
-                           json.symbol_ = symbol;
-                           resolve(json);
+                           json.symb = symbol;
+                           cb(null,json)
                        });
-                   })
                };
 
-               let updateSymbolDepthCache = async function(json){
+               let updateSymbolDepthCache = function(json){
                     // Get previous store symbol
-                    let symbol = json.symbol_;
+                    let symbol = json.symb;
                     // Initialize depth cache from snapshot
                     depthCache[symbol] = depthData(json);
                     // Prepare depth cache context
