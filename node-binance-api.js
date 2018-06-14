@@ -7,12 +7,15 @@
  * ============================================================ */
 
 /**
- * Node Binance Api
+ * Node Binance API
  * @module jaggedsoft/node-binance-api
+ * @return {object} instance to class object
  */
-function Binance() {
-    if (!(this instanceof Binance)) { return new Binance(); }
+let api = function Binance() {
     'use strict';
+    if (!(this instanceof Binance)) {
+        return new Binance();
+    }
     const WebSocket = require('ws');
     const request = require('request');
     const crypto = require('crypto');
@@ -22,6 +25,7 @@ function Binance() {
     const HttpsProxyAgent = require('https-proxy-agent');
     const SocksProxyAgent = require('socks-proxy-agent');
     const stringHash = require('string-hash');
+    const async = require('async');
     const base = 'https://api.binance.com/api/';
     const wapi = 'https://api.binance.com/wapi/';
     const stream = 'wss://stream.binance.com:9443/ws/';
@@ -803,9 +807,9 @@ function Binance() {
         * @param {float} float - get the price precision point
         * @return {int} - number of place
         */
-		getPrecision: function(float) { //
-			return float.toString().split('.')[1].length || 0;
-		},
+        getPrecision: function(float) { //
+            return float.toString().split('.')[1].length || 0;
+        },
 
         /**
         * rounds number with given step
@@ -1663,26 +1667,38 @@ function Binance() {
                     }
                 };
 
-                let getSymbolDepthSnapshot = function(symbol) {
-                    publicRequest(base+'v1/depth', { symbol:symbol, limit:limit }, function(error, json) {
-                        // Initialize depth cache from snapshot
-                        depthCache[symbol] = depthData(json);
-                        // Prepare depth cache context
-                        let context = depthCacheContext[symbol];
-                        context.snapshotUpdateId = json.lastUpdateId;
-                        context.messageQueue = context.messageQueue.filter(depth => depth.u > context.snapshotUpdateId);
-                        // Process any pending depth messages
-                        for ( let depth of context.messageQueue ) {
+                let getSymbolDepthSnapshot = function(symbol,cb){
 
-                            /* Although sync errors shouldn't ever happen here, we catch and swallow them anyway
-                               just in case. The stream handler function above will deal with broken caches. */
-                            try {depthHandler(depth);} catch (err) {
-                                // do nothing
-                            }
+                       publicRequest(base+'v1/depth', { symbol:symbol, limit:limit }, function(error, json) {
+                           if (error) {
+                               return cb(error,null);
+                           }
+                           // Store symbol next use
+                           json.symb = symbol;
+                           cb(null,json)
+                       });
+               };
+
+               let updateSymbolDepthCache = function(json){
+                    // Get previous store symbol
+                    let symbol = json.symb;
+                    // Initialize depth cache from snapshot
+                    depthCache[symbol] = depthData(json);
+                    // Prepare depth cache context
+                    let context = depthCacheContext[symbol];
+                    context.snapshotUpdateId = json.lastUpdateId;
+                    context.messageQueue = context.messageQueue.filter(depth => depth.u > context.snapshotUpdateId);
+                    // Process any pending depth messages
+                    for ( let depth of context.messageQueue ) {
+
+                        /* Although sync errors shouldn't ever happen here, we catch and swallow them anyway
+                           just in case. The stream handler function above will deal with broken caches. */
+                        try {depthHandler(depth);} catch (err) {
+                            // do nothing
                         }
-                        delete context.messageQueue;
-                        if ( callback ) callback(symbol, depthCache[symbol]);
-                    });
+                    }
+                    delete context.messageQueue;
+                    if ( callback ) callback(symbol, depthCache[symbol]);
                 };
 
                 /* If an array of symbols are sent we use a combined stream connection rather.
@@ -1697,14 +1713,20 @@ function Binance() {
                         return symbol.toLowerCase()+'@depth';
                     });
                     subscription = subscribeCombined(streams, handleDepthStreamData, reconnect, function() {
-                        symbols.forEach(getSymbolDepthSnapshot);
+                      async.mapLimit(symbols, symbols.length, getSymbolDepthSnapshot,(err, results) => {
+                         if (err) throw err
+                         results.forEach(updateSymbolDepthCache);
+                      });
                     });
                     symbols.forEach(s => assignEndpointIdToContext(s, subscription.endpoint));
                 } else {
                     let symbol = symbols;
                     symbolDepthInit(symbol);
                     subscription = subscribe(symbol.toLowerCase()+'@depth', handleDepthStreamData, reconnect, function() {
-                        getSymbolDepthSnapshot(symbol);
+                      async.mapLimit([symbol], 1, getSymbolDepthSnapshot,(err, results) => {
+                          if (err) throw err
+                          results.forEach(updateSymbolDepthCache);
+                      });
                     });
                     assignEndpointIdToContext(symbol, subscription.endpoint);
                 }
@@ -1923,6 +1945,6 @@ function Binance() {
             }
         }
     };
-};
-module.exports = Binance;
+}
+module.exports = api;
 //https://github.com/binance-exchange/binance-official-api-docs
