@@ -1021,6 +1021,21 @@ let api = function Binance() {
             return this;
         },
 
+        
+        /**
+        * Creates an order
+        * @param {string} side - BUY or SELL
+        * @param {string} symbol - the symbol to buy
+        * @param {numeric} quantity - the quanitity required
+        * @param {numeric} price - the price to pay for each unit
+        * @param {object} flags - addtional buy order flags
+        * @param {function} callback - the callback function
+        * @return {undefined}
+        */
+        order: function(side, symbol, quantity, price, flags = {}, callback = false) {
+            order(side, symbol, quantity, price, flags, callback);
+        }
+        
         /**
         * Creates a buy order
         * @param {string} symbol - the symbol to buy
