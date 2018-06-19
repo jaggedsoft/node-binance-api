@@ -1034,7 +1034,7 @@ let api = function Binance() {
         */
         order: function(side, symbol, quantity, price, flags = {}, callback = false) {
             order(side, symbol, quantity, price, flags, callback);
-        }
+        },
         
         /**
         * Creates a buy order
