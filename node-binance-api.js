@@ -7,11 +7,15 @@
  * ============================================================ */
 
 /**
- * Node Binance Api
+ * Node Binance API
  * @module jaggedsoft/node-binance-api
+ * @return {object} instance to class object
  */
-module.exports = function() {
+let api = function Binance() {
     'use strict';
+    if (!(this instanceof Binance)) {
+        return new Binance();
+    }
     const WebSocket = require('ws');
     const request = require('request');
     const crypto = require('crypto');
@@ -21,6 +25,7 @@ module.exports = function() {
     const HttpsProxyAgent = require('https-proxy-agent');
     const SocksProxyAgent = require('socks-proxy-agent');
     const stringHash = require('string-hash');
+    const async = require('async');
     const base = 'https://api.binance.com/api/';
     const wapi = 'https://api.binance.com/wapi/';
     const stream = 'wss://stream.binance.com:9443/ws/';
@@ -34,7 +39,7 @@ module.exports = function() {
     let klineQueue = {};
     let ohlc = {};
     const default_options = {
-        recvWindow: 60000, // to be lowered to 5000 in v0.5
+        recvWindow: 5000,
         useServerTime: false,
         reconnect: true,
         verbose: false,
@@ -703,6 +708,7 @@ module.exports = function() {
             }
             context.skipCount = 0;
             context.lastEventUpdateId = depth.u;
+            context.lastEventUpdateTime = depth.E;
         }
 
         // This now conforms 100% to the Binance docs constraints on managing a local order book
@@ -801,9 +807,9 @@ module.exports = function() {
         * @param {float} float - get the price precision point
         * @return {int} - number of place
         */
-		getPrecision: function(float) { //
-			return float.toString().split('.')[1].length || 0;
-		},
+        getPrecision: function(float) { //
+            return float.toString().split('.')[1].length || 0;
+        },
 
         /**
         * rounds number with given step
@@ -1012,8 +1018,24 @@ module.exports = function() {
                     if ( callback ) callback();
                 });
             } else if ( callback ) callback();
+            return this;
         },
 
+        
+        /**
+        * Creates an order
+        * @param {string} side - BUY or SELL
+        * @param {string} symbol - the symbol to buy
+        * @param {numeric} quantity - the quanitity required
+        * @param {numeric} price - the price to pay for each unit
+        * @param {object} flags - addtional buy order flags
+        * @param {function} callback - the callback function
+        * @return {undefined}
+        */
+        order: function(side, symbol, quantity, price, flags = {}, callback = false) {
+            order(side, symbol, quantity, price, flags, callback);
+        },
+        
         /**
         * Creates a buy order
         * @param {string} symbol - the symbol to buy
@@ -1656,30 +1678,42 @@ module.exports = function() {
                         } catch (err) {
                             return terminate(context.endpointId, true);
                         }
-                        if ( callback ) callback(symbol, depthCache[symbol]);
+                        if ( callback ) callback(symbol, depthCache[symbol], context);
                     }
                 };
 
-                let getSymbolDepthSnapshot = function(symbol) {
-                    publicRequest(base+'v1/depth', { symbol:symbol, limit:limit }, function(error, json) {
-                        // Initialize depth cache from snapshot
-                        depthCache[symbol] = depthData(json);
-                        // Prepare depth cache context
-                        let context = depthCacheContext[symbol];
-                        context.snapshotUpdateId = json.lastUpdateId;
-                        context.messageQueue = context.messageQueue.filter(depth => depth.u > context.snapshotUpdateId);
-                        // Process any pending depth messages
-                        for ( let depth of context.messageQueue ) {
+                let getSymbolDepthSnapshot = function(symbol,cb){
 
-                            /* Although sync errors shouldn't ever happen here, we catch and swallow them anyway
-                               just in case. The stream handler function above will deal with broken caches. */
-                            try {depthHandler(depth);} catch (err) {
-                                // do nothing
-                            }
+                       publicRequest(base+'v1/depth', { symbol:symbol, limit:limit }, function(error, json) {
+                           if (error) {
+                               return cb(error,null);
+                           }
+                           // Store symbol next use
+                           json.symb = symbol;
+                           cb(null,json)
+                       });
+               };
+
+               let updateSymbolDepthCache = function(json){
+                    // Get previous store symbol
+                    let symbol = json.symb;
+                    // Initialize depth cache from snapshot
+                    depthCache[symbol] = depthData(json);
+                    // Prepare depth cache context
+                    let context = depthCacheContext[symbol];
+                    context.snapshotUpdateId = json.lastUpdateId;
+                    context.messageQueue = context.messageQueue.filter(depth => depth.u > context.snapshotUpdateId);
+                    // Process any pending depth messages
+                    for ( let depth of context.messageQueue ) {
+
+                        /* Although sync errors shouldn't ever happen here, we catch and swallow them anyway
+                           just in case. The stream handler function above will deal with broken caches. */
+                        try {depthHandler(depth);} catch (err) {
+                            // do nothing
                         }
-                        delete context.messageQueue;
-                        if ( callback ) callback(symbol, depthCache[symbol]);
-                    });
+                    }
+                    delete context.messageQueue;
+                    if ( callback ) callback(symbol, depthCache[symbol]);
                 };
 
                 /* If an array of symbols are sent we use a combined stream connection rather.
@@ -1694,14 +1728,20 @@ module.exports = function() {
                         return symbol.toLowerCase()+'@depth';
                     });
                     subscription = subscribeCombined(streams, handleDepthStreamData, reconnect, function() {
-                        symbols.forEach(getSymbolDepthSnapshot);
+                      async.mapLimit(symbols, symbols.length, getSymbolDepthSnapshot,(err, results) => {
+                         if (err) throw err
+                         results.forEach(updateSymbolDepthCache);
+                      });
                     });
                     symbols.forEach(s => assignEndpointIdToContext(s, subscription.endpoint));
                 } else {
                     let symbol = symbols;
                     symbolDepthInit(symbol);
                     subscription = subscribe(symbol.toLowerCase()+'@depth', handleDepthStreamData, reconnect, function() {
-                        getSymbolDepthSnapshot(symbol);
+                      async.mapLimit([symbol], 1, getSymbolDepthSnapshot,(err, results) => {
+                          if (err) throw err
+                          results.forEach(updateSymbolDepthCache);
+                      });
                     });
                     assignEndpointIdToContext(symbol, subscription.endpoint);
                 }
@@ -1920,5 +1960,6 @@ module.exports = function() {
             }
         }
     };
-}();
+}
+module.exports = api;
 //https://github.com/binance-exchange/binance-official-api-docs

@@ -20,8 +20,8 @@ npm install node-binance-api --save
 
 #### Getting started
 ```javascript
-const binance = require('node-binance-api');
-binance.options({
+const Binance = require('node-binance-api');
+const binance = new Binance().options({
   APIKEY: '<key>',
   APISECRET: '<secret>',
   useServerTime: true, // If you get timestamp errors, synchronize to server time at startup
@@ -1576,22 +1576,6 @@ binance.withdraw("BTC", "1C5gqLRs96Xq4V2ZZAR1347yUCpHie7sa", 0.2);
 [User Data: Account Balance Updates, Trade Updates, New Orders, Filled Orders, Cancelled Orders via WebSocket](https://github.com/jaggedsoft/node-binance-api/blob/master/examples/advanced.md#user-data-account-balance-updates-trade-updates-new-orders-filled-orders-cancelled-orders-via-websocket)
 
 
-### Troubleshooting
-Verify that your system time is correct. If you have any suggestions don't hestitate to file an issue.
-
-Having problems? Try adding `useServerTime` to your options:
-```js
-binance.options({
-  APIKEY: 'xxx',
-  APISECRET: 'xxx',
-  useServerTime: true,
-  verbose: true, // Add extra output when subscribing to websockets, etc
-  log: log => {
-    console.log(log); // You can create your own logger here, or disable console output
-  }
-});
-```
-
 ### Proxy Support
 For the standard REST API the https_proxy or socks_proxy variable is honoured
 
@@ -1623,6 +1607,23 @@ set socks_proxy=socks://yourproxy.com:port
 # run your app
 ```
 
+### Troubleshooting
+Verify that your system time is correct. If you have any suggestions don't hestitate to file an issue.
+
+Having problems? Try adding `useServerTime` to your options or setting `recvWindow`:
+```js
+binance.options({
+  APIKEY: 'xxx',
+  APISECRET: 'xxx',
+  useServerTime: true,
+  recvWindow: 60000, // Set a higher recvWindow to increase response timeout
+  verbose: true, // Add extra output when subscribing to WebSockets, etc
+  log: log => {
+    console.log(log); // You can create your own logger here, or disable console output
+  }
+});
+```
+
 [![Views](http://hits.dwyl.io/jaggedsoft/node-binance-api.svg)](http://hits.dwyl.io/jaggedsoft/node-binance-api)
 
-Thank you to all contributors: dmzoneill, dmitriz, keith1024, learnathoner, vaielab, nickreese, Tuitio, grandmore, itnok, CollinEstes, sethyx, mstijak, MadDeveloper, balthazar, bitoiu, matthewwoop, robaleman, hems and others!
+Thank you to all contributors: dmzoneill, dmitriz, keith1024, usama33, yanislk, learnathoner, vaielab, nickreese, Tuitio, grandmore, itnok, CollinEstes, sethyx, mstijak, MadDeveloper, balthazar, bitoiu, matthewwoop, robaleman, hems and others!
