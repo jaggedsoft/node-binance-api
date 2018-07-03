@@ -13,9 +13,6 @@
  */
 let api = function Binance() {
     'use strict';
-    if (!(this instanceof Binance)) {
-        return new Binance();
-    }
     const WebSocket = require('ws');
     const request = require('request');
     const crypto = require('crypto');
