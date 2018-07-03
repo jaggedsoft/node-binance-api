@@ -13,9 +13,6 @@
  */
 let api = function Binance() {
     'use strict';
-    if (!(this instanceof Binance)) {
-        return new Binance();
-    }
     const WebSocket = require('ws');
     const request = require('request');
     const crypto = require('crypto');
@@ -1021,7 +1018,7 @@ let api = function Binance() {
             return this;
         },
 
-        
+
         /**
         * Creates an order
         * @param {string} side - BUY or SELL
@@ -1035,7 +1032,7 @@ let api = function Binance() {
         order: function(side, symbol, quantity, price, flags = {}, callback = false) {
             order(side, symbol, quantity, price, flags, callback);
         },
-        
+
         /**
         * Creates a buy order
         * @param {string} symbol - the symbol to buy
