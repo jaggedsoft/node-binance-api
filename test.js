@@ -503,14 +503,16 @@ describe('Candle sticks', function () {
 describe('Object keys', function () {
   describe('First', function () {
     it('Gets the first key', function (done) {
-      let first = binance.first({ first: '1', second: '2', third: '3' }); assert.strictEqual('first', first, 'should be first');
+      let first = binance.first({ first: '1', second: '2', third: '3' });
+      assert.strictEqual('first', first, 'should be first');
       done();
     }).timeout(TIMEOUT);
   });
 
   describe('Last', function () {
     it('Gets the last key', function (done) {
-      let last = binance.last({ first: '1', second: '2', third: '3' }); assert.strictEqual('third', last, 'should be third');
+      let last = binance.last({ first: '1', second: '2', third: '3' });
+      assert.strictEqual('third', last, 'should be third');
       done();
     }).timeout(TIMEOUT);
   });
