@@ -18,7 +18,7 @@ let api = function Binance() {
     const crypto = require('crypto');
     const file = require('fs');
     const url = require('url');
-    const dns = require('dns-sync');
+    const dns = require('dns');
     const HttpsProxyAgent = require('https-proxy-agent');
     const SocksProxyAgent = require('socks-proxy-agent');
     const stringHash = require('string-hash');
@@ -41,7 +41,7 @@ let api = function Binance() {
         reconnect: true,
         verbose: false,
         test: false,
-        log: function(...args) {
+        log: function (...args) {
             console.log(Array.prototype.slice.call(args));
         }
     };
@@ -54,11 +54,8 @@ let api = function Binance() {
      * @param {string} connString - socks conection string
      * @return {string} modified string with ip address
      */
-    const proxyReplacewithIp = function(connString) {
-        let arr = connString.split( '/' );
-        let host = arr[2].split(':')[0];
-        let port = arr[2].split(':')[1];
-        return 'socks://' + dns.resolve(host) + ':' + port;
+    const proxyReplacewithIp = function (connString) {
+        return connString;
     }
 
     /**
@@ -66,11 +63,11 @@ let api = function Binance() {
      * @param {string} connString - conection string
      * @return {array} array of host and port
      */
-    const parseProxy = function(connString) {
-        let arr = connString.split( '/' );
+    const parseProxy = function (connString) {
+        let arr = connString.split('/');
         let host = arr[2].split(':')[0];
         let port = arr[2].split(':')[1];
-        return [arr[0],host,port];
+        return [arr[0], host, port];
     }
 
     /**
@@ -78,52 +75,52 @@ let api = function Binance() {
      * @param {object} obj - The object check
      * @return {boolean} true or false is iterable
      */
-    const isIterable = function(obj) {
-      // checks for null and undefined
-      if (obj === null) {
-        return false;
-      }
-      return typeof obj[Symbol.iterator] === 'function';
+    const isIterable = function (obj) {
+        // checks for null and undefined
+        if (obj === null) {
+            return false;
+        }
+        return typeof obj[Symbol.iterator] === 'function';
     }
 
     const addProxy = opt => {
-      let socksproxy = process.env.socks_proxy || false;
-      if ( socksproxy === false ) return opt;
-      socksproxy = proxyReplacewithIp(socksproxy);
+        let socksproxy = process.env.socks_proxy || false;
+        if (socksproxy === false) return opt;
+        socksproxy = proxyReplacewithIp(socksproxy);
 
-      if ( options.verbose ) options.log('using socks proxy server ' + socksproxy);
+        if (options.verbose) options.log('using socks proxy server ' + socksproxy);
 
-      opt.agentClass = SocksProxyAgent;
-      opt.agentOptions = {
-          protocol: parseProxy(socksproxy)[0],
-          host: parseProxy(socksproxy)[1],
-          port: parseProxy(socksproxy)[2]
-      }
-      return opt;
+        opt.agentClass = SocksProxyAgent;
+        opt.agentOptions = {
+            protocol: parseProxy(socksproxy)[0],
+            host: parseProxy(socksproxy)[1],
+            port: parseProxy(socksproxy)[2]
+        }
+        return opt;
     }
 
     const reqHandler = cb => (error, response, body) => {
-      if ( !cb ) return;
+        if (!cb) return;
 
-      if ( error ) return cb(error, {});
+        if (error) return cb(error, {});
 
-      if ( response && response.statusCode !== 200 ) return cb(response, {});
+        if (response && response.statusCode !== 200) return cb(response, {});
 
-      return cb(null, JSON.parse(body));
+        return cb(null, JSON.parse(body));
     }
 
     const proxyRequest = (opt, cb) => request(addProxy(opt), reqHandler(cb));
 
     const reqObj = (url, data = {}, method = 'GET', key) => ({
-      url: url,
-      qs: data,
-      method: method,
-      timeout: options.recvWindow,
-      headers: {
-          'User-Agent': userAgent,
-          'Content-type': contentType,
-          'X-MBX-APIKEY': key || ''
-      }
+        url: url,
+        qs: data,
+        method: method,
+        timeout: options.recvWindow,
+        headers: {
+            'User-Agent': userAgent,
+            'Content-type': contentType,
+            'X-MBX-APIKEY': key || ''
+        }
     })
 
     /**
@@ -134,7 +131,7 @@ let api = function Binance() {
      * @param {string} method - the http method
      * @return {undefined}
      */
-    const publicRequest = function(url, data = {}, callback, method = 'GET') {
+    const publicRequest = function (url, data = {}, callback, method = 'GET') {
         let opt = reqObj(url, data, method);
         proxyRequest(opt, callback);
     };
@@ -147,13 +144,13 @@ let api = function Binance() {
      * @param {string} method - the http method
      * @return {undefined}
      */
-    const apiRequest = function(url, data = {}, callback, method = 'GET') {
-        if ( !options.APIKEY ) throw Error('apiRequest: Invalid API Key');
+    const apiRequest = function (url, data = {}, callback, method = 'GET') {
+        if (!options.APIKEY) throw Error('apiRequest: Invalid API Key');
         let opt = reqObj(
-          url,
-          data,
-          method,
-          options.APIKEY
+            url,
+            data,
+            method,
+            options.APIKEY
         );
         proxyRequest(opt, callback);
     };
@@ -166,15 +163,15 @@ let api = function Binance() {
      * @param {string} method - the http method
      * @return {undefined}
      */
-    const marketRequest = function(url, data = {}, callback, method = 'GET') {
-        if ( !options.APIKEY ) throw Error('apiRequest: Invalid API Key');
-        let query = Object.keys(data).reduce(function(a,k){a.push(k+'='+encodeURIComponent(data[k]));return a},[]).join('&');
+    const marketRequest = function (url, data = {}, callback, method = 'GET') {
+        if (!options.APIKEY) throw Error('apiRequest: Invalid API Key');
+        let query = Object.keys(data).reduce(function (a, k) { a.push(k + '=' + encodeURIComponent(data[k])); return a }, []).join('&');
 
         let opt = reqObj(
-          url+(query ? '?'+query : ''),
-          data,
-          method,
-          options.APIKEY
+            url + (query ? '?' + query : ''),
+            data,
+            method,
+            options.APIKEY
         );
         proxyRequest(opt, callback);
     };
@@ -187,19 +184,19 @@ let api = function Binance() {
      * @param {string} method - the http method
      * @return {undefined}
      */
-    const signedRequest = function(url, data = {}, callback, method = 'GET') {
-        if ( !options.APIKEY ) throw Error('apiRequest: Invalid API Key');
-        if ( !options.APISECRET ) throw Error('signedRequest: Invalid API Secret');
+    const signedRequest = function (url, data = {}, callback, method = 'GET') {
+        if (!options.APIKEY) throw Error('apiRequest: Invalid API Key');
+        if (!options.APISECRET) throw Error('signedRequest: Invalid API Secret');
         data.timestamp = new Date().getTime() + info.timeOffset;
-        if ( typeof data.recvWindow === 'undefined' ) data.recvWindow = options.recvWindow;
-        let query = Object.keys(data).reduce(function(a,k){a.push(k+'='+encodeURIComponent(data[k]));return a},[]).join('&');
+        if (typeof data.recvWindow === 'undefined') data.recvWindow = options.recvWindow;
+        let query = Object.keys(data).reduce(function (a, k) { a.push(k + '=' + encodeURIComponent(data[k])); return a }, []).join('&');
         let signature = crypto.createHmac('sha256', options.APISECRET).update(query).digest('hex'); // set the HMAC hash header
 
         let opt = reqObj(
-          url+'?'+query+'&signature='+signature,
-          data,
-          method,
-          options.APIKEY
+            url + '?' + query + '&signature=' + signature,
+            data,
+            method,
+            options.APIKEY
         );
         proxyRequest(opt, callback);
     };
@@ -214,23 +211,23 @@ let api = function Binance() {
      * @param {function} callback - the callback function
      * @return {undefined}
      */
-    const order = function(side, symbol, quantity, price, flags = {}, callback = false) {
+    const order = function (side, symbol, quantity, price, flags = {}, callback = false) {
         let endpoint = 'v3/order';
-        if ( options.test ) endpoint += '/test';
+        if (options.test) endpoint += '/test';
         let opt = {
             symbol: symbol,
             side: side,
             type: 'LIMIT',
             quantity: quantity
         };
-        if ( typeof flags.type !== 'undefined' ) opt.type = flags.type;
-        if ( opt.type.includes('LIMIT') ) {
+        if (typeof flags.type !== 'undefined') opt.type = flags.type;
+        if (opt.type.includes('LIMIT')) {
             opt.price = price;
             opt.timeInForce = 'GTC';
         }
-        if ( typeof flags.timeInForce !== 'undefined' ) opt.timeInForce = flags.timeInForce;
-        if ( typeof flags.newOrderRespType !== 'undefined' ) opt.newOrderRespType = flags.newOrderRespType;
-        if ( typeof flags.newClientOrderId !== 'undefined' ) opt.newClientOrderId = flags.newClientOrderId;
+        if (typeof flags.timeInForce !== 'undefined') opt.timeInForce = flags.timeInForce;
+        if (typeof flags.newOrderRespType !== 'undefined') opt.newOrderRespType = flags.newOrderRespType;
+        if (typeof flags.newClientOrderId !== 'undefined') opt.newClientOrderId = flags.newClientOrderId;
 
         /*
          * STOP_LOSS
@@ -239,22 +236,22 @@ let api = function Binance() {
          * TAKE_PROFIT_LIMIT
          * LIMIT_MAKER
          */
-        if ( typeof flags.icebergQty !== 'undefined' ) opt.icebergQty = flags.icebergQty;
-        if ( typeof flags.stopPrice !== 'undefined' ) {
+        if (typeof flags.icebergQty !== 'undefined') opt.icebergQty = flags.icebergQty;
+        if (typeof flags.stopPrice !== 'undefined') {
             opt.stopPrice = flags.stopPrice;
-            if ( opt.type === 'LIMIT' ) throw Error('stopPrice: Must set "type" to one of the following: STOP_LOSS, STOP_LOSS_LIMIT, TAKE_PROFIT, TAKE_PROFIT_LIMIT');
+            if (opt.type === 'LIMIT') throw Error('stopPrice: Must set "type" to one of the following: STOP_LOSS, STOP_LOSS_LIMIT, TAKE_PROFIT, TAKE_PROFIT_LIMIT');
         }
-        signedRequest(base+endpoint, opt, function(error, response) {
-            if ( !response ) {
-                if ( callback ) callback(error, response);
+        signedRequest(base + endpoint, opt, function (error, response) {
+            if (!response) {
+                if (callback) callback(error, response);
                 else options.log('Order() error:', error);
                 return;
             }
-            if ( typeof response.msg !== 'undefined' && response.msg === 'Filter failure: MIN_NOTIONAL' ) {
+            if (typeof response.msg !== 'undefined' && response.msg === 'Filter failure: MIN_NOTIONAL') {
                 options.log('Order quantity too small. See exchangeInfo() for minimum amounts');
             }
-            if ( callback ) callback(error, response);
-            else options.log(side+'('+symbol+','+quantity+','+price+') ',response);
+            if (callback) callback(error, response);
+            else options.log(side + '(' + symbol + ',' + quantity + ',' + price + ') ', response);
         }, 'POST');
     };
 
@@ -262,7 +259,7 @@ let api = function Binance() {
      * No-operation function
      * @return {undefined}
      */
-    const noop = function() {
+    const noop = function () {
         // do nothing
     };
 
@@ -270,18 +267,18 @@ let api = function Binance() {
      * Reworked Tuitio's heartbeat code into a shared single interval tick
      * @return {undefined}
      */
-    const socketHeartbeat = function() {
+    const socketHeartbeat = function () {
 
         /* sockets removed from `subscriptions` during a manual terminate()
            will no longer be at risk of having functions called on them */
-        for ( let endpointId in subscriptions ) {
+        for (let endpointId in subscriptions) {
             const ws = subscriptions[endpointId];
-            if ( ws.isAlive ) {
+            if (ws.isAlive) {
                 ws.isAlive = false;
-                if ( ws.readyState === WebSocket.OPEN) ws.ping(noop);
+                if (ws.readyState === WebSocket.OPEN) ws.ping(noop);
             } else {
-                if ( options.verbose ) options.log('Terminating inactive/broken WebSocket: '+ws.endpoint);
-                if ( ws.readyState === WebSocket.OPEN) ws.terminate();
+                if (options.verbose) options.log('Terminating inactive/broken WebSocket: ' + ws.endpoint);
+                if (ws.readyState === WebSocket.OPEN) ws.terminate();
             }
         }
     };
@@ -291,13 +288,13 @@ let api = function Binance() {
      * @param {function} opened_callback - a callback function
      * @return {undefined}
      */
-    const handleSocketOpen = function(opened_callback) {
+    const handleSocketOpen = function (opened_callback) {
         this.isAlive = true;
         if (Object.keys(subscriptions).length === 0) {
             socketHeartbeatInterval = setInterval(socketHeartbeat, 30000);
         }
         subscriptions[this.endpoint] = this;
-        if ( typeof opened_callback === 'function' ) opened_callback(this.endpoint);
+        if (typeof opened_callback === 'function') opened_callback(this.endpoint);
     };
 
     /**
@@ -307,21 +304,21 @@ let api = function Binance() {
      * @param {string} reason - string with the response
      * @return {undefined}
      */
-    const handleSocketClose = function(reconnect, code, reason) {
+    const handleSocketClose = function (reconnect, code, reason) {
         delete subscriptions[this.endpoint];
         if (Object.keys(subscriptions).length === 0) {
             clearInterval(socketHeartbeatInterval);
         }
-        options.log('WebSocket closed: '+this.endpoint+
-            (code ? ' ('+code+')' : '')+
-            (reason ? ' '+reason : ''));
-        if ( options.reconnect && this.reconnect && reconnect ) {
-            if ( parseInt(this.endpoint.length, 10) === 60 ) options.log('Account data WebSocket reconnecting...');
-            else options.log('WebSocket reconnecting: '+this.endpoint+'...');
+        options.log('WebSocket closed: ' + this.endpoint +
+            (code ? ' (' + code + ')' : '') +
+            (reason ? ' ' + reason : ''));
+        if (options.reconnect && this.reconnect && reconnect) {
+            if (parseInt(this.endpoint.length, 10) === 60) options.log('Account data WebSocket reconnecting...');
+            else options.log('WebSocket reconnecting: ' + this.endpoint + '...');
             try {
                 reconnect();
-            } catch ( error ) {
-                options.log('WebSocket reconnect error: '+error.message);
+            } catch (error) {
+                options.log('WebSocket reconnect error: ' + error.message);
             }
         }
     };
@@ -331,20 +328,20 @@ let api = function Binance() {
      * @param {object} error - error object message
      * @return {undefined}
      */
-    const handleSocketError = function(error) {
+    const handleSocketError = function (error) {
 
         /* Errors ultimately result in a `close` event.
            see: https://github.com/websockets/ws/blob/828194044bf247af852b31c49e2800d557fedeff/lib/websocket.js#L126 */
-        options.log('WebSocket error: '+this.endpoint+
-            (error.code ? ' ('+error.code+')' : '')+
-            (error.message ? ' '+error.message : ''));
+        options.log('WebSocket error: ' + this.endpoint +
+            (error.code ? ' (' + error.code + ')' : '') +
+            (error.message ? ' ' + error.message : ''));
     };
 
     /**
      * Called each time the socket heartsbeats
      * @return {undefined}
      */
-    const handleSocketHeartbeat = function() {
+    const handleSocketHeartbeat = function () {
         this.isAlive = true;
     };
 
@@ -356,31 +353,31 @@ let api = function Binance() {
      * @param {object} opened_callback - the function to called when opened
      * @return {WebSocket} - websocket reference
      */
-    const subscribe = function(endpoint, callback, reconnect = false, opened_callback = false) {
+    const subscribe = function (endpoint, callback, reconnect = false, opened_callback = false) {
 
         let httpsproxy = process.env.https_proxy || false;
         let socksproxy = process.env.socks_proxy || false;
         let ws = false;
 
-        if ( socksproxy !== false ) {
+        if (socksproxy !== false) {
             socksproxy = proxyReplacewithIp(socksproxy);
-            if ( options.verbose ) options.log('using socks proxy server ' + socksproxy);
+            if (options.verbose) options.log('using socks proxy server ' + socksproxy);
             let agent = new SocksProxyAgent({
                 protocol: parseProxy(socksproxy)[0],
                 host: parseProxy(socksproxy)[1],
                 port: parseProxy(socksproxy)[2]
             });
-            ws = new WebSocket(stream+endpoint, { agent: agent });
-        } else if ( httpsproxy !== false ) {
-            if ( options.verbose ) options.log('using proxy server ' + agent);
+            ws = new WebSocket(stream + endpoint, { agent: agent });
+        } else if (httpsproxy !== false) {
+            if (options.verbose) options.log('using proxy server ' + agent);
             let config = url.parse(httpsproxy);
             let agent = new HttpsProxyAgent(config);
-            ws = new WebSocket(stream+endpoint, { agent: agent });
+            ws = new WebSocket(stream + endpoint, { agent: agent });
         } else {
-            ws = new WebSocket(stream+endpoint);
+            ws = new WebSocket(stream + endpoint);
         }
 
-        if ( options.verbose ) options.log('Subscribed to '+endpoint);
+        if (options.verbose) options.log('Subscribed to ' + endpoint);
         ws.reconnect = options.reconnect;
         ws.endpoint = endpoint;
         ws.isAlive = false;
@@ -388,11 +385,11 @@ let api = function Binance() {
         ws.on('pong', handleSocketHeartbeat);
         ws.on('error', handleSocketError);
         ws.on('close', handleSocketClose.bind(ws, reconnect));
-        ws.on('message', function(data) {
+        ws.on('message', function (data) {
             try {
                 callback(JSON.parse(data));
             } catch (error) {
-                options.log('Parse error: '+error.message);
+                options.log('Parse error: ' + error.message);
             }
         });
         return ws;
@@ -406,46 +403,46 @@ let api = function Binance() {
      * @param {object} opened_callback - the function to called when opened
      * @return {WebSocket} - websocket reference
      */
-    const subscribeCombined = function(streams, callback, reconnect = false, opened_callback = false) {
+    const subscribeCombined = function (streams, callback, reconnect = false, opened_callback = false) {
 
         let httpsproxy = process.env.https_proxy || false;
         let socksproxy = process.env.socks_proxy || false;
         const queryParams = streams.join('/');
         let ws = false;
 
-        if ( socksproxy !== false ) {
+        if (socksproxy !== false) {
             socksproxy = proxyReplacewithIp(socksproxy);
-            if ( options.verbose ) options.log('using socks proxy server ' + socksproxy);
+            if (options.verbose) options.log('using socks proxy server ' + socksproxy);
             let agent = new SocksProxyAgent({
                 protocol: parseProxy(socksproxy)[0],
                 host: parseProxy(socksproxy)[1],
                 port: parseProxy(socksproxy)[2]
             });
-            ws = new WebSocket(combineStream+queryParams, { agent: agent });
-        } else if ( httpsproxy !== false ) {
-            if ( options.verbose ) options.log('using proxy server ' + httpsproxy);
+            ws = new WebSocket(combineStream + queryParams, { agent: agent });
+        } else if (httpsproxy !== false) {
+            if (options.verbose) options.log('using proxy server ' + httpsproxy);
             let config = url.parse(httpsproxy);
             let agent = new HttpsProxyAgent(config);
-            ws = new WebSocket(combineStream+queryParams, { agent: agent });
+            ws = new WebSocket(combineStream + queryParams, { agent: agent });
         } else {
-            ws = new WebSocket(combineStream+queryParams);
+            ws = new WebSocket(combineStream + queryParams);
         }
 
         ws.reconnect = options.reconnect;
         ws.endpoint = stringHash(queryParams);
         ws.isAlive = false;
-        if ( options.verbose ) {
-            options.log('CombinedStream: Subscribed to ['+ws.endpoint+'] '+queryParams);
+        if (options.verbose) {
+            options.log('CombinedStream: Subscribed to [' + ws.endpoint + '] ' + queryParams);
         }
         ws.on('open', handleSocketOpen.bind(ws, opened_callback));
         ws.on('pong', handleSocketHeartbeat);
         ws.on('error', handleSocketError);
         ws.on('close', handleSocketClose.bind(ws, reconnect));
-        ws.on('message', function(data) {
+        ws.on('message', function (data) {
             try {
                 callback(JSON.parse(data).data);
             } catch (error) {
-                options.log('CombinedStream: Parse error: '+error.message);
+                options.log('CombinedStream: Parse error: ' + error.message);
             }
         });
         return ws;
@@ -457,9 +454,9 @@ let api = function Binance() {
      * @param {boolean} reconnect - auto reconnect after termination
      * @return {undefined}
      */
-    const terminate = function(endpoint, reconnect = false) {
+    const terminate = function (endpoint, reconnect = false) {
         let ws = subscriptions[endpoint];
-        if ( !ws ) return;
+        if (!ws) return;
         ws.removeAllListeners('message');
         ws.reconnect = reconnect;
         ws.terminate();
@@ -470,14 +467,14 @@ let api = function Binance() {
      * @param {object} data - user data callback data type
      * @return {undefined}
      */
-    const userDataHandler = function(data) {
+    const userDataHandler = function (data) {
         let type = data.e;
-        if ( type === 'outboundAccountInfo' ) {
+        if (type === 'outboundAccountInfo') {
             options.balance_callback(data);
-        } else if ( type === 'executionReport' ) {
-            if ( options.execution_callback ) options.execution_callback(data);
+        } else if (type === 'executionReport') {
+            if (options.execution_callback) options.execution_callback(data);
         } else {
-            options.log('Unexpected userData: '+type);
+            options.log('Unexpected userData: ' + type);
         }
     };
 
@@ -487,31 +484,31 @@ let api = function Binance() {
      * @param {function} callback - user data callback data type
      * @return {undefined}
      */
-    const prevDayStreamHandler = function(data, callback) {
+    const prevDayStreamHandler = function (data, callback) {
         let {
-            e:eventType,
-            E:eventTime,
-            s:symbol,
-            p:priceChange,
-            P:percentChange,
-            w:averagePrice,
-            x:prevClose,
-            c:close,
-            Q:closeQty,
-            b:bestBid,
-            B:bestBidQty,
-            a:bestAsk,
-            A:bestAskQty,
-            o:open,
-            h:high,
-            l:low,
-            v:volume,
-            q:quoteVolume,
-            O:openTime,
-            C:closeTime,
-            F:firstTradeId,
-            L:lastTradeId,
-            n:numTrades
+            e: eventType,
+            E: eventTime,
+            s: symbol,
+            p: priceChange,
+            P: percentChange,
+            w: averagePrice,
+            x: prevClose,
+            c: close,
+            Q: closeQty,
+            b: bestBid,
+            B: bestBidQty,
+            a: bestAsk,
+            A: bestAskQty,
+            o: open,
+            h: high,
+            l: low,
+            v: volume,
+            q: quoteVolume,
+            O: openTime,
+            C: closeTime,
+            F: firstTradeId,
+            L: lastTradeId,
+            n: numTrades
         } = data;
         callback(null, {
             eventType,
@@ -545,10 +542,10 @@ let api = function Binance() {
      * @param {array} data - array of symbols
      * @return {array} - symbols with their current prices
      */
-    const priceData = function(data) {
+    const priceData = function (data) {
         const prices = {};
-        if ( Array.isArray(data) ) {
-            for ( let obj of data ) {
+        if (Array.isArray(data)) {
+            for (let obj of data) {
                 prices[obj.symbol] = obj.price;
             }
         } else { // Single price returned
@@ -562,14 +559,14 @@ let api = function Binance() {
      * @param {array} data - array of symbols
      * @return {object} - symbols with their bids and asks data
      */
-    const bookPriceData = function(data) {
+    const bookPriceData = function (data) {
         let prices = {};
-        for ( let obj of data ) {
+        for (let obj of data) {
             prices[obj.symbol] = {
-                bid:obj.bidPrice,
-                bids:obj.bidQty,
-                ask:obj.askPrice,
-                asks:obj.askQty
+                bid: obj.bidPrice,
+                bids: obj.bidQty,
+                ask: obj.askPrice,
+                asks: obj.askQty
             };
         }
         return prices;
@@ -580,15 +577,15 @@ let api = function Binance() {
      * @param {array} data - account info object
      * @return {object} - balances hel with available, onorder amounts
      */
-    const balanceData = function(data) {
+    const balanceData = function (data) {
         let balances = {};
-        if ( typeof data === 'undefined' ) return {};
-        if ( typeof data.balances === 'undefined' ) {
+        if (typeof data === 'undefined') return {};
+        if (typeof data.balances === 'undefined') {
             options.log('balanceData error', data);
             return {};
         }
-        for ( let obj of data.balances ) {
-            balances[obj.asset] = {available:obj.free, onOrder:obj.locked};
+        for (let obj of data.balances) {
+            balances[obj.asset] = { available: obj.free, onOrder: obj.locked };
         }
         return balances;
     };
@@ -600,17 +597,17 @@ let api = function Binance() {
      * @param {array} ticks - tick array
      * @return {undefined}
      */
-    const klineData = function(symbol, interval, ticks) { // Used for /depth
+    const klineData = function (symbol, interval, ticks) { // Used for /depth
         let last_time = 0;
         if (isIterable(ticks)) {
-          for ( let tick of ticks ) {
-              // eslint-disable-next-line no-unused-vars
-              let [time, open, high, low, close, volume, closeTime, assetVolume, trades, buyBaseVolume, buyAssetVolume, ignored] = tick;
-              ohlc[symbol][interval][time] = {open:open, high:high, low:low, close:close, volume:volume};
-              last_time = time;
-          }
+            for (let tick of ticks) {
+                // eslint-disable-next-line no-unused-vars
+                let [time, open, high, low, close, volume, closeTime, assetVolume, trades, buyBaseVolume, buyAssetVolume, ignored] = tick;
+                ohlc[symbol][interval][time] = { open: open, high: high, low: low, close: close, volume: volume };
+                last_time = time;
+            }
 
-          info[symbol][interval].timestamp = last_time;
+            info[symbol][interval].timestamp = last_time;
         }
     };
 
@@ -620,12 +617,12 @@ let api = function Binance() {
      * @param {string} interval - time interval, 1m, 3m, 5m ....
      * @return {array} - interval data for given symbol
      */
-    const klineConcat = function(symbol, interval) {
+    const klineConcat = function (symbol, interval) {
         let output = ohlc[symbol][interval];
-        if ( typeof ohlcLatest[symbol][interval].time === 'undefined' ) return output;
+        if (typeof ohlcLatest[symbol][interval].time === 'undefined') return output;
         const time = ohlcLatest[symbol][interval].time;
         const last_updated = Object.keys(ohlc[symbol][interval]).pop();
-        if ( time >= last_updated ) {
+        if (time >= last_updated) {
             output[time] = ohlcLatest[symbol][interval];
             delete output[time].time;
             output[time].isFinal = false;
@@ -640,24 +637,24 @@ let api = function Binance() {
      * @param {string} firstTime - time filter
      * @return {undefined}
      */
-    const klineHandler = function(symbol, kline, firstTime = 0) {
+    const klineHandler = function (symbol, kline, firstTime = 0) {
         // TODO: add Taker buy base asset volume
         // eslint-disable-next-line no-unused-vars
-        let { e:eventType, E:eventTime, k:ticks } = kline;
+        let { e: eventType, E: eventTime, k: ticks } = kline;
         // eslint-disable-next-line no-unused-vars
-        let { o:open, h:high, l:low, c:close, v:volume, i:interval, x:isFinal, q:quoteVolume, t:time } = ticks; //n:trades, V:buyVolume, Q:quoteBuyVolume
-        if ( time <= firstTime ) return;
-        if ( !isFinal ) {
-            if ( typeof ohlcLatest[symbol][interval].time !== 'undefined' ) {
-                if ( ohlcLatest[symbol][interval].time > time ) return;
+        let { o: open, h: high, l: low, c: close, v: volume, i: interval, x: isFinal, q: quoteVolume, t: time } = ticks; //n:trades, V:buyVolume, Q:quoteBuyVolume
+        if (time <= firstTime) return;
+        if (!isFinal) {
+            if (typeof ohlcLatest[symbol][interval].time !== 'undefined') {
+                if (ohlcLatest[symbol][interval].time > time) return;
             }
-            ohlcLatest[symbol][interval] = {open:open, high:high, low:low, close:close, volume:volume, time:time};
+            ohlcLatest[symbol][interval] = { open: open, high: high, low: low, close: close, volume: volume, time: time };
             return;
         }
         // Delete an element from the beginning so we don't run out of memory
         const first_updated = Object.keys(ohlc[symbol][interval]).shift();
-        if ( first_updated ) delete ohlc[symbol][interval][first_updated];
-        ohlc[symbol][interval][time] = {open:open, high:high, low:low, close:close, volume:volume};
+        if (first_updated) delete ohlc[symbol][interval][first_updated];
+        ohlc[symbol][interval][time] = { open: open, high: high, low: low, close: close, volume: volume };
     };
 
     /**
@@ -665,20 +662,20 @@ let api = function Binance() {
      * @param {object} data - containing the bids and asks
      * @return {undefined}
      */
-    const depthData = function(data) {
-        if ( !data ) return {bids:[], asks:[]};
+    const depthData = function (data) {
+        if (!data) return { bids: [], asks: [] };
         let bids = {}, asks = {}, obj;
-        if ( typeof data.bids !== 'undefined' ) {
-            for ( obj of data.bids ) {
+        if (typeof data.bids !== 'undefined') {
+            for (obj of data.bids) {
                 bids[obj[0]] = parseFloat(obj[1]);
             }
         }
-        if ( typeof data.asks !== 'undefined' ) {
-            for ( obj of data.asks ) {
+        if (typeof data.asks !== 'undefined') {
+            for (obj of data.asks) {
                 asks[obj[0]] = parseFloat(obj[1]);
             }
         }
-        return {lastUpdateId: data.lastUpdateId, bids:bids, asks:asks};
+        return { lastUpdateId: data.lastUpdateId, bids: bids, asks: asks };
     }
 
     /**
@@ -686,20 +683,20 @@ let api = function Binance() {
      * @param {object} depth - information
      * @return {undefined}
      */
-    const depthHandler = function(depth) {
+    const depthHandler = function (depth) {
         let symbol = depth.s, obj;
         let context = depthCacheContext[symbol];
 
-        let updateDepthCache = function() {
-            for ( obj of depth.b ) { //bids
+        let updateDepthCache = function () {
+            for (obj of depth.b) { //bids
                 depthCache[symbol].bids[obj[0]] = parseFloat(obj[1]);
-                if ( obj[1] === '0.00000000' ) {
+                if (obj[1] === '0.00000000') {
                     delete depthCache[symbol].bids[obj[0]];
                 }
             }
-            for ( obj of depth.a ) { //asks
+            for (obj of depth.a) { //asks
                 depthCache[symbol].asks[obj[0]] = parseFloat(obj[1]);
-                if ( obj[1] === '0.00000000' ) {
+                if (obj[1] === '0.00000000') {
                     delete depthCache[symbol].asks[obj[0]];
                 }
             }
@@ -709,24 +706,24 @@ let api = function Binance() {
         }
 
         // This now conforms 100% to the Binance docs constraints on managing a local order book
-        if ( context.lastEventUpdateId ) {
+        if (context.lastEventUpdateId) {
             const expectedUpdateId = context.lastEventUpdateId + 1;
-            if ( depth.U <= expectedUpdateId ) {
+            if (depth.U <= expectedUpdateId) {
                 updateDepthCache();
             } else {
-                let msg = 'depthHandler: ['+symbol+'] The depth cache is out of sync.';
-                msg += ' Symptom: Unexpected Update ID. Expected "'+expectedUpdateId+'", got "'+depth.U+'"';
-                if ( options.verbose ) options.log(msg);
+                let msg = 'depthHandler: [' + symbol + '] The depth cache is out of sync.';
+                msg += ' Symptom: Unexpected Update ID. Expected "' + expectedUpdateId + '", got "' + depth.U + '"';
+                if (options.verbose) options.log(msg);
                 throw new Error(msg);
             }
-        } else if ( depth.U > context.snapshotUpdateId + 1 ) {
+        } else if (depth.U > context.snapshotUpdateId + 1) {
             /* In this case we have a gap between the data of the stream and the snapshot.
                This is an out of sync error, and the connection must be torn down and reconnected. */
-            let msg = 'depthHandler: ['+symbol+'] The depth cache is out of sync.';
+            let msg = 'depthHandler: [' + symbol + '] The depth cache is out of sync.';
             msg += ' Symptom: Gap between snapshot and first stream data.';
-            if ( options.verbose ) options.log(msg);
+            if (options.verbose) options.log(msg);
             throw new Error(msg);
-        } else if ( depth.u < context.snapshotUpdateId + 1 ) {
+        } else if (depth.u < context.snapshotUpdateId + 1) {
             /* In this case we've received data that we've already had since the snapshot.
                This isn't really an issue, and we can just update the cache again, or ignore it entirely. */
 
@@ -742,8 +739,8 @@ let api = function Binance() {
      * @param {string} symbol - the symbol to fetch
      * @return {object} - the depth cache object
      */
-    const getDepthCache = function(symbol) {
-        if ( typeof depthCache[symbol] === 'undefined' ) return {bids: {}, asks: {}};
+    const getDepthCache = function (symbol) {
+        if (typeof depthCache[symbol] === 'undefined') return { bids: {}, asks: {} };
         return depthCache[symbol];
     };
 
@@ -752,20 +749,20 @@ let api = function Binance() {
      * @param {string} symbol - the symbol to fetch
      * @return {object} - the depth volume cache object
      */
-    const depthVolume = function(symbol) {
+    const depthVolume = function (symbol) {
         let cache = getDepthCache(symbol), quantity, price;
         let bidbase = 0, askbase = 0, bidqty = 0, askqty = 0;
-        for ( price in cache.bids ) {
+        for (price in cache.bids) {
             quantity = cache.bids[price];
-            bidbase+= parseFloat((quantity * parseFloat(price)).toFixed(8));
-            bidqty+= quantity;
+            bidbase += parseFloat((quantity * parseFloat(price)).toFixed(8));
+            bidqty += quantity;
         }
-        for ( price in cache.asks ) {
+        for (price in cache.asks) {
             quantity = cache.asks[price];
-            askbase+= parseFloat((quantity * parseFloat(price)).toFixed(8));
-            askqty+= quantity;
+            askbase += parseFloat((quantity * parseFloat(price)).toFixed(8));
+            askqty += quantity;
         }
-        return {bids: bidbase, asks: askbase, bidQty: bidqty, askQty: askqty};
+        return { bids: bidbase, asks: askbase, bidQty: bidqty, askQty: askqty };
     };
 
     /**
@@ -775,7 +772,7 @@ let api = function Binance() {
      * @param {array} array - the array to check
      * @return {boolean} - true or false
      */
-    const isArrayUnique = function(array) {
+    const isArrayUnique = function (array) {
         let s = new Set(array);
         return s.size === array.length;
     };
@@ -786,7 +783,7 @@ let api = function Binance() {
         * @param {symbol} symbol - get depch cache for this symbol
         * @return {object} - object
         */
-        depthCache: function(symbol) {
+        depthCache: function (symbol) {
             return getDepthCache(symbol);
         },
 
@@ -795,7 +792,7 @@ let api = function Binance() {
         * @param {symbol} symbol - get depch volume for this symbol
         * @return {object} - object
         */
-        depthVolume: function(symbol) {
+        depthVolume: function (symbol) {
             return depthVolume(symbol);
         },
 
@@ -804,7 +801,7 @@ let api = function Binance() {
         * @param {float} float - get the price precision point
         * @return {int} - number of place
         */
-        getPrecision: function(float) { //
+        getPrecision: function (float) { //
             return float.toString().split('.')[1].length || 0;
         },
 
@@ -814,9 +811,9 @@ let api = function Binance() {
         * @param {float} stepSize - step size
         * @return {float} - number
         */
-        roundStep: function(number, stepSize) {
+        roundStep: function (number, stepSize) {
             const precision = stepSize.toString().split('.')[1].length || 0;
-            return (( (number / stepSize) | 0 ) * stepSize).toFixed(precision);
+            return (((number / stepSize) | 0) * stepSize).toFixed(precision);
         },
 
         /**
@@ -826,8 +823,8 @@ let api = function Binance() {
         * @param {int} width - percentage width
         * @return {float} - percentage
         */
-        percent: function(min, max, width = 100) {
-            return ( min * 0.01 ) / ( max * 0.01 ) * width;
+        percent: function (min, max, width = 100) {
+            return (min * 0.01) / (max * 0.01) * width;
         },
 
         /**
@@ -835,7 +832,7 @@ let api = function Binance() {
         * @param {array} array - the number to add
         * @return {float} - sum
         */
-        sum: function(array) {
+        sum: function (array) {
             return array.reduce((a, b) => a + b, 0);
         },
 
@@ -844,9 +841,9 @@ let api = function Binance() {
         * @param {object} object - the object
         * @return {object} - the object
         */
-        reverse: function(object) {
+        reverse: function (object) {
             let range = Object.keys(object).reverse(), output = {};
-            for ( let price of range ) {
+            for (let price of range) {
                 output[price] = object[price];
             }
             return output;
@@ -857,8 +854,8 @@ let api = function Binance() {
         * @param {object} obj - the object
         * @return {array} - the array
         */
-        array: function(obj) {
-            return Object.keys(obj).map(function(key) {
+        array: function (obj) {
+            return Object.keys(obj).map(function (key) {
                 return [Number(key), obj[key]];
             });
         },
@@ -870,19 +867,19 @@ let api = function Binance() {
         * @param {string} baseValue - the object
         * @return {object} - the object
         */
-        sortBids: function(symbol, max = Infinity, baseValue = false) {
+        sortBids: function (symbol, max = Infinity, baseValue = false) {
             let object = {}, count = 0, cache;
-            if ( typeof symbol === 'object' ) cache = symbol;
+            if (typeof symbol === 'object') cache = symbol;
             else cache = getDepthCache(symbol).bids;
-            let sorted = Object.keys(cache).sort(function(a, b){return parseFloat(b)-parseFloat(a)});
+            let sorted = Object.keys(cache).sort(function (a, b) { return parseFloat(b) - parseFloat(a) });
             let cumulative = 0;
-            for ( let price of sorted ) {
-                if ( baseValue === 'cumulative' ) {
-                    cumulative+= parseFloat(cache[price]);
+            for (let price of sorted) {
+                if (baseValue === 'cumulative') {
+                    cumulative += parseFloat(cache[price]);
                     object[price] = cumulative;
-                } else if ( !baseValue ) object[price] = parseFloat(cache[price]);
+                } else if (!baseValue) object[price] = parseFloat(cache[price]);
                 else object[price] = parseFloat((cache[price] * parseFloat(price)).toFixed(8));
-                if ( ++count >= max ) break;
+                if (++count >= max) break;
             }
             return object;
         },
@@ -894,19 +891,19 @@ let api = function Binance() {
         * @param {string} baseValue - the object
         * @return {object} - the object
         */
-        sortAsks: function(symbol, max = Infinity, baseValue = false) {
+        sortAsks: function (symbol, max = Infinity, baseValue = false) {
             let object = {}, count = 0, cache;
-            if ( typeof symbol === 'object' ) cache = symbol;
+            if (typeof symbol === 'object') cache = symbol;
             else cache = getDepthCache(symbol).asks;
-            let sorted = Object.keys(cache).sort(function(a, b){return parseFloat(a)-parseFloat(b)});
+            let sorted = Object.keys(cache).sort(function (a, b) { return parseFloat(a) - parseFloat(b) });
             let cumulative = 0;
-            for ( let price of sorted ) {
-                if ( baseValue === 'cumulative' ) {
-                    cumulative+= parseFloat(cache[price]);
+            for (let price of sorted) {
+                if (baseValue === 'cumulative') {
+                    cumulative += parseFloat(cache[price]);
                     object[price] = cumulative;
-                } else if ( !baseValue ) object[price] = parseFloat(cache[price]);
+                } else if (!baseValue) object[price] = parseFloat(cache[price]);
                 else object[price] = parseFloat((cache[price] * parseFloat(price)).toFixed(8));
-                if ( ++count >= max ) break;
+                if (++count >= max) break;
             }
             return object;
         },
@@ -916,7 +913,7 @@ let api = function Binance() {
         * @param {object} object - the object to get the first member
         * @return {string} - the object key
         */
-        first: function(object) {
+        first: function (object) {
             return Object.keys(object).shift();
         },
 
@@ -925,7 +922,7 @@ let api = function Binance() {
         * @param {object} object - the object to get the first member
         * @return {string} - the object key
         */
-        last: function(object) {
+        last: function (object) {
             return Object.keys(object).pop();
         },
 
@@ -935,7 +932,7 @@ let api = function Binance() {
         * @param {int} start - the starting index
         * @return {array} - the array of entires
         */
-        slice: function(object, start = 0) {
+        slice: function (object, start = 0) {
             return Object.entries(object).slice(start).map(entry => entry[0]);
         },
 
@@ -944,7 +941,7 @@ let api = function Binance() {
         * @param {object} object - the object to get the properties form
         * @return {string} - the minimum key
         */
-        min: function(object) {
+        min: function (object) {
             return Math.min.apply(Math, Object.keys(object));
         },
 
@@ -953,7 +950,7 @@ let api = function Binance() {
         * @param {object} object - the object to get the properties form
         * @return {string} - the minimum key
         */
-        max: function(object) {
+        max: function (object) {
             return Math.max.apply(Math, Object.keys(object));
         },
 
@@ -963,7 +960,7 @@ let api = function Binance() {
         * @param {object} value - the value of the key
         * @return {undefined}
         */
-        setOption: function(key, value) {
+        setOption: function (key, value) {
             options[key] = value;
         },
 
@@ -972,7 +969,7 @@ let api = function Binance() {
         * @param {string} key - the key to set
         * @return {undefined}
         */
-        getOption: function(key) {
+        getOption: function (key) {
             return options[key];
         },
 
@@ -980,7 +977,7 @@ let api = function Binance() {
         * returns the entire info object
         * @return {object} - the info object
         */
-        getInfo: function() {
+        getInfo: function () {
             return info;
         },
 
@@ -988,7 +985,7 @@ let api = function Binance() {
         * returns the entire options object
         * @return {object} - the options object
         */
-        getOptions: function() {
+        getOptions: function () {
             return options;
         },
 
@@ -998,23 +995,23 @@ let api = function Binance() {
         * @param {function} callback - the callback function
         * @return {undefined}
         */
-        options: function(opt, callback = false) {
-            if ( typeof opt === 'string' ) { // Pass json config filename
+        options: function (opt, callback = false) {
+            if (typeof opt === 'string') { // Pass json config filename
                 options = JSON.parse(file.readFileSync(opt));
             } else options = opt;
-            if ( typeof options.recvWindow === 'undefined' ) options.recvWindow = default_options.recvWindow;
-            if ( typeof options.useServerTime === 'undefined' ) options.useServerTime = default_options.useServerTime;
-            if ( typeof options.reconnect === 'undefined' ) options.reconnect = default_options.reconnect;
-            if ( typeof options.test === 'undefined' ) options.test = default_options.test;
-            if ( typeof options.log === 'undefined' ) options.log = default_options.log;
-            if ( typeof options.verbose === 'undefined' ) options.verbose = default_options.verbose;
-            if ( options.useServerTime ) {
-                apiRequest(base+'v1/time', {}, function(error, response) {
+            if (typeof options.recvWindow === 'undefined') options.recvWindow = default_options.recvWindow;
+            if (typeof options.useServerTime === 'undefined') options.useServerTime = default_options.useServerTime;
+            if (typeof options.reconnect === 'undefined') options.reconnect = default_options.reconnect;
+            if (typeof options.test === 'undefined') options.test = default_options.test;
+            if (typeof options.log === 'undefined') options.log = default_options.log;
+            if (typeof options.verbose === 'undefined') options.verbose = default_options.verbose;
+            if (options.useServerTime) {
+                apiRequest(base + 'v1/time', {}, function (error, response) {
                     info.timeOffset = response.serverTime - new Date().getTime();
                     //options.log("server time set: ", response.serverTime, info.timeOffset);
-                    if ( callback ) callback();
+                    if (callback) callback();
                 });
-            } else if ( callback ) callback();
+            } else if (callback) callback();
             return this;
         },
 
@@ -1029,7 +1026,7 @@ let api = function Binance() {
         * @param {function} callback - the callback function
         * @return {undefined}
         */
-        order: function(side, symbol, quantity, price, flags = {}, callback = false) {
+        order: function (side, symbol, quantity, price, flags = {}, callback = false) {
             order(side, symbol, quantity, price, flags, callback);
         },
 
@@ -1042,7 +1039,7 @@ let api = function Binance() {
         * @param {function} callback - the callback function
         * @return {undefined}
         */
-        buy: function(symbol, quantity, price, flags = {}, callback = false) {
+        buy: function (symbol, quantity, price, flags = {}, callback = false) {
             order('BUY', symbol, quantity, price, flags, callback);
         },
 
@@ -1055,7 +1052,7 @@ let api = function Binance() {
         * @param {function} callback - the callback function
         * @return {undefined}
         */
-        sell: function(symbol, quantity, price, flags = {}, callback = false) {
+        sell: function (symbol, quantity, price, flags = {}, callback = false) {
             order('SELL', symbol, quantity, price, flags, callback);
         },
 
@@ -1067,12 +1064,12 @@ let api = function Binance() {
         * @param {function} callback - the callback function
         * @return {undefined}
         */
-        marketBuy: function(symbol, quantity, flags = {type:'MARKET'}, callback = false) {
-            if ( typeof flags === 'function' ) { // Accept callback as third parameter
+        marketBuy: function (symbol, quantity, flags = { type: 'MARKET' }, callback = false) {
+            if (typeof flags === 'function') { // Accept callback as third parameter
                 callback = flags;
-                flags = {type:'MARKET'};
+                flags = { type: 'MARKET' };
             }
-            if ( typeof flags.type === 'undefined' ) flags.type = 'MARKET';
+            if (typeof flags.type === 'undefined') flags.type = 'MARKET';
             order('BUY', symbol, quantity, 0, flags, callback);
         },
 
@@ -1084,12 +1081,12 @@ let api = function Binance() {
         * @param {function} callback - the callback function
         * @return {undefined}
         */
-        marketSell: function(symbol, quantity, flags = {type:'MARKET'}, callback = false) {
-            if ( typeof flags === 'function' ) { // Accept callback as third parameter
+        marketSell: function (symbol, quantity, flags = { type: 'MARKET' }, callback = false) {
+            if (typeof flags === 'function') { // Accept callback as third parameter
                 callback = flags;
-                flags = {type:'MARKET'};
+                flags = { type: 'MARKET' };
             }
-            if ( typeof flags.type === 'undefined' ) flags.type = 'MARKET';
+            if (typeof flags.type === 'undefined') flags.type = 'MARKET';
             order('SELL', symbol, quantity, 0, flags, callback);
         },
 
@@ -1100,9 +1097,9 @@ let api = function Binance() {
         * @param {function} callback - the callback function
         * @return {undefined}
         */
-        cancel: function(symbol, orderid, callback = false) {
-            signedRequest(base+'v3/order', {symbol:symbol, orderId:orderid}, function(error, data) {
-                if ( callback ) return callback.call(this, error, data, symbol);
+        cancel: function (symbol, orderid, callback = false) {
+            signedRequest(base + 'v3/order', { symbol: symbol, orderId: orderid }, function (error, data) {
+                if (callback) return callback.call(this, error, data, symbol);
             }, 'DELETE');
         },
 
@@ -1114,10 +1111,10 @@ let api = function Binance() {
         * @param {object} flags - any addtional flags
         * @return {undefined}
         */
-        orderStatus: function(symbol, orderid, callback, flags = {}) {
-            let parameters = Object.assign({symbol:symbol, orderId:orderid}, flags);
-            signedRequest(base+'v3/order', parameters, function(error, data) {
-                if ( callback ) return callback.call(this, error, data, symbol);
+        orderStatus: function (symbol, orderid, callback, flags = {}) {
+            let parameters = Object.assign({ symbol: symbol, orderId: orderid }, flags);
+            signedRequest(base + 'v3/order', parameters, function (error, data) {
+                if (callback) return callback.call(this, error, data, symbol);
             });
         },
 
@@ -1127,9 +1124,9 @@ let api = function Binance() {
         * @param {function} callback - the callback function
         * @return {undefined}
         */
-        openOrders: function(symbol, callback) {
-            let parameters = symbol ? {symbol:symbol} : {};
-            signedRequest(base+'v3/openOrders', parameters, function(error, data) {
+        openOrders: function (symbol, callback) {
+            let parameters = symbol ? { symbol: symbol } : {};
+            signedRequest(base + 'v3/openOrders', parameters, function (error, data) {
                 return callback.call(this, error, data, symbol);
             });
         },
@@ -1140,16 +1137,16 @@ let api = function Binance() {
         * @param {function} callback - the callback function
         * @return {undefined}
         */
-        cancelOrders: function(symbol, callback = false) {
-            signedRequest(base+'v3/openOrders', {symbol:symbol}, function(error, json) {
-                if ( json.length === 0 ) {
-                    if ( callback ) return callback.call(this, 'No orders present for this symbol', {}, symbol);
+        cancelOrders: function (symbol, callback = false) {
+            signedRequest(base + 'v3/openOrders', { symbol: symbol }, function (error, json) {
+                if (json.length === 0) {
+                    if (callback) return callback.call(this, 'No orders present for this symbol', {}, symbol);
                 }
-                for ( let obj of json ) {
+                for (let obj of json) {
                     let quantity = obj.origQty - obj.executedQty;
-                    options.log('cancel order: '+obj.side+' '+symbol+' '+quantity+' @ '+obj.price+' #'+obj.orderId);
-                    signedRequest(base+'v3/order', {symbol:symbol, orderId:obj.orderId}, function(error, data) {
-                        if ( callback ) return callback.call(this, error, data, symbol);
+                    options.log('cancel order: ' + obj.side + ' ' + symbol + ' ' + quantity + ' @ ' + obj.price + ' #' + obj.orderId);
+                    signedRequest(base + 'v3/order', { symbol: symbol, orderId: obj.orderId }, function (error, data) {
+                        if (callback) return callback.call(this, error, data, symbol);
                     }, 'DELETE');
                 }
             });
@@ -1162,10 +1159,10 @@ let api = function Binance() {
         * @param {object} options - addtional options
         * @return {undefined}
         */
-        allOrders: function(symbol, callback, options = {}) {
-            let parameters = Object.assign({symbol:symbol}, options);
-            signedRequest(base+'v3/allOrders', parameters, function(error, data) {
-                if ( callback ) return callback.call(this, error, data, symbol);
+        allOrders: function (symbol, callback, options = {}) {
+            let parameters = Object.assign({ symbol: symbol }, options);
+            signedRequest(base + 'v3/allOrders', parameters, function (error, data) {
+                if (callback) return callback.call(this, error, data, symbol);
             });
         },
 
@@ -1176,8 +1173,8 @@ let api = function Binance() {
         * @param {int} limit - limit the number of returned orders
         * @return {undefined}
         */
-        depth: function(symbol, callback, limit = 100) {
-            publicRequest(base+'v1/depth', {symbol:symbol, limit:limit}, function(error, data) {
+        depth: function (symbol, callback, limit = 100) {
+            publicRequest(base + 'v1/depth', { symbol: symbol, limit: limit }, function (error, data) {
                 return callback.call(this, error, depthData(data), symbol);
             });
         },
@@ -1188,20 +1185,20 @@ let api = function Binance() {
         * @param {function} callback - the callback function
         * @return {undefined}
         */
-        prices: function(symbol, callback = false) {
-            const params = typeof symbol === 'string' ? '?symbol='+symbol : '';
-            if ( typeof symbol === 'function' ) callback = symbol; // backwards compatibility
+        prices: function (symbol, callback = false) {
+            const params = typeof symbol === 'string' ? '?symbol=' + symbol : '';
+            if (typeof symbol === 'function') callback = symbol; // backwards compatibility
 
             let socksproxy = process.env.socks_proxy || false;
 
             let opt = {
-                url: base+'v3/ticker/price'+params,
+                url: base + 'v3/ticker/price' + params,
                 timeout: options.recvWindow
             };
 
-            if ( socksproxy !== false ) {
+            if (socksproxy !== false) {
                 socksproxy = proxyReplacewithIp(socksproxy);
-                if ( options.verbose ) options.log('using socks proxy server ' + socksproxy);
+                if (options.verbose) options.log('using socks proxy server ' + socksproxy);
                 opt.agentClass = SocksProxyAgent;
                 opt.agentOptions = {
                     protocol: parseProxy(socksproxy)[0],
@@ -1210,14 +1207,14 @@ let api = function Binance() {
                 }
             }
 
-            request(opt, function(error, response, body) {
-                if ( !callback ) return;
+            request(opt, function (error, response, body) {
+                if (!callback) return;
 
-                if ( error ) return callback( error );
+                if (error) return callback(error);
 
-                if ( response && response.statusCode !== 200 ) return callback( response );
+                if (response && response.statusCode !== 200) return callback(response);
 
-                if ( callback ) return callback( null, priceData(JSON.parse(body)) );
+                if (callback) return callback(null, priceData(JSON.parse(body)));
             });
         },
 
@@ -1227,20 +1224,20 @@ let api = function Binance() {
         * @param {function} callback - the callback function
         * @return {undefined}
         */
-        bookTickers: function(symbol, callback) {
-            const params = typeof symbol === 'string' ? '?symbol='+symbol : '';
-            if ( typeof symbol === 'function' ) callback = symbol; // backwards compatibility
+        bookTickers: function (symbol, callback) {
+            const params = typeof symbol === 'string' ? '?symbol=' + symbol : '';
+            if (typeof symbol === 'function') callback = symbol; // backwards compatibility
 
             let socksproxy = process.env.socks_proxy || false;
 
             let opt = {
-                url: base+'v3/ticker/bookTicker'+params,
+                url: base + 'v3/ticker/bookTicker' + params,
                 timeout: options.recvWindow
             };
 
-            if ( socksproxy !== false ) {
+            if (socksproxy !== false) {
                 socksproxy = proxyReplacewithIp(socksproxy);
-                if ( options.verbose ) options.log('using socks proxy server ' + socksproxy);
+                if (options.verbose) options.log('using socks proxy server ' + socksproxy);
                 opt.agentClass = SocksProxyAgent;
                 opt.agentOptions = {
                     protocol: parseProxy(socksproxy)[0],
@@ -1249,16 +1246,16 @@ let api = function Binance() {
                 }
             }
 
-            request(opt, function(error, response, body) {
-                if ( !callback ) return;
+            request(opt, function (error, response, body) {
+                if (!callback) return;
 
-                if ( error ) return callback( error );
+                if (error) return callback(error);
 
-                if ( response && response.statusCode !== 200 ) return callback( response );
+                if (response && response.statusCode !== 200) return callback(response);
 
-                if ( callback ) {
+                if (callback) {
                     const result = symbol ? JSON.parse(body) : bookPriceData(JSON.parse(body));
-                    return callback( null, result );
+                    return callback(null, result);
                 }
             });
         },
@@ -1269,10 +1266,10 @@ let api = function Binance() {
         * @param {function} callback - the callback function
         * @return {undefined}
         */
-        prevDay: function(symbol, callback) {
-            let input = symbol ? {symbol:symbol} : {};
-            publicRequest(base+'v1/ticker/24hr', input, function(error, data) {
-                if ( callback ) return callback.call(this, error, data, symbol);
+        prevDay: function (symbol, callback) {
+            let input = symbol ? { symbol: symbol } : {};
+            publicRequest(base + 'v1/ticker/24hr', input, function (error, data) {
+                if (callback) return callback.call(this, error, data, symbol);
             });
         },
 
@@ -1281,8 +1278,8 @@ let api = function Binance() {
         * @param {function} callback - the callback function
         * @return {undefined}
         */
-        exchangeInfo: function(callback) {
-            publicRequest(base+'v1/exchangeInfo', {}, callback);
+        exchangeInfo: function (callback) {
+            publicRequest(base + 'v1/exchangeInfo', {}, callback);
         },
 
         /**
@@ -1290,8 +1287,8 @@ let api = function Binance() {
         * @param {function} callback - the callback function
         * @return {undefined}
         */
-        systemStatus: function(callback) {
-            publicRequest(wapi+'v3/systemStatus.html', {}, callback);
+        systemStatus: function (callback) {
+            publicRequest(wapi + 'v3/systemStatus.html', {}, callback);
         },
 
         /**
@@ -1303,11 +1300,11 @@ let api = function Binance() {
         * @param {function} callback - the callback function
         * @return {undefined}
         */
-        withdraw: function(asset, address, amount, addressTag = false, callback = false) {
-            let params = {asset, address, amount};
+        withdraw: function (asset, address, amount, addressTag = false, callback = false) {
+            let params = { asset, address, amount };
             params.name = 'API Withdraw';
-            if ( addressTag ) params.addressTag = addressTag;
-            signedRequest(wapi+'v3/withdraw.html', params, callback, 'POST');
+            if (addressTag) params.addressTag = addressTag;
+            signedRequest(wapi + 'v3/withdraw.html', params, callback, 'POST');
         },
 
         /**
@@ -1316,9 +1313,9 @@ let api = function Binance() {
         * @param {string} asset - the asset symbol
         * @return {undefined}
         */
-        withdrawHistory: function(callback, asset = false) {
-            let params = asset ? {asset:asset} : {};
-            signedRequest(wapi+'v3/withdrawHistory.html', params, callback);
+        withdrawHistory: function (callback, asset = false) {
+            let params = asset ? { asset: asset } : {};
+            signedRequest(wapi + 'v3/withdrawHistory.html', params, callback);
         },
 
         /**
@@ -1327,9 +1324,9 @@ let api = function Binance() {
         * @param {object} params - addtional aprams
         * @return {undefined}
         */
-        depositHistory: function(callback, params = {}) {
-            if ( typeof params === 'string' ) params = {asset:params}; // Support 'asset' (string) or optional parameters (object)
-            signedRequest(wapi+'v3/depositHistory.html', params, callback);
+        depositHistory: function (callback, params = {}) {
+            if (typeof params === 'string') params = { asset: params }; // Support 'asset' (string) or optional parameters (object)
+            signedRequest(wapi + 'v3/depositHistory.html', params, callback);
         },
 
         /**
@@ -1338,8 +1335,8 @@ let api = function Binance() {
         * @param {function} callback - the callback function
         * @return {undefined}
         */
-        depositAddress: function(asset, callback) {
-            signedRequest(wapi+'v3/depositAddress.html', {asset:asset}, callback);
+        depositAddress: function (asset, callback) {
+            signedRequest(wapi + 'v3/depositAddress.html', { asset: asset }, callback);
         },
 
         /**
@@ -1347,8 +1344,8 @@ let api = function Binance() {
         * @param {function} callback - the callback function
         * @return {undefined}
         */
-        accountStatus: function(callback) {
-            signedRequest(wapi+'v3/accountStatus.html', {}, callback);
+        accountStatus: function (callback) {
+            signedRequest(wapi + 'v3/accountStatus.html', {}, callback);
         },
 
         /**
@@ -1356,8 +1353,8 @@ let api = function Binance() {
         * @param {function} callback - the callback function
         * @return {undefined}
         */
-        account: function(callback) {
-            signedRequest(base+'v3/account', {}, callback);
+        account: function (callback) {
+            signedRequest(base + 'v3/account', {}, callback);
         },
 
         /**
@@ -1365,9 +1362,9 @@ let api = function Binance() {
         * @param {function} callback - the callback function
         * @return {undefined}
         */
-        balance: function(callback) {
-            signedRequest(base+'v3/account', {}, function(error, data) {
-                if ( callback ) callback( error, balanceData(data) );
+        balance: function (callback) {
+            signedRequest(base + 'v3/account', {}, function (error, data) {
+                if (callback) callback(error, balanceData(data));
             });
         },
 
@@ -1378,10 +1375,10 @@ let api = function Binance() {
         * @param {object} options - addtional optoins
         * @return {undefined}
         */
-        trades: function(symbol, callback, options = {}) {
-            let parameters = Object.assign({symbol:symbol}, options);
-            signedRequest(base+'v3/myTrades', parameters, function(error, data) {
-                if ( callback ) return callback.call(this, error, data, symbol);
+        trades: function (symbol, callback, options = {}) {
+            let parameters = Object.assign({ symbol: symbol }, options);
+            signedRequest(base + 'v3/myTrades', parameters, function (error, data) {
+                if (callback) return callback.call(this, error, data, symbol);
             });
         },
 
@@ -1390,11 +1387,11 @@ let api = function Binance() {
         * @param {function} callback - the callback function
         * @return {undefined}
         */
-        useServerTime: function(callback = false) {
-            apiRequest(base+'v1/time', {}, function(error, response) {
+        useServerTime: function (callback = false) {
+            apiRequest(base + 'v1/time', {}, function (error, response) {
                 info.timeOffset = response.serverTime - new Date().getTime();
                 //options.log("server time set: ", response.serverTime, info.timeOffset);
-                if ( callback ) callback();
+                if (callback) callback();
             });
         },
 
@@ -1403,8 +1400,8 @@ let api = function Binance() {
         * @param {function} callback - the callback function
         * @return {undefined}
         */
-        time: function(callback) {
-            apiRequest(base+'v1/time', {}, callback);
+        time: function (callback) {
+            apiRequest(base + 'v1/time', {}, callback);
         },
 
         /**
@@ -1414,9 +1411,9 @@ let api = function Binance() {
         * @param {function} callback - the callback function
         * @return {undefined}
         */
-        aggTrades: function(symbol, options = {}, callback = false) { //fromId startTime endTime limit
-            let parameters = Object.assign({symbol}, options);
-            marketRequest(base+'v1/aggTrades', parameters, callback);
+        aggTrades: function (symbol, options = {}, callback = false) { //fromId startTime endTime limit
+            let parameters = Object.assign({ symbol }, options);
+            marketRequest(base + 'v1/aggTrades', parameters, callback);
         },
 
         /**
@@ -1426,8 +1423,8 @@ let api = function Binance() {
         * @param {int} limit - limit the number of items returned
         * @return {undefined}
         */
-        recentTrades: function(symbol, callback, limit = 500) {
-            marketRequest(base+'v1/trades', {symbol:symbol, limit:limit}, callback);
+        recentTrades: function (symbol, callback, limit = 500) {
+            marketRequest(base + 'v1/trades', { symbol: symbol, limit: limit }, callback);
         },
 
         /**
@@ -1438,10 +1435,10 @@ let api = function Binance() {
         * @param {int} fromId - from this id
         * @return {undefined}
         */
-        historicalTrades: function(symbol, callback, limit = 500, fromId = false) {
-            let parameters = {symbol:symbol, limit:limit};
-            if ( fromId ) parameters.fromId = fromId;
-            marketRequest(base+'v1/historicalTrades', parameters, callback);
+        historicalTrades: function (symbol, callback, limit = 500, fromId = false) {
+            let parameters = { symbol: symbol, limit: limit };
+            if (fromId) parameters.fromId = fromId;
+            marketRequest(base + 'v1/historicalTrades', parameters, callback);
         },
 
         /**
@@ -1450,9 +1447,9 @@ let api = function Binance() {
         * @param {boolean} include_volume - to include the voume or not
         * @return {array} - an array
         */
-        highstock: function(chart, include_volume = false) {
+        highstock: function (chart, include_volume = false) {
             let array = [];
-            for ( let timestamp in chart ) {
+            for (let timestamp in chart) {
                 let obj = chart[timestamp];
                 let line = [
                     Number(timestamp),
@@ -1461,7 +1458,7 @@ let api = function Binance() {
                     parseFloat(obj.low),
                     parseFloat(obj.close)
                 ];
-                if ( include_volume ) line.push(parseFloat(obj.volume));
+                if (include_volume) line.push(parseFloat(obj.volume));
                 array.push(line);
             }
             return array;
@@ -1472,9 +1469,9 @@ let api = function Binance() {
         * @param {object} chart - the chart
         * @return {object} - object with cnalde information
         */
-        ohlc: function(chart) {
+        ohlc: function (chart) {
             let open = [], high = [], low = [], close = [], volume = [];
-            for ( let timestamp in chart ) { //ohlc[symbol][interval]
+            for (let timestamp in chart) { //ohlc[symbol][interval]
                 let obj = chart[timestamp];
                 open.push(parseFloat(obj.open));
                 high.push(parseFloat(obj.high));
@@ -1482,7 +1479,7 @@ let api = function Binance() {
                 close.push(parseFloat(obj.close));
                 volume.push(parseFloat(obj.volume));
             }
-            return {open:open, high:high, low:low, close:close, volume:volume};
+            return { open: open, high: high, low: low, close: close, volume: volume };
         },
 
         /**
@@ -1494,10 +1491,10 @@ let api = function Binance() {
         * @param {object} options - addtitional options
         * @return {undefined}
         */
-        candlesticks: function(symbol, interval = '5m', callback = false, options = {limit:500}) {
-            if ( !callback ) return;
-            let params = Object.assign({symbol:symbol, interval:interval}, options);
-            publicRequest(base+'v1/klines', params, function(error, data) {
+        candlesticks: function (symbol, interval = '5m', callback = false, options = { limit: 500 }) {
+            if (!callback) return;
+            let params = Object.assign({ symbol: symbol, interval: interval }, options);
+            publicRequest(base + 'v1/klines', params, function (error, data) {
                 return callback.call(this, error, data, symbol);
             });
         },
@@ -1510,7 +1507,7 @@ let api = function Binance() {
         * @param {string} method - the http method
         * @return {undefined}
         */
-        publicRequest: function(url, data, callback, method = 'GET') {
+        publicRequest: function (url, data, callback, method = 'GET') {
             publicRequest(url, data, callback, method)
         },
 
@@ -1522,7 +1519,7 @@ let api = function Binance() {
         * @param {string} method - the http method
         * @return {undefined}
         */
-        signedRequest: function(url, data, callback, method = 'GET') {
+        signedRequest: function (url, data, callback, method = 'GET') {
             signedRequest(url, data, callback, method);
         },
 
@@ -1531,12 +1528,12 @@ let api = function Binance() {
         * @param {string} symbol - the public api endpoint
         * @return {undefined}
         */
-        getMarket: function(symbol) {
+        getMarket: function (symbol) {
             const substring = symbol.substr(-3);
-            if ( substring === 'BTC' ) return 'BTC';
-            else if ( substring === 'ETH' ) return 'ETH';
-            else if ( substring === 'BNB' ) return 'BNB';
-            else if ( symbol.substr(-4) === 'USDT' ) return 'USDT';
+            if (substring === 'BTC') return 'BTC';
+            else if (substring === 'ETH') return 'ETH';
+            else if (substring === 'BNB') return 'BNB';
+            else if (symbol.substr(-4) === 'USDT') return 'USDT';
         },
         websockets: {
             /**
@@ -1547,25 +1544,25 @@ let api = function Binance() {
             * @return {undefined}
             */
             userData: function userData(callback, execution_callback = false, subscribed_callback = false) {
-                let reconnect = function() {
-                    if ( options.reconnect ) userData(callback, execution_callback, subscribed_callback);
+                let reconnect = function () {
+                    if (options.reconnect) userData(callback, execution_callback, subscribed_callback);
                 };
-                apiRequest(base+'v1/userDataStream', {}, function(error, response) {
+                apiRequest(base + 'v1/userDataStream', {}, function (error, response) {
                     options.listenKey = response.listenKey;
                     setTimeout(function userDataKeepAlive() { // keepalive
                         try {
-                            apiRequest(base+'v1/userDataStream?listenKey='+options.listenKey, {}, function(err) {
-                                if ( err ) setTimeout(userDataKeepAlive, 60000); // retry in 1 minute
+                            apiRequest(base + 'v1/userDataStream?listenKey=' + options.listenKey, {}, function (err) {
+                                if (err) setTimeout(userDataKeepAlive, 60000); // retry in 1 minute
                                 else setTimeout(userDataKeepAlive, 60 * 30 * 1000); // 30 minute keepalive
                             }, 'PUT');
-                        } catch ( error ) {
+                        } catch (error) {
                             setTimeout(userDataKeepAlive, 60000); // retry in 1 minute
                         }
                     }, 60 * 30 * 1000); // 30 minute keepalive
                     options.balance_callback = callback;
                     options.execution_callback = execution_callback;
                     const subscription = subscribe(options.listenKey, userDataHandler, reconnect);
-                    if ( subscribed_callback ) subscribed_callback(subscription.endpoint);
+                    if (subscribed_callback) subscribed_callback(subscription.endpoint);
                 }, 'POST');
             },
 
@@ -1576,7 +1573,7 @@ let api = function Binance() {
             * @param {boolean} reconnect - subscription callback
             * @return {WebSocket} the websocket reference
             */
-            subscribe: function(url, callback, reconnect = false) {
+            subscribe: function (url, callback, reconnect = false) {
                 return subscribe(url, callback, reconnect);
             },
 
@@ -1587,7 +1584,7 @@ let api = function Binance() {
             * @param {boolean} reconnect - subscription callback
             * @return {WebSocket} the websocket reference
             */
-            subscribeCombined: function(url, callback, reconnect = false) {
+            subscribeCombined: function (url, callback, reconnect = false) {
                 return subscribeCombined(url, callback, reconnect);
             },
 
@@ -1595,7 +1592,7 @@ let api = function Binance() {
             * Returns the known websockets subscriptions
             * @return {array} array of web socket subscriptions
             */
-            subscriptions: function() {
+            subscriptions: function () {
                 return subscriptions;
             },
 
@@ -1604,8 +1601,8 @@ let api = function Binance() {
             * @param {string} endpoint - the string associated with the endpoint
             * @return {undefined}
             */
-            terminate: function(endpoint) {
-                if ( options.verbose ) options.log('WebSocket terminating:', endpoint);
+            terminate: function (endpoint) {
+                if (options.verbose) options.log('WebSocket terminating:', endpoint);
                 return terminate(endpoint);
             },
 
@@ -1616,20 +1613,20 @@ let api = function Binance() {
             * @return {string} the websocket endpoint
             */
             depth: function depth(symbols, callback) {
-                let reconnect = function() {
-                    if ( options.reconnect ) depth(symbols, callback);
+                let reconnect = function () {
+                    if (options.reconnect) depth(symbols, callback);
                 };
 
                 let subscription;
-                if ( Array.isArray(symbols) ) {
-                    if ( !isArrayUnique(symbols) ) throw Error('depth: "symbols" cannot contain duplicate elements.');
-                    let streams = symbols.map(function(symbol) {
-                        return symbol.toLowerCase()+'@depth';
+                if (Array.isArray(symbols)) {
+                    if (!isArrayUnique(symbols)) throw Error('depth: "symbols" cannot contain duplicate elements.');
+                    let streams = symbols.map(function (symbol) {
+                        return symbol.toLowerCase() + '@depth';
                     });
                     subscription = subscribeCombined(streams, callback, reconnect);
                 } else {
                     let symbol = symbols;
-                    subscription = subscribe(symbol.toLowerCase()+'@depth', callback, reconnect);
+                    subscription = subscribe(symbol.toLowerCase() + '@depth', callback, reconnect);
                 }
                 return subscription.endpoint;
             },
@@ -1642,12 +1639,12 @@ let api = function Binance() {
             * @return {string} the websocket endpoint
             */
             depthCache: function depthCacheFunction(symbols, callback, limit = 500) {
-                let reconnect = function() {
-                    if ( options.reconnect ) depthCacheFunction(symbols, callback, limit);
+                let reconnect = function () {
+                    if (options.reconnect) depthCacheFunction(symbols, callback, limit);
                 };
 
-                let symbolDepthInit = function(symbol) {
-                    if ( typeof depthCacheContext[symbol] === 'undefined' ) depthCacheContext[symbol] = {};
+                let symbolDepthInit = function (symbol) {
+                    if (typeof depthCacheContext[symbol] === 'undefined') depthCacheContext[symbol] = {};
 
                     let context = depthCacheContext[symbol];
                     context.snapshotUpdateId = null;
@@ -1657,17 +1654,17 @@ let api = function Binance() {
                     depthCache[symbol] = { bids: {}, asks: {} };
                 };
 
-                let assignEndpointIdToContext = function(symbol, endpointId) {
-                    if ( depthCacheContext[symbol] ) {
+                let assignEndpointIdToContext = function (symbol, endpointId) {
+                    if (depthCacheContext[symbol]) {
                         let context = depthCacheContext[symbol];
                         context.endpointId = endpointId;
                     }
                 }
 
-                let handleDepthStreamData = function(depth) {
+                let handleDepthStreamData = function (depth) {
                     let symbol = depth.s;
                     let context = depthCacheContext[symbol];
-                    if (context.messageQueue && !context.snapshotUpdateId ) {
+                    if (context.messageQueue && !context.snapshotUpdateId) {
                         context.messageQueue.push(depth);
                     } else {
                         try {
@@ -1675,23 +1672,23 @@ let api = function Binance() {
                         } catch (err) {
                             return terminate(context.endpointId, true);
                         }
-                        if ( callback ) callback(symbol, depthCache[symbol], context);
+                        if (callback) callback(symbol, depthCache[symbol], context);
                     }
                 };
 
-                let getSymbolDepthSnapshot = function(symbol,cb){
+                let getSymbolDepthSnapshot = function (symbol, cb) {
 
-                       publicRequest(base+'v1/depth', { symbol:symbol, limit:limit }, function(error, json) {
-                           if (error) {
-                               return cb(error,null);
-                           }
-                           // Store symbol next use
-                           json.symb = symbol;
-                           cb(null,json)
-                       });
-               };
+                    publicRequest(base + 'v1/depth', { symbol: symbol, limit: limit }, function (error, json) {
+                        if (error) {
+                            return cb(error, null);
+                        }
+                        // Store symbol next use
+                        json.symb = symbol;
+                        cb(null, json)
+                    });
+                };
 
-               let updateSymbolDepthCache = function(json){
+                let updateSymbolDepthCache = function (json) {
                     // Get previous store symbol
                     let symbol = json.symb;
                     // Initialize depth cache from snapshot
@@ -1701,44 +1698,44 @@ let api = function Binance() {
                     context.snapshotUpdateId = json.lastUpdateId;
                     context.messageQueue = context.messageQueue.filter(depth => depth.u > context.snapshotUpdateId);
                     // Process any pending depth messages
-                    for ( let depth of context.messageQueue ) {
+                    for (let depth of context.messageQueue) {
 
                         /* Although sync errors shouldn't ever happen here, we catch and swallow them anyway
                            just in case. The stream handler function above will deal with broken caches. */
-                        try {depthHandler(depth);} catch (err) {
+                        try { depthHandler(depth); } catch (err) {
                             // do nothing
                         }
                     }
                     delete context.messageQueue;
-                    if ( callback ) callback(symbol, depthCache[symbol]);
+                    if (callback) callback(symbol, depthCache[symbol]);
                 };
 
                 /* If an array of symbols are sent we use a combined stream connection rather.
                    This is transparent to the developer, and results in a single socket connection.
                    This essentially eliminates "unexpected response" errors when subscribing to a lot of data. */
                 let subscription;
-                if ( Array.isArray(symbols) ) {
-                    if ( !isArrayUnique(symbols) ) throw Error('depthCache: "symbols" cannot contain duplicate elements.');
+                if (Array.isArray(symbols)) {
+                    if (!isArrayUnique(symbols)) throw Error('depthCache: "symbols" cannot contain duplicate elements.');
 
                     symbols.forEach(symbolDepthInit);
                     let streams = symbols.map(function (symbol) {
-                        return symbol.toLowerCase()+'@depth';
+                        return symbol.toLowerCase() + '@depth';
                     });
-                    subscription = subscribeCombined(streams, handleDepthStreamData, reconnect, function() {
-                      async.mapLimit(symbols, symbols.length, getSymbolDepthSnapshot,(err, results) => {
-                         if (err) throw err
-                         results.forEach(updateSymbolDepthCache);
-                      });
+                    subscription = subscribeCombined(streams, handleDepthStreamData, reconnect, function () {
+                        async.mapLimit(symbols, symbols.length, getSymbolDepthSnapshot, (err, results) => {
+                            if (err) throw err
+                            results.forEach(updateSymbolDepthCache);
+                        });
                     });
                     symbols.forEach(s => assignEndpointIdToContext(s, subscription.endpoint));
                 } else {
                     let symbol = symbols;
                     symbolDepthInit(symbol);
-                    subscription = subscribe(symbol.toLowerCase()+'@depth', handleDepthStreamData, reconnect, function() {
-                      async.mapLimit([symbol], 1, getSymbolDepthSnapshot,(err, results) => {
-                          if (err) throw err
-                          results.forEach(updateSymbolDepthCache);
-                      });
+                    subscription = subscribe(symbol.toLowerCase() + '@depth', handleDepthStreamData, reconnect, function () {
+                        async.mapLimit([symbol], 1, getSymbolDepthSnapshot, (err, results) => {
+                            if (err) throw err
+                            results.forEach(updateSymbolDepthCache);
+                        });
                     });
                     assignEndpointIdToContext(symbol, subscription.endpoint);
                 }
@@ -1752,20 +1749,20 @@ let api = function Binance() {
             * @return {string} the websocket endpoint
             */
             aggTrades: function trades(symbols, callback) {
-                let reconnect = function() {
-                    if ( options.reconnect ) trades(symbols, callback);
+                let reconnect = function () {
+                    if (options.reconnect) trades(symbols, callback);
                 };
 
                 let subscription;
-                if ( Array.isArray(symbols) ) {
-                    if ( !isArrayUnique(symbols) ) throw Error('trades: "symbols" cannot contain duplicate elements.');
-                    let streams = symbols.map(function(symbol) {
-                        return symbol.toLowerCase()+'@aggTrade';
+                if (Array.isArray(symbols)) {
+                    if (!isArrayUnique(symbols)) throw Error('trades: "symbols" cannot contain duplicate elements.');
+                    let streams = symbols.map(function (symbol) {
+                        return symbol.toLowerCase() + '@aggTrade';
                     });
                     subscription = subscribeCombined(streams, callback, reconnect);
                 } else {
                     let symbol = symbols;
-                    subscription = subscribe(symbol.toLowerCase()+'@aggTrade', callback, reconnect);
+                    subscription = subscribe(symbol.toLowerCase() + '@aggTrade', callback, reconnect);
                 }
                 return subscription.endpoint;
             },
@@ -1777,20 +1774,20 @@ let api = function Binance() {
             * @return {string} the websocket endpoint
             */
             trades: function trades(symbols, callback) {
-                let reconnect = function() {
-                    if ( options.reconnect ) trades(symbols, callback);
+                let reconnect = function () {
+                    if (options.reconnect) trades(symbols, callback);
                 };
 
                 let subscription;
-                if ( Array.isArray(symbols) ) {
-                    if ( !isArrayUnique(symbols) ) throw Error('trades: "symbols" cannot contain duplicate elements.');
-                    let streams = symbols.map(function(symbol) {
-                        return symbol.toLowerCase()+'@trade';
+                if (Array.isArray(symbols)) {
+                    if (!isArrayUnique(symbols)) throw Error('trades: "symbols" cannot contain duplicate elements.');
+                    let streams = symbols.map(function (symbol) {
+                        return symbol.toLowerCase() + '@trade';
                     });
                     subscription = subscribeCombined(streams, callback, reconnect);
                 } else {
                     let symbol = symbols;
-                    subscription = subscribe(symbol.toLowerCase()+'@trade', callback, reconnect);
+                    subscription = subscribe(symbol.toLowerCase() + '@trade', callback, reconnect);
                 }
                 return subscription.endpoint;
             },
@@ -1803,60 +1800,60 @@ let api = function Binance() {
             * @return {string} the websocket endpoint
             */
             chart: function chart(symbols, interval, callback) {
-                let reconnect = function() {
-                    if ( options.reconnect ) chart(symbols, interval, callback);
+                let reconnect = function () {
+                    if (options.reconnect) chart(symbols, interval, callback);
                 };
 
-                let symbolChartInit = function(symbol) {
-                    if ( typeof info[symbol] === 'undefined' ) info[symbol] = {};
-                    if ( typeof info[symbol][interval] === 'undefined' ) info[symbol][interval] = {};
-                    if ( typeof ohlc[symbol] === 'undefined' ) ohlc[symbol] = {};
-                    if ( typeof ohlc[symbol][interval] === 'undefined' ) ohlc[symbol][interval] = {};
-                    if ( typeof ohlcLatest[symbol] === 'undefined' ) ohlcLatest[symbol] = {};
-                    if ( typeof ohlcLatest[symbol][interval] === 'undefined' ) ohlcLatest[symbol][interval] = {};
-                    if ( typeof klineQueue[symbol] === 'undefined' ) klineQueue[symbol] = {};
-                    if ( typeof klineQueue[symbol][interval] === 'undefined' ) klineQueue[symbol][interval] = [];
+                let symbolChartInit = function (symbol) {
+                    if (typeof info[symbol] === 'undefined') info[symbol] = {};
+                    if (typeof info[symbol][interval] === 'undefined') info[symbol][interval] = {};
+                    if (typeof ohlc[symbol] === 'undefined') ohlc[symbol] = {};
+                    if (typeof ohlc[symbol][interval] === 'undefined') ohlc[symbol][interval] = {};
+                    if (typeof ohlcLatest[symbol] === 'undefined') ohlcLatest[symbol] = {};
+                    if (typeof ohlcLatest[symbol][interval] === 'undefined') ohlcLatest[symbol][interval] = {};
+                    if (typeof klineQueue[symbol] === 'undefined') klineQueue[symbol] = {};
+                    if (typeof klineQueue[symbol][interval] === 'undefined') klineQueue[symbol][interval] = [];
                     info[symbol][interval].timestamp = 0;
                 }
 
-                let handleKlineStreamData = function(kline) {
+                let handleKlineStreamData = function (kline) {
                     let symbol = kline.s;
-                    if ( !info[symbol][interval].timestamp ) {
-                      if ( typeof (klineQueue[symbol][interval]) !== 'undefined' && kline !== null) {
-                        klineQueue[symbol][interval].push(kline);
-                      }
+                    if (!info[symbol][interval].timestamp) {
+                        if (typeof (klineQueue[symbol][interval]) !== 'undefined' && kline !== null) {
+                            klineQueue[symbol][interval].push(kline);
+                        }
                     } else {
                         //options.log('@klines at ' + kline.k.t);
                         klineHandler(symbol, kline);
-                        if ( callback ) callback(symbol, interval, klineConcat(symbol, interval));
+                        if (callback) callback(symbol, interval, klineConcat(symbol, interval));
                     }
                 };
 
-                let getSymbolKlineSnapshot = function(symbol) {
-                    publicRequest(base + 'v1/klines', { symbol:symbol, interval:interval }, function (error, data) {
+                let getSymbolKlineSnapshot = function (symbol) {
+                    publicRequest(base + 'v1/klines', { symbol: symbol, interval: interval }, function (error, data) {
                         klineData(symbol, interval, data);
                         //options.log('/klines at ' + info[symbol][interval].timestamp);
-                        if ( typeof klineQueue[symbol][interval] !== 'undefined' ) {
-                            for ( let kline of klineQueue[symbol][interval] ) klineHandler(symbol, kline, info[symbol][interval].timestamp);
+                        if (typeof klineQueue[symbol][interval] !== 'undefined') {
+                            for (let kline of klineQueue[symbol][interval]) klineHandler(symbol, kline, info[symbol][interval].timestamp);
                             delete klineQueue[symbol][interval];
                         }
-                        if ( callback ) callback(symbol, interval, klineConcat(symbol, interval));
+                        if (callback) callback(symbol, interval, klineConcat(symbol, interval));
                     });
                 };
 
                 let subscription;
-                if ( Array.isArray(symbols) ) {
-                    if ( !isArrayUnique(symbols) ) throw Error('chart: "symbols" cannot contain duplicate elements.');
+                if (Array.isArray(symbols)) {
+                    if (!isArrayUnique(symbols)) throw Error('chart: "symbols" cannot contain duplicate elements.');
                     symbols.forEach(symbolChartInit);
-                    let streams = symbols.map(function(symbol) {
-                        return symbol.toLowerCase()+'@kline_'+interval;
+                    let streams = symbols.map(function (symbol) {
+                        return symbol.toLowerCase() + '@kline_' + interval;
                     });
                     subscription = subscribeCombined(streams, handleKlineStreamData, reconnect);
                     symbols.forEach(getSymbolKlineSnapshot);
                 } else {
                     let symbol = symbols;
                     symbolChartInit(symbol);
-                    subscription = subscribe(symbol.toLowerCase()+'@kline_'+interval, handleKlineStreamData, reconnect);
+                    subscription = subscribe(symbol.toLowerCase() + '@kline_' + interval, handleKlineStreamData, reconnect);
                     getSymbolKlineSnapshot(symbol);
                 }
                 return subscription.endpoint;
@@ -1870,23 +1867,23 @@ let api = function Binance() {
             * @return {string} the websocket endpoint
             */
             candlesticks: function candlesticks(symbols, interval, callback) {
-                let reconnect = function() {
-                    if ( options.reconnect ) candlesticks(symbols, interval, callback);
+                let reconnect = function () {
+                    if (options.reconnect) candlesticks(symbols, interval, callback);
                 };
 
                 /* If an array of symbols are sent we use a combined stream connection rather.
                    This is transparent to the developer, and results in a single socket connection.
                    This essentially eliminates "unexpected response" errors when subscribing to a lot of data. */
                 let subscription;
-                if ( Array.isArray(symbols) ) {
-                    if ( !isArrayUnique(symbols) ) throw Error('candlesticks: "symbols" cannot contain duplicate elements.');
+                if (Array.isArray(symbols)) {
+                    if (!isArrayUnique(symbols)) throw Error('candlesticks: "symbols" cannot contain duplicate elements.');
                     let streams = symbols.map(function (symbol) {
-                        return symbol.toLowerCase()+'@kline_'+interval;
+                        return symbol.toLowerCase() + '@kline_' + interval;
                     });
                     subscription = subscribeCombined(streams, callback, reconnect);
                 } else {
                     let symbol = symbols.toLowerCase();
-                    subscription = subscribe(symbol+'@kline_'+interval, callback, reconnect);
+                    subscription = subscribe(symbol + '@kline_' + interval, callback, reconnect);
                 }
                 return subscription.endpoint;
             },
@@ -1897,12 +1894,12 @@ let api = function Binance() {
             * @return {string} the websocket endpoint
             */
             miniTicker: function miniTicker(callback) {
-                let reconnect = function() {
-                    if ( options.reconnect ) miniTicker(callback);
+                let reconnect = function () {
+                    if (options.reconnect) miniTicker(callback);
                 };
-                let subscription = subscribe('!miniTicker@arr', function(data) {
+                let subscription = subscribe('!miniTicker@arr', function (data) {
                     let markets = {};
-                    for ( let obj of data ) {
+                    for (let obj of data) {
                         markets[obj.s] = {
                             close: obj.c,
                             open: obj.o,
@@ -1925,30 +1922,30 @@ let api = function Binance() {
             * @return {string} the websocket endpoint
             */
             prevDay: function prevDay(symbols, callback) {
-                let reconnect = function() {
-                    if ( options.reconnect ) prevDay(symbols, callback);
+                let reconnect = function () {
+                    if (options.reconnect) prevDay(symbols, callback);
                 };
 
                 let subscription;
                 // Combine stream for array of symbols
-                if ( Array.isArray(symbols) ) {
-                    if ( !isArrayUnique(symbols) ) throw Error('prevDay: "symbols" cannot contain duplicate elements.');
-                    let streams = symbols.map(function(symbol) {
-                        return symbol.toLowerCase()+'@ticker';
+                if (Array.isArray(symbols)) {
+                    if (!isArrayUnique(symbols)) throw Error('prevDay: "symbols" cannot contain duplicate elements.');
+                    let streams = symbols.map(function (symbol) {
+                        return symbol.toLowerCase() + '@ticker';
                     });
-                    subscription = subscribeCombined(streams, function(data) {
+                    subscription = subscribeCombined(streams, function (data) {
                         prevDayStreamHandler(data, callback);
                     }, reconnect);
-                // Raw stream for  a single symbol
-                } else if ( symbols ) {
+                    // Raw stream for  a single symbol
+                } else if (symbols) {
                     let symbol = symbols;
-                    subscription = subscribe(symbol.toLowerCase()+'@ticker', function(data) {
+                    subscription = subscribe(symbol.toLowerCase() + '@ticker', function (data) {
                         prevDayStreamHandler(data, callback);
                     }, reconnect);
-                // Raw stream of all listed symbols
+                    // Raw stream of all listed symbols
                 } else {
-                    subscription = subscribe('!ticker@arr', function(data) {
-                        for ( let line of data ) {
+                    subscription = subscribe('!ticker@arr', function (data) {
+                        for (let line of data) {
                             prevDayStreamHandler(line, callback);
                         }
                     }, reconnect);
