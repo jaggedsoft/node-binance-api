@@ -18,7 +18,6 @@ let api = function Binance() {
     const crypto = require('crypto');
     const file = require('fs');
     const url = require('url');
-    const dns = require('dns');
     const HttpsProxyAgent = require('https-proxy-agent');
     const SocksProxyAgent = require('socks-proxy-agent');
     const stringHash = require('string-hash');
@@ -165,7 +164,10 @@ let api = function Binance() {
      */
     const marketRequest = function (url, data = {}, callback, method = 'GET') {
         if (!options.APIKEY) throw Error('apiRequest: Invalid API Key');
-        let query = Object.keys(data).reduce(function (a, k) { a.push(k + '=' + encodeURIComponent(data[k])); return a }, []).join('&');
+        let query = Object.keys(data).reduce(function (a, k) {
+            a.push(k + '=' + encodeURIComponent(data[k]));
+            return a;
+        }, []).join('&');
 
         let opt = reqObj(
             url + (query ? '?' + query : ''),
@@ -189,7 +191,10 @@ let api = function Binance() {
         if (!options.APISECRET) throw Error('signedRequest: Invalid API Secret');
         data.timestamp = new Date().getTime() + info.timeOffset;
         if (typeof data.recvWindow === 'undefined') data.recvWindow = options.recvWindow;
-        let query = Object.keys(data).reduce(function (a, k) { a.push(k + '=' + encodeURIComponent(data[k])); return a }, []).join('&');
+        let query = Object.keys(data).reduce(function (a, k) {
+            a.push(k + '=' + encodeURIComponent(data[k]));
+            return a;
+        }, []).join('&');
         let signature = crypto.createHmac('sha256', options.APISECRET).update(query).digest('hex'); // set the HMAC hash header
 
         let opt = reqObj(
@@ -871,7 +876,9 @@ let api = function Binance() {
             let object = {}, count = 0, cache;
             if (typeof symbol === 'object') cache = symbol;
             else cache = getDepthCache(symbol).bids;
-            let sorted = Object.keys(cache).sort(function (a, b) { return parseFloat(b) - parseFloat(a) });
+            let sorted = Object.keys(cache).sort(function (a, b) {
+                return parseFloat(b) - parseFloat(a)
+            });
             let cumulative = 0;
             for (let price of sorted) {
                 if (baseValue === 'cumulative') {
@@ -895,7 +902,9 @@ let api = function Binance() {
             let object = {}, count = 0, cache;
             if (typeof symbol === 'object') cache = symbol;
             else cache = getDepthCache(symbol).asks;
-            let sorted = Object.keys(cache).sort(function (a, b) { return parseFloat(a) - parseFloat(b) });
+            let sorted = Object.keys(cache).sort(function (a, b) {
+                return parseFloat(a) - parseFloat(b);
+            });
             let cumulative = 0;
             for (let price of sorted) {
                 if (baseValue === 'cumulative') {
@@ -1702,7 +1711,9 @@ let api = function Binance() {
 
                         /* Although sync errors shouldn't ever happen here, we catch and swallow them anyway
                            just in case. The stream handler function above will deal with broken caches. */
-                        try { depthHandler(depth); } catch (err) {
+                        try {
+                            depthHandler(depth);
+                        } catch (err) {
                             // do nothing
                         }
                     }
