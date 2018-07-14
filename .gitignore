@@ -52,6 +52,10 @@ node_modules
 ##########
 .vscode
 
+# IntelliJ #
+##########
+.idea
+
 # code coverage"
 coverage
 
