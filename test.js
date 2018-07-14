@@ -750,7 +750,7 @@ describe('Deposit history', function () {
 });
 
 describe('Deposit address', function () {
-  it('Attempt to get deposit address for BNB', function (done) {
+  it('Attempt to get deposit address for BTC', function (done) {
     binance.depositAddress('BTC', (error, result) => {
       debug(error);
       debug(result);
