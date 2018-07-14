@@ -41,7 +41,7 @@ before_script:
 
 script:
     - travis_retry npm run test
-    - if [[ $PROXY_VALIDATION == "yes" ]]; then export socks_proxy=http://127.0.0.1:9999; fi
+    - if [[ $PROXY_VALIDATION == "yes" ]]; then export socks_proxy=socks4://127.0.0.1:9999; fi
     - if [[ $PROXY_VALIDATION == "yes" ]]; then travis_retry npm run test; fi
     - npm run lint  
 
