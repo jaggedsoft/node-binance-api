@@ -12,7 +12,9 @@
  * @return {object} instance to class object
  */
 let api = function Binance() {
-    'use strict';
+    let Binance = this; // eslint-disable-line consistent-this
+    'use strict'; // eslint-disable-line no-unused-expressions
+
     const WebSocket = require('ws');
     const request = require('request');
     const crypto = require('crypto');
@@ -28,12 +30,12 @@ let api = function Binance() {
     const combineStream = 'wss://stream.binance.com:9443/stream?streams=';
     const userAgent = 'Mozilla/4.0 (compatible; Node Binance API)';
     const contentType = 'application/x-www-form-urlencoded';
-    let subscriptions = {};
-    let depthCache = {};
-    let depthCacheContext = {};
-    let ohlcLatest = {};
-    let klineQueue = {};
-    let ohlc = {};
+    Binance.subscriptions = {};
+    Binance.depthCache = {};
+    Binance.depthCacheContext = {};
+    Binance.ohlcLatest = {};
+    Binance.klineQueue = {};
+    Binance.ohlc = {};
     const default_options = {
         recvWindow: 5000,
         useServerTime: false,
@@ -44,9 +46,9 @@ let api = function Binance() {
             console.log(Array.prototype.slice.call(args));
         }
     };
-    let options = default_options;
-    let info = { timeOffset: 0 };
-    let socketHeartbeatInterval;
+    Binance.options = default_options;
+    Binance.info = { timeOffset: 0 };
+    Binance.socketHeartbeatInterval = null;
 
     /**
      * Replaces socks connection uri hostname with IP address
@@ -87,7 +89,7 @@ let api = function Binance() {
         if (socksproxy === false) return opt;
         socksproxy = proxyReplacewithIp(socksproxy);
 
-        if (options.verbose) options.log('using socks proxy server ' + socksproxy);
+        if (Binance.options.verbose) Binance.options.log('using socks proxy server ' + socksproxy);
 
         opt.agentClass = SocksProxyAgent;
         opt.agentOptions = {
@@ -114,7 +116,7 @@ let api = function Binance() {
         url: url,
         qs: data,
         method: method,
-        timeout: options.recvWindow,
+        timeout: Binance.options.recvWindow,
         headers: {
             'User-Agent': userAgent,
             'Content-type': contentType,
@@ -144,12 +146,12 @@ let api = function Binance() {
      * @return {undefined}
      */
     const apiRequest = function (url, data = {}, callback, method = 'GET') {
-        if (!options.APIKEY) throw Error('apiRequest: Invalid API Key');
+        if (!Binance.options.APIKEY) throw Error('apiRequest: Invalid API Key');
         let opt = reqObj(
             url,
             data,
             method,
-            options.APIKEY
+            Binance.options.APIKEY
         );
         proxyRequest(opt, callback);
     };
@@ -163,7 +165,7 @@ let api = function Binance() {
      * @return {undefined}
      */
     const marketRequest = function (url, data = {}, callback, method = 'GET') {
-        if (!options.APIKEY) throw Error('apiRequest: Invalid API Key');
+        if (!Binance.options.APIKEY) throw Error('apiRequest: Invalid API Key');
         let query = Object.keys(data).reduce(function (a, k) {
             a.push(k + '=' + encodeURIComponent(data[k]));
             return a;
@@ -173,7 +175,7 @@ let api = function Binance() {
             url + (query ? '?' + query : ''),
             data,
             method,
-            options.APIKEY
+            Binance.options.APIKEY
         );
         proxyRequest(opt, callback);
     };
@@ -187,21 +189,21 @@ let api = function Binance() {
      * @return {undefined}
      */
     const signedRequest = function (url, data = {}, callback, method = 'GET') {
-        if (!options.APIKEY) throw Error('apiRequest: Invalid API Key');
-        if (!options.APISECRET) throw Error('signedRequest: Invalid API Secret');
-        data.timestamp = new Date().getTime() + info.timeOffset;
-        if (typeof data.recvWindow === 'undefined') data.recvWindow = options.recvWindow;
+        if (!Binance.options.APIKEY) throw Error('apiRequest: Invalid API Key');
+        if (!Binance.options.APISECRET) throw Error('signedRequest: Invalid API Secret');
+        data.timestamp = new Date().getTime() + Binance.info.timeOffset;
+        if (typeof data.recvWindow === 'undefined') data.recvWindow = Binance.options.recvWindow;
         let query = Object.keys(data).reduce(function (a, k) {
             a.push(k + '=' + encodeURIComponent(data[k]));
             return a;
         }, []).join('&');
-        let signature = crypto.createHmac('sha256', options.APISECRET).update(query).digest('hex'); // set the HMAC hash header
+        let signature = crypto.createHmac('sha256', Binance.options.APISECRET).update(query).digest('hex'); // set the HMAC hash header
 
         let opt = reqObj(
             url + '?' + query + '&signature=' + signature,
             data,
             method,
-            options.APIKEY
+            Binance.options.APIKEY
         );
         proxyRequest(opt, callback);
     };
@@ -218,7 +220,7 @@ let api = function Binance() {
      */
     const order = function (side, symbol, quantity, price, flags = {}, callback = false) {
         let endpoint = 'v3/order';
-        if (options.test) endpoint += '/test';
+        if (Binance.options.test) endpoint += '/test';
         let opt = {
             symbol: symbol,
             side: side,
@@ -249,14 +251,14 @@ let api = function Binance() {
         signedRequest(base + endpoint, opt, function (error, response) {
             if (!response) {
                 if (callback) callback(error, response);
-                else options.log('Order() error:', error);
+                else Binance.options.log('Order() error:', error);
                 return;
             }
             if (typeof response.msg !== 'undefined' && response.msg === 'Filter failure: MIN_NOTIONAL') {
-                options.log('Order quantity too small. See exchangeInfo() for minimum amounts');
+                Binance.options.log('Order quantity too small. See exchangeInfo() for minimum amounts');
             }
             if (callback) callback(error, response);
-            else options.log(side + '(' + symbol + ',' + quantity + ',' + price + ') ', response);
+            else Binance.options.log(side + '(' + symbol + ',' + quantity + ',' + price + ') ', response);
         }, 'POST');
     };
 
@@ -276,13 +278,13 @@ let api = function Binance() {
 
         /* sockets removed from `subscriptions` during a manual terminate()
            will no longer be at risk of having functions called on them */
-        for (let endpointId in subscriptions) {
-            const ws = subscriptions[endpointId];
+        for (let endpointId in Binance.subscriptions) {
+            const ws = Binance.subscriptions[endpointId];
             if (ws.isAlive) {
                 ws.isAlive = false;
                 if (ws.readyState === WebSocket.OPEN) ws.ping(noop);
             } else {
-                if (options.verbose) options.log('Terminating inactive/broken WebSocket: ' + ws.endpoint);
+                if (Binance.options.verbose) Binance.options.log('Terminating inactive/broken WebSocket: ' + ws.endpoint);
                 if (ws.readyState === WebSocket.OPEN) ws.terminate();
             }
         }
@@ -295,10 +297,10 @@ let api = function Binance() {
      */
     const handleSocketOpen = function (opened_callback) {
         this.isAlive = true;
-        if (Object.keys(subscriptions).length === 0) {
-            socketHeartbeatInterval = setInterval(socketHeartbeat, 30000);
+        if (Object.keys(Binance.subscriptions).length === 0) {
+            Binance.socketHeartbeatInterval = setInterval(socketHeartbeat, 30000);
         }
-        subscriptions[this.endpoint] = this;
+        Binance.subscriptions[this.endpoint] = this;
         if (typeof opened_callback === 'function') opened_callback(this.endpoint);
     };
 
@@ -310,20 +312,20 @@ let api = function Binance() {
      * @return {undefined}
      */
     const handleSocketClose = function (reconnect, code, reason) {
-        delete subscriptions[this.endpoint];
-        if (Object.keys(subscriptions).length === 0) {
-            clearInterval(socketHeartbeatInterval);
+        delete Binance.subscriptions[this.endpoint];
+        if (Object.keys(Binance.subscriptions).length === 0) {
+            clearInterval(Binance.socketHeartbeatInterval);
         }
-        options.log('WebSocket closed: ' + this.endpoint +
+        Binance.options.log('WebSocket closed: ' + this.endpoint +
             (code ? ' (' + code + ')' : '') +
             (reason ? ' ' + reason : ''));
-        if (options.reconnect && this.reconnect && reconnect) {
-            if (parseInt(this.endpoint.length, 10) === 60) options.log('Account data WebSocket reconnecting...');
-            else options.log('WebSocket reconnecting: ' + this.endpoint + '...');
+        if (Binance.options.reconnect && this.reconnect && reconnect) {
+            if (parseInt(this.endpoint.length, 10) === 60) Binance.options.log('Account data WebSocket reconnecting...');
+            else Binance.options.log('WebSocket reconnecting: ' + this.endpoint + '...');
             try {
                 reconnect();
             } catch (error) {
-                options.log('WebSocket reconnect error: ' + error.message);
+                Binance.options.log('WebSocket reconnect error: ' + error.message);
             }
         }
     };
@@ -337,7 +339,7 @@ let api = function Binance() {
 
         /* Errors ultimately result in a `close` event.
            see: https://github.com/websockets/ws/blob/828194044bf247af852b31c49e2800d557fedeff/lib/websocket.js#L126 */
-        options.log('WebSocket error: ' + this.endpoint +
+        Binance.options.log('WebSocket error: ' + this.endpoint +
             (error.code ? ' (' + error.code + ')' : '') +
             (error.message ? ' ' + error.message : ''));
     };
@@ -366,7 +368,7 @@ let api = function Binance() {
 
         if (socksproxy !== false) {
             socksproxy = proxyReplacewithIp(socksproxy);
-            if (options.verbose) options.log('using socks proxy server ' + socksproxy);
+            if (Binance.options.verbose) Binance.options.log('using socks proxy server ' + socksproxy);
             let agent = new SocksProxyAgent({
                 protocol: parseProxy(socksproxy)[0],
                 host: parseProxy(socksproxy)[1],
@@ -374,7 +376,7 @@ let api = function Binance() {
             });
             ws = new WebSocket(stream + endpoint, { agent: agent });
         } else if (httpsproxy !== false) {
-            if (options.verbose) options.log('using proxy server ' + agent);
+            if (Binance.options.verbose) Binance.options.log('using proxy server ' + agent);
             let config = url.parse(httpsproxy);
             let agent = new HttpsProxyAgent(config);
             ws = new WebSocket(stream + endpoint, { agent: agent });
@@ -382,8 +384,8 @@ let api = function Binance() {
             ws = new WebSocket(stream + endpoint);
         }
 
-        if (options.verbose) options.log('Subscribed to ' + endpoint);
-        ws.reconnect = options.reconnect;
+        if (Binance.options.verbose) Binance.options.log('Subscribed to ' + endpoint);
+        ws.reconnect = Binance.options.reconnect;
         ws.endpoint = endpoint;
         ws.isAlive = false;
         ws.on('open', handleSocketOpen.bind(ws, opened_callback));
@@ -394,7 +396,7 @@ let api = function Binance() {
             try {
                 callback(JSON.parse(data));
             } catch (error) {
-                options.log('Parse error: ' + error.message);
+                Binance.options.log('Parse error: ' + error.message);
             }
         });
         return ws;
@@ -417,7 +419,7 @@ let api = function Binance() {
 
         if (socksproxy !== false) {
             socksproxy = proxyReplacewithIp(socksproxy);
-            if (options.verbose) options.log('using socks proxy server ' + socksproxy);
+            if (Binance.options.verbose) Binance.options.log('using socks proxy server ' + socksproxy);
             let agent = new SocksProxyAgent({
                 protocol: parseProxy(socksproxy)[0],
                 host: parseProxy(socksproxy)[1],
@@ -425,7 +427,7 @@ let api = function Binance() {
             });
             ws = new WebSocket(combineStream + queryParams, { agent: agent });
         } else if (httpsproxy !== false) {
-            if (options.verbose) options.log('using proxy server ' + httpsproxy);
+            if (Binance.options.verbose) Binance.options.log('using proxy server ' + httpsproxy);
             let config = url.parse(httpsproxy);
             let agent = new HttpsProxyAgent(config);
             ws = new WebSocket(combineStream + queryParams, { agent: agent });
@@ -433,11 +435,11 @@ let api = function Binance() {
             ws = new WebSocket(combineStream + queryParams);
         }
 
-        ws.reconnect = options.reconnect;
+        ws.reconnect = Binance.options.reconnect;
         ws.endpoint = stringHash(queryParams);
         ws.isAlive = false;
-        if (options.verbose) {
-            options.log('CombinedStream: Subscribed to [' + ws.endpoint + '] ' + queryParams);
+        if (Binance.options.verbose) {
+            Binance.options.log('CombinedStream: Subscribed to [' + ws.endpoint + '] ' + queryParams);
         }
         ws.on('open', handleSocketOpen.bind(ws, opened_callback));
         ws.on('pong', handleSocketHeartbeat);
@@ -447,7 +449,7 @@ let api = function Binance() {
             try {
                 callback(JSON.parse(data).data);
             } catch (error) {
-                options.log('CombinedStream: Parse error: ' + error.message);
+                Binance.options.log('CombinedStream: Parse error: ' + error.message);
             }
         });
         return ws;
@@ -460,7 +462,7 @@ let api = function Binance() {
      * @return {undefined}
      */
     const terminate = function (endpoint, reconnect = false) {
-        let ws = subscriptions[endpoint];
+        let ws = Binance.subscriptions[endpoint];
         if (!ws) return;
         ws.removeAllListeners('message');
         ws.reconnect = reconnect;
@@ -475,11 +477,11 @@ let api = function Binance() {
     const userDataHandler = function (data) {
         let type = data.e;
         if (type === 'outboundAccountInfo') {
-            options.balance_callback(data);
+            Binance.options.balance_callback(data);
         } else if (type === 'executionReport') {
-            if (options.execution_callback) options.execution_callback(data);
+            if (Binance.options.execution_callback) Binance.options.execution_callback(data);
         } else {
-            options.log('Unexpected userData: ' + type);
+            Binance.options.log('Unexpected userData: ' + type);
         }
     };
 
@@ -586,7 +588,7 @@ let api = function Binance() {
         let balances = {};
         if (typeof data === 'undefined') return {};
         if (typeof data.balances === 'undefined') {
-            options.log('balanceData error', data);
+            Binance.options.log('balanceData error', data);
             return {};
         }
         for (let obj of data.balances) {
@@ -608,11 +610,11 @@ let api = function Binance() {
             for (let tick of ticks) {
                 // eslint-disable-next-line no-unused-vars
                 let [time, open, high, low, close, volume, closeTime, assetVolume, trades, buyBaseVolume, buyAssetVolume, ignored] = tick;
-                ohlc[symbol][interval][time] = { open: open, high: high, low: low, close: close, volume: volume };
+                Binance.ohlc[symbol][interval][time] = { open: open, high: high, low: low, close: close, volume: volume };
                 last_time = time;
             }
 
-            info[symbol][interval].timestamp = last_time;
+            Binance.info[symbol][interval].timestamp = last_time;
         }
     };
 
@@ -623,12 +625,12 @@ let api = function Binance() {
      * @return {array} - interval data for given symbol
      */
     const klineConcat = function (symbol, interval) {
-        let output = ohlc[symbol][interval];
-        if (typeof ohlcLatest[symbol][interval].time === 'undefined') return output;
-        const time = ohlcLatest[symbol][interval].time;
-        const last_updated = Object.keys(ohlc[symbol][interval]).pop();
+        let output = Binance.ohlc[symbol][interval];
+        if (typeof Binance.ohlcLatest[symbol][interval].time === 'undefined') return output;
+        const time = Binance.ohlcLatest[symbol][interval].time;
+        const last_updated = Object.keys(Binance.ohlc[symbol][interval]).pop();
         if (time >= last_updated) {
-            output[time] = ohlcLatest[symbol][interval];
+            output[time] = Binance.ohlcLatest[symbol][interval];
             delete output[time].time;
             output[time].isFinal = false;
         }
@@ -650,16 +652,16 @@ let api = function Binance() {
         let { o: open, h: high, l: low, c: close, v: volume, i: interval, x: isFinal, q: quoteVolume, t: time } = ticks; //n:trades, V:buyVolume, Q:quoteBuyVolume
         if (time <= firstTime) return;
         if (!isFinal) {
-            if (typeof ohlcLatest[symbol][interval].time !== 'undefined') {
-                if (ohlcLatest[symbol][interval].time > time) return;
+            if (typeof Binance.ohlcLatest[symbol][interval].time !== 'undefined') {
+                if (Binance.ohlcLatest[symbol][interval].time > time) return;
             }
-            ohlcLatest[symbol][interval] = { open: open, high: high, low: low, close: close, volume: volume, time: time };
+            Binance.ohlcLatest[symbol][interval] = { open: open, high: high, low: low, close: close, volume: volume, time: time };
             return;
         }
         // Delete an element from the beginning so we don't run out of memory
-        const first_updated = Object.keys(ohlc[symbol][interval]).shift();
-        if (first_updated) delete ohlc[symbol][interval][first_updated];
-        ohlc[symbol][interval][time] = { open: open, high: high, low: low, close: close, volume: volume };
+        const first_updated = Object.keys(Binance.ohlc[symbol][interval]).shift();
+        if (first_updated) delete Binance.ohlc[symbol][interval][first_updated];
+        Binance.ohlc[symbol][interval][time] = { open: open, high: high, low: low, close: close, volume: volume };
     };
 
     /**
@@ -690,19 +692,19 @@ let api = function Binance() {
      */
     const depthHandler = function (depth) {
         let symbol = depth.s, obj;
-        let context = depthCacheContext[symbol];
+        let context = Binance.depthCacheContext[symbol];
 
         let updateDepthCache = function () {
             for (obj of depth.b) { //bids
-                depthCache[symbol].bids[obj[0]] = parseFloat(obj[1]);
+                Binance.depthCache[symbol].bids[obj[0]] = parseFloat(obj[1]);
                 if (obj[1] === '0.00000000') {
-                    delete depthCache[symbol].bids[obj[0]];
+                    delete Binance.depthCache[symbol].bids[obj[0]];
                 }
             }
             for (obj of depth.a) { //asks
-                depthCache[symbol].asks[obj[0]] = parseFloat(obj[1]);
+                Binance.depthCache[symbol].asks[obj[0]] = parseFloat(obj[1]);
                 if (obj[1] === '0.00000000') {
-                    delete depthCache[symbol].asks[obj[0]];
+                    delete Binance.depthCache[symbol].asks[obj[0]];
                 }
             }
             context.skipCount = 0;
@@ -718,7 +720,7 @@ let api = function Binance() {
             } else {
                 let msg = 'depthHandler: [' + symbol + '] The depth cache is out of sync.';
                 msg += ' Symptom: Unexpected Update ID. Expected "' + expectedUpdateId + '", got "' + depth.U + '"';
-                if (options.verbose) options.log(msg);
+                if (Binance.options.verbose) Binance.options.log(msg);
                 throw new Error(msg);
             }
         } else if (depth.U > context.snapshotUpdateId + 1) {
@@ -726,7 +728,7 @@ let api = function Binance() {
                This is an out of sync error, and the connection must be torn down and reconnected. */
             let msg = 'depthHandler: [' + symbol + '] The depth cache is out of sync.';
             msg += ' Symptom: Gap between snapshot and first stream data.';
-            if (options.verbose) options.log(msg);
+            if (Binance.options.verbose) Binance.options.log(msg);
             throw new Error(msg);
         } else if (depth.u < context.snapshotUpdateId + 1) {
             /* In this case we've received data that we've already had since the snapshot.
@@ -745,8 +747,8 @@ let api = function Binance() {
      * @return {object} - the depth cache object
      */
     const getDepthCache = function (symbol) {
-        if (typeof depthCache[symbol] === 'undefined') return { bids: {}, asks: {} };
-        return depthCache[symbol];
+        if (typeof Binance.depthCache[symbol] === 'undefined') return { bids: {}, asks: {} };
+        return Binance.depthCache[symbol];
     };
 
     /**
@@ -970,7 +972,7 @@ let api = function Binance() {
         * @return {undefined}
         */
         setOption: function (key, value) {
-            options[key] = value;
+            Binance.options[key] = value;
         },
 
         /**
@@ -979,7 +981,7 @@ let api = function Binance() {
         * @return {undefined}
         */
         getOption: function (key) {
-            return options[key];
+            return Binance.options[key];
         },
 
         /**
@@ -987,7 +989,7 @@ let api = function Binance() {
         * @return {object} - the info object
         */
         getInfo: function () {
-            return info;
+            return Binance.info;
         },
 
         /**
@@ -995,7 +997,7 @@ let api = function Binance() {
         * @return {object} - the options object
         */
         getOptions: function () {
-            return options;
+            return Binance.options;
         },
 
         /**
@@ -1006,18 +1008,18 @@ let api = function Binance() {
         */
         options: function (opt, callback = false) {
             if (typeof opt === 'string') { // Pass json config filename
-                options = JSON.parse(file.readFileSync(opt));
-            } else options = opt;
-            if (typeof options.recvWindow === 'undefined') options.recvWindow = default_options.recvWindow;
-            if (typeof options.useServerTime === 'undefined') options.useServerTime = default_options.useServerTime;
-            if (typeof options.reconnect === 'undefined') options.reconnect = default_options.reconnect;
-            if (typeof options.test === 'undefined') options.test = default_options.test;
-            if (typeof options.log === 'undefined') options.log = default_options.log;
-            if (typeof options.verbose === 'undefined') options.verbose = default_options.verbose;
-            if (options.useServerTime) {
+                Binance.options = JSON.parse(file.readFileSync(opt));
+            } else Binance.options = opt;
+            if (typeof Binance.options.recvWindow === 'undefined') Binance.options.recvWindow = default_options.recvWindow;
+            if (typeof Binance.options.useServerTime === 'undefined') Binance.options.useServerTime = default_options.useServerTime;
+            if (typeof Binance.options.reconnect === 'undefined') Binance.options.reconnect = default_options.reconnect;
+            if (typeof Binance.options.test === 'undefined') Binance.options.test = default_options.test;
+            if (typeof Binance.options.log === 'undefined') Binance.options.log = default_options.log;
+            if (typeof Binance.options.verbose === 'undefined') Binance.options.verbose = default_options.verbose;
+            if (Binance.options.useServerTime) {
                 apiRequest(base + 'v1/time', {}, function (error, response) {
-                    info.timeOffset = response.serverTime - new Date().getTime();
-                    //options.log("server time set: ", response.serverTime, info.timeOffset);
+                    Binance.info.timeOffset = response.serverTime - new Date().getTime();
+                    //Binance.options.log("server time set: ", response.serverTime, Binance.info.timeOffset);
                     if (callback) callback();
                 });
             } else if (callback) callback();
@@ -1153,7 +1155,7 @@ let api = function Binance() {
                 }
                 for (let obj of json) {
                     let quantity = obj.origQty - obj.executedQty;
-                    options.log('cancel order: ' + obj.side + ' ' + symbol + ' ' + quantity + ' @ ' + obj.price + ' #' + obj.orderId);
+                    Binance.options.log('cancel order: ' + obj.side + ' ' + symbol + ' ' + quantity + ' @ ' + obj.price + ' #' + obj.orderId);
                     signedRequest(base + 'v3/order', { symbol: symbol, orderId: obj.orderId }, function (error, data) {
                         if (callback) return callback.call(this, error, data, symbol);
                     }, 'DELETE');
@@ -1202,12 +1204,12 @@ let api = function Binance() {
 
             let opt = {
                 url: base + 'v3/ticker/price' + params,
-                timeout: options.recvWindow
+                timeout: Binance.options.recvWindow
             };
 
             if (socksproxy !== false) {
                 socksproxy = proxyReplacewithIp(socksproxy);
-                if (options.verbose) options.log('using socks proxy server ' + socksproxy);
+                if (Binance.options.verbose) Binance.options.log('using socks proxy server ' + socksproxy);
                 opt.agentClass = SocksProxyAgent;
                 opt.agentOptions = {
                     protocol: parseProxy(socksproxy)[0],
@@ -1241,12 +1243,12 @@ let api = function Binance() {
 
             let opt = {
                 url: base + 'v3/ticker/bookTicker' + params,
-                timeout: options.recvWindow
+                timeout: Binance.options.recvWindow
             };
 
             if (socksproxy !== false) {
                 socksproxy = proxyReplacewithIp(socksproxy);
-                if (options.verbose) options.log('using socks proxy server ' + socksproxy);
+                if (Binance.options.verbose) Binance.options.log('using socks proxy server ' + socksproxy);
                 opt.agentClass = SocksProxyAgent;
                 opt.agentOptions = {
                     protocol: parseProxy(socksproxy)[0],
@@ -1398,8 +1400,8 @@ let api = function Binance() {
         */
         useServerTime: function (callback = false) {
             apiRequest(base + 'v1/time', {}, function (error, response) {
-                info.timeOffset = response.serverTime - new Date().getTime();
-                //options.log("server time set: ", response.serverTime, info.timeOffset);
+                Binance.info.timeOffset = response.serverTime - new Date().getTime();
+                //Binance.options.log("server time set: ", response.serverTime, Binance.info.timeOffset);
                 if (callback) callback();
             });
         },
@@ -1480,7 +1482,7 @@ let api = function Binance() {
         */
         ohlc: function (chart) {
             let open = [], high = [], low = [], close = [], volume = [];
-            for (let timestamp in chart) { //ohlc[symbol][interval]
+            for (let timestamp in chart) { //Binance.ohlc[symbol][interval]
                 let obj = chart[timestamp];
                 open.push(parseFloat(obj.open));
                 high.push(parseFloat(obj.high));
@@ -1554,13 +1556,13 @@ let api = function Binance() {
             */
             userData: function userData(callback, execution_callback = false, subscribed_callback = false) {
                 let reconnect = function () {
-                    if (options.reconnect) userData(callback, execution_callback, subscribed_callback);
+                    if (Binance.options.reconnect) userData(callback, execution_callback, subscribed_callback);
                 };
                 apiRequest(base + 'v1/userDataStream', {}, function (error, response) {
-                    options.listenKey = response.listenKey;
+                    Binance.options.listenKey = response.listenKey;
                     setTimeout(function userDataKeepAlive() { // keepalive
                         try {
-                            apiRequest(base + 'v1/userDataStream?listenKey=' + options.listenKey, {}, function (err) {
+                            apiRequest(base + 'v1/userDataStream?listenKey=' + Binance.options.listenKey, {}, function (err) {
                                 if (err) setTimeout(userDataKeepAlive, 60000); // retry in 1 minute
                                 else setTimeout(userDataKeepAlive, 60 * 30 * 1000); // 30 minute keepalive
                             }, 'PUT');
@@ -1568,9 +1570,9 @@ let api = function Binance() {
                             setTimeout(userDataKeepAlive, 60000); // retry in 1 minute
                         }
                     }, 60 * 30 * 1000); // 30 minute keepalive
-                    options.balance_callback = callback;
-                    options.execution_callback = execution_callback;
-                    const subscription = subscribe(options.listenKey, userDataHandler, reconnect);
+                    Binance.options.balance_callback = callback;
+                    Binance.options.execution_callback = execution_callback;
+                    const subscription = subscribe(Binance.options.listenKey, userDataHandler, reconnect);
                     if (subscribed_callback) subscribed_callback(subscription.endpoint);
                 }, 'POST');
             },
@@ -1602,7 +1604,7 @@ let api = function Binance() {
             * @return {array} array of web socket subscriptions
             */
             subscriptions: function () {
-                return subscriptions;
+                return Binance.subscriptions;
             },
 
             /**
@@ -1611,7 +1613,7 @@ let api = function Binance() {
             * @return {undefined}
             */
             terminate: function (endpoint) {
-                if (options.verbose) options.log('WebSocket terminating:', endpoint);
+                if (Binance.options.verbose) Binance.options.log('WebSocket terminating:', endpoint);
                 return terminate(endpoint);
             },
 
@@ -1623,7 +1625,7 @@ let api = function Binance() {
             */
             depth: function depth(symbols, callback) {
                 let reconnect = function () {
-                    if (options.reconnect) depth(symbols, callback);
+                    if (Binance.options.reconnect) depth(symbols, callback);
                 };
 
                 let subscription;
@@ -1649,30 +1651,30 @@ let api = function Binance() {
             */
             depthCache: function depthCacheFunction(symbols, callback, limit = 500) {
                 let reconnect = function () {
-                    if (options.reconnect) depthCacheFunction(symbols, callback, limit);
+                    if (Binance.options.reconnect) depthCacheFunction(symbols, callback, limit);
                 };
 
                 let symbolDepthInit = function (symbol) {
-                    if (typeof depthCacheContext[symbol] === 'undefined') depthCacheContext[symbol] = {};
+                    if (typeof Binance.depthCacheContext[symbol] === 'undefined') Binance.depthCacheContext[symbol] = {};
 
-                    let context = depthCacheContext[symbol];
+                    let context = Binance.depthCacheContext[symbol];
                     context.snapshotUpdateId = null;
                     context.lastEventUpdateId = null;
                     context.messageQueue = [];
 
-                    depthCache[symbol] = { bids: {}, asks: {} };
+                    Binance.depthCache[symbol] = { bids: {}, asks: {} };
                 };
 
                 let assignEndpointIdToContext = function (symbol, endpointId) {
-                    if (depthCacheContext[symbol]) {
-                        let context = depthCacheContext[symbol];
+                    if (Binance.depthCacheContext[symbol]) {
+                        let context = Binance.depthCacheContext[symbol];
                         context.endpointId = endpointId;
                     }
                 }
 
                 let handleDepthStreamData = function (depth) {
                     let symbol = depth.s;
-                    let context = depthCacheContext[symbol];
+                    let context = Binance.depthCacheContext[symbol];
                     if (context.messageQueue && !context.snapshotUpdateId) {
                         context.messageQueue.push(depth);
                     } else {
@@ -1681,7 +1683,7 @@ let api = function Binance() {
                         } catch (err) {
                             return terminate(context.endpointId, true);
                         }
-                        if (callback) callback(symbol, depthCache[symbol], context);
+                        if (callback) callback(symbol, Binance.depthCache[symbol], context);
                     }
                 };
 
@@ -1701,9 +1703,9 @@ let api = function Binance() {
                     // Get previous store symbol
                     let symbol = json.symb;
                     // Initialize depth cache from snapshot
-                    depthCache[symbol] = depthData(json);
+                    Binance.depthCache[symbol] = depthData(json);
                     // Prepare depth cache context
-                    let context = depthCacheContext[symbol];
+                    let context = Binance.depthCacheContext[symbol];
                     context.snapshotUpdateId = json.lastUpdateId;
                     context.messageQueue = context.messageQueue.filter(depth => depth.u > context.snapshotUpdateId);
                     // Process any pending depth messages
@@ -1718,7 +1720,7 @@ let api = function Binance() {
                         }
                     }
                     delete context.messageQueue;
-                    if (callback) callback(symbol, depthCache[symbol]);
+                    if (callback) callback(symbol, Binance.depthCache[symbol]);
                 };
 
                 /* If an array of symbols are sent we use a combined stream connection rather.
@@ -1734,7 +1736,7 @@ let api = function Binance() {
                     });
                     subscription = subscribeCombined(streams, handleDepthStreamData, reconnect, function () {
                         async.mapLimit(symbols, symbols.length, getSymbolDepthSnapshot, (err, results) => {
-                            if (err) throw err
+                            if (err) throw err;
                             results.forEach(updateSymbolDepthCache);
                         });
                     });
@@ -1744,7 +1746,7 @@ let api = function Binance() {
                     symbolDepthInit(symbol);
                     subscription = subscribe(symbol.toLowerCase() + '@depth', handleDepthStreamData, reconnect, function () {
                         async.mapLimit([symbol], 1, getSymbolDepthSnapshot, (err, results) => {
-                            if (err) throw err
+                            if (err) throw err;
                             results.forEach(updateSymbolDepthCache);
                         });
                     });
@@ -1761,7 +1763,7 @@ let api = function Binance() {
             */
             aggTrades: function trades(symbols, callback) {
                 let reconnect = function () {
-                    if (options.reconnect) trades(symbols, callback);
+                    if (Binance.options.reconnect) trades(symbols, callback);
                 };
 
                 let subscription;
@@ -1786,7 +1788,7 @@ let api = function Binance() {
             */
             trades: function trades(symbols, callback) {
                 let reconnect = function () {
-                    if (options.reconnect) trades(symbols, callback);
+                    if (Binance.options.reconnect) trades(symbols, callback);
                 };
 
                 let subscription;
@@ -1812,29 +1814,29 @@ let api = function Binance() {
             */
             chart: function chart(symbols, interval, callback) {
                 let reconnect = function () {
-                    if (options.reconnect) chart(symbols, interval, callback);
+                    if (Binance.options.reconnect) chart(symbols, interval, callback);
                 };
 
                 let symbolChartInit = function (symbol) {
-                    if (typeof info[symbol] === 'undefined') info[symbol] = {};
-                    if (typeof info[symbol][interval] === 'undefined') info[symbol][interval] = {};
-                    if (typeof ohlc[symbol] === 'undefined') ohlc[symbol] = {};
-                    if (typeof ohlc[symbol][interval] === 'undefined') ohlc[symbol][interval] = {};
-                    if (typeof ohlcLatest[symbol] === 'undefined') ohlcLatest[symbol] = {};
-                    if (typeof ohlcLatest[symbol][interval] === 'undefined') ohlcLatest[symbol][interval] = {};
-                    if (typeof klineQueue[symbol] === 'undefined') klineQueue[symbol] = {};
-                    if (typeof klineQueue[symbol][interval] === 'undefined') klineQueue[symbol][interval] = [];
-                    info[symbol][interval].timestamp = 0;
+                    if (typeof Binance.info[symbol] === 'undefined') Binance.info[symbol] = {};
+                    if (typeof Binance.info[symbol][interval] === 'undefined') Binance.info[symbol][interval] = {};
+                    if (typeof Binance.ohlc[symbol] === 'undefined') Binance.ohlc[symbol] = {};
+                    if (typeof Binance.ohlc[symbol][interval] === 'undefined') Binance.ohlc[symbol][interval] = {};
+                    if (typeof Binance.ohlcLatest[symbol] === 'undefined') Binance.ohlcLatest[symbol] = {};
+                    if (typeof Binance.ohlcLatest[symbol][interval] === 'undefined') Binance.ohlcLatest[symbol][interval] = {};
+                    if (typeof Binance.klineQueue[symbol] === 'undefined') Binance.klineQueue[symbol] = {};
+                    if (typeof Binance.klineQueue[symbol][interval] === 'undefined') Binance.klineQueue[symbol][interval] = [];
+                    Binance.info[symbol][interval].timestamp = 0;
                 }
 
                 let handleKlineStreamData = function (kline) {
                     let symbol = kline.s;
-                    if (!info[symbol][interval].timestamp) {
-                        if (typeof (klineQueue[symbol][interval]) !== 'undefined' && kline !== null) {
-                            klineQueue[symbol][interval].push(kline);
+                    if (!Binance.info[symbol][interval].timestamp) {
+                        if (typeof (Binance.klineQueue[symbol][interval]) !== 'undefined' && kline !== null) {
+                            Binance.klineQueue[symbol][interval].push(kline);
                         }
                     } else {
-                        //options.log('@klines at ' + kline.k.t);
+                        //Binance.options.log('@klines at ' + kline.k.t);
                         klineHandler(symbol, kline);
                         if (callback) callback(symbol, interval, klineConcat(symbol, interval));
                     }
@@ -1843,10 +1845,10 @@ let api = function Binance() {
                 let getSymbolKlineSnapshot = function (symbol) {
                     publicRequest(base + 'v1/klines', { symbol: symbol, interval: interval }, function (error, data) {
                         klineData(symbol, interval, data);
-                        //options.log('/klines at ' + info[symbol][interval].timestamp);
-                        if (typeof klineQueue[symbol][interval] !== 'undefined') {
-                            for (let kline of klineQueue[symbol][interval]) klineHandler(symbol, kline, info[symbol][interval].timestamp);
-                            delete klineQueue[symbol][interval];
+                        //Binance.options.log('/klines at ' + Binance.info[symbol][interval].timestamp);
+                        if (typeof Binance.klineQueue[symbol][interval] !== 'undefined') {
+                            for (let kline of Binance.klineQueue[symbol][interval]) klineHandler(symbol, kline, Binance.info[symbol][interval].timestamp);
+                            delete Binance.klineQueue[symbol][interval];
                         }
                         if (callback) callback(symbol, interval, klineConcat(symbol, interval));
                     });
@@ -1879,7 +1881,7 @@ let api = function Binance() {
             */
             candlesticks: function candlesticks(symbols, interval, callback) {
                 let reconnect = function () {
-                    if (options.reconnect) candlesticks(symbols, interval, callback);
+                    if (Binance.options.reconnect) candlesticks(symbols, interval, callback);
                 };
 
                 /* If an array of symbols are sent we use a combined stream connection rather.
@@ -1906,7 +1908,7 @@ let api = function Binance() {
             */
             miniTicker: function miniTicker(callback) {
                 let reconnect = function () {
-                    if (options.reconnect) miniTicker(callback);
+                    if (Binance.options.reconnect) miniTicker(callback);
                 };
                 let subscription = subscribe('!miniTicker@arr', function (data) {
                     let markets = {};
@@ -1934,7 +1936,7 @@ let api = function Binance() {
             */
             prevDay: function prevDay(symbols, callback) {
                 let reconnect = function () {
-                    if (options.reconnect) prevDay(symbols, callback);
+                    if (Binance.options.reconnect) prevDay(symbols, callback);
                 };
 
                 let subscription;
