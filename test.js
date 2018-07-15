@@ -14,7 +14,7 @@ const WARN_SHOULD_BE_NOT_NULL = 'should not be null';
 const WARN_SHOULD_HAVE_KEY = 'should have key ';
 const WARN_SHOULD_NOT_HAVE_KEY = 'should not have key ';
 const WARN_SHOULD_BE_UNDEFINED = 'should be undefined';
-const WARN_SHOULD_BE_TYPE = 'should be a string ';
+const WARN_SHOULD_BE_TYPE = 'should be a ';
 const TIMEOUT = 10000;
 
 let chai = require('chai');
@@ -242,7 +242,7 @@ describe('Sell', function () {
   }).timeout(TIMEOUT);
 });
 
-describe('MarketiBuy', function () {
+describe('MarketBuy', function () {
   it('Attempt to buy ETH at market price', function (done) {
     let quantity = 1;
     assert(typeof (binance.marketBuy('BNBBTC', quantity)) === 'undefined', WARN_SHOULD_BE_UNDEFINED);
@@ -750,7 +750,7 @@ describe('Deposit history', function () {
 });
 
 describe('Deposit address', function () {
-  it('Attempt to get deposit address for BNB', function (done) {
+  it('Attempt to get deposit address for BTC', function (done) {
     binance.depositAddress('BTC', (error, result) => {
       debug(error);
       debug(result);

@@ -52,7 +52,7 @@ let api = function Binance() {
 
     /**
      * Replaces socks connection uri hostname with IP address
-     * @param {string} connString - socks conection string
+     * @param {string} connString - socks connection string
      * @return {string} modified string with ip address
      */
     const proxyReplacewithIp = function (connString) {
@@ -60,8 +60,8 @@ let api = function Binance() {
     }
 
     /**
-     * returns an array in the form of [host, port]
-     * @param {string} connString - conection string
+     * Returns an array in the form of [host, port]
+     * @param {string} connString - connection string
      * @return {array} array of host and port
      */
     const parseProxy = function (connString) {
@@ -72,7 +72,7 @@ let api = function Binance() {
     }
 
     /**
-     * Checks to see of the boject is iterable
+     * Checks to see of the object is iterable
      * @param {object} obj - The object check
      * @return {boolean} true or false is iterable
      */
@@ -291,7 +291,7 @@ let api = function Binance() {
     };
 
     /**
-     * Called when socket is opened, subscriptiosn are registered for later reference
+     * Called when socket is opened, subscriptions are registered for later reference
      * @param {function} opened_callback - a callback function
      * @return {undefined}
      */
@@ -305,7 +305,7 @@ let api = function Binance() {
     };
 
     /**
-     * Called when socket is closed, subscriptiosn are deregistered for later reference
+     * Called when socket is closed, subscriptions are de-registered for later reference
      * @param {boolean} reconnect - true or false to reconnect the socket
      * @param {string} code - code associated with the socket
      * @param {string} reason - string with the response
@@ -345,7 +345,7 @@ let api = function Binance() {
     };
 
     /**
-     * Called each time the socket heartsbeats
+     * Called on each socket heartbeat
      * @return {undefined}
      */
     const handleSocketHeartbeat = function () {
@@ -355,8 +355,8 @@ let api = function Binance() {
     /**
      * Used to subscribe to a single websocket endpoint
      * @param {string} endpoint - endpoint to connect to
-     * @param {function} callback - the function to called when infomration is received
-     * @param {boolean} reconnect - whether to reocnect on disconnect
+     * @param {function} callback - the function to called when information is received
+     * @param {boolean} reconnect - whether to reconnect on disconnect
      * @param {object} opened_callback - the function to called when opened
      * @return {WebSocket} - websocket reference
      */
@@ -405,8 +405,8 @@ let api = function Binance() {
     /**
      * Used to subscribe to a combined websocket endpoint
      * @param {string} streams - streams to connect to
-     * @param {function} callback - the function to called when infomration is received
-     * @param {boolean} reconnect - whether to reocnect on disconnect
+     * @param {function} callback - the function to called when information is received
+     * @param {boolean} reconnect - whether to reconnect on disconnect
      * @param {object} opened_callback - the function to called when opened
      * @return {WebSocket} - websocket reference
      */
@@ -470,7 +470,7 @@ let api = function Binance() {
     }
 
     /**
-     * Used as part of the userdata websockets callback
+     * Used as part of the user data websockets callback
      * @param {object} data - user data callback data type
      * @return {undefined}
      */
@@ -486,7 +486,7 @@ let api = function Binance() {
     };
 
     /**
-     * Parses the previous day stream and calls the user callback with fiendly object
+     * Parses the previous day stream and calls the user callback with friendly object
      * @param {object} data - user data callback data type
      * @param {function} callback - user data callback data type
      * @return {undefined}
@@ -598,7 +598,7 @@ let api = function Binance() {
     };
 
     /**
-     * Used by web sockets depth and populates ohlc and info
+     * Used by web sockets depth and populates OHLC and info
      * @param {string} symbol - symbol to get candlestick info
      * @param {string} interval - time interval, 1m, 3m, 5m ....
      * @param {array} ticks - tick array
@@ -824,7 +824,7 @@ let api = function Binance() {
         },
 
         /**
-        * Gets percetage of given numbers
+        * Gets percentage of given numbers
         * @param {float} min - the smaller number
         * @param {float} max - the bigger number
         * @param {int} width - percentage width
@@ -844,7 +844,7 @@ let api = function Binance() {
         },
 
         /**
-        * Reversses the keys of an object
+        * Reverses the keys of an object
         * @param {object} object - the object
         * @return {object} - the object
         */
@@ -966,7 +966,7 @@ let api = function Binance() {
         },
 
         /**
-        * Sets an option fiven a key and value
+        * Sets an option given a key and value
         * @param {string} key - the key to set
         * @param {object} value - the value of the key
         * @return {undefined}
@@ -976,7 +976,7 @@ let api = function Binance() {
         },
 
         /**
-        * Gets an option fiven a key
+        * Gets an option given a key
         * @param {string} key - the key to set
         * @return {undefined}
         */
@@ -985,7 +985,7 @@ let api = function Binance() {
         },
 
         /**
-        * returns the entire info object
+        * Returns the entire info object
         * @return {object} - the info object
         */
         getInfo: function () {
@@ -993,7 +993,7 @@ let api = function Binance() {
         },
 
         /**
-        * returns the entire options object
+        * Returns the entire options object
         * @return {object} - the options object
         */
         getOptions: function () {
@@ -1001,7 +1001,7 @@ let api = function Binance() {
         },
 
         /**
-        * Gets an option fiven a key
+        * Gets an option given a key
         * @param {object} opt - the object with the class configuration
         * @param {function} callback - the callback function
         * @return {undefined}
@@ -1031,9 +1031,9 @@ let api = function Binance() {
         * Creates an order
         * @param {string} side - BUY or SELL
         * @param {string} symbol - the symbol to buy
-        * @param {numeric} quantity - the quanitity required
+        * @param {numeric} quantity - the quantity required
         * @param {numeric} price - the price to pay for each unit
-        * @param {object} flags - addtional buy order flags
+        * @param {object} flags - aadditionalbuy order flags
         * @param {function} callback - the callback function
         * @return {undefined}
         */
@@ -1044,9 +1044,9 @@ let api = function Binance() {
         /**
         * Creates a buy order
         * @param {string} symbol - the symbol to buy
-        * @param {numeric} quantity - the quanitity required
+        * @param {numeric} quantity - the quantity required
         * @param {numeric} price - the price to pay for each unit
-        * @param {object} flags - addtional buy order flags
+        * @param {object} flags - additional buy order flags
         * @param {function} callback - the callback function
         * @return {undefined}
         */
@@ -1057,9 +1057,9 @@ let api = function Binance() {
         /**
         * Creates a sell order
         * @param {string} symbol - the symbol to sell
-        * @param {numeric} quantity - the quanitity required
+        * @param {numeric} quantity - the quantity required
         * @param {numeric} price - the price to sell each unit for
-        * @param {object} flags - addtional sell order flags
+        * @param {object} flags - additional order flags
         * @param {function} callback - the callback function
         * @return {undefined}
         */
@@ -1070,8 +1070,8 @@ let api = function Binance() {
         /**
         * Creates a market buy order
         * @param {string} symbol - the symbol to buy
-        * @param {numeric} quantity - the quanitity required
-        * @param {object} flags - addtional buy order flags
+        * @param {numeric} quantity - the quantity required
+        * @param {object} flags - additional buy order flags
         * @param {function} callback - the callback function
         * @return {undefined}
         */
@@ -1087,8 +1087,8 @@ let api = function Binance() {
         /**
         * Creates a market sell order
         * @param {string} symbol - the symbol to sell
-        * @param {numeric} quantity - the quanitity required
-        * @param {object} flags - addtional sell order flags
+        * @param {numeric} quantity - the quantity required
+        * @param {object} flags - additional sell order flags
         * @param {function} callback - the callback function
         * @return {undefined}
         */
@@ -1119,7 +1119,7 @@ let api = function Binance() {
         * @param {string} symbol - the symbol to check
         * @param {string} orderid - the orderid to check
         * @param {function} callback - the callback function
-        * @param {object} flags - any addtional flags
+        * @param {object} flags - any additional flags
         * @return {undefined}
         */
         orderStatus: function (symbol, orderid, callback, flags = {}) {
@@ -1143,7 +1143,7 @@ let api = function Binance() {
         },
 
         /**
-        * Cancels all order of a given sumbol
+        * Cancels all order of a given symbol
         * @param {string} symbol - the symbol to cancel all orders for
         * @param {function} callback - the callback function
         * @return {undefined}
@@ -1164,10 +1164,10 @@ let api = function Binance() {
         },
 
         /**
-        * Gets all order of a given sumbol
+        * Gets all order of a given symbol
         * @param {string} symbol - the symbol
         * @param {function} callback - the callback function
-        * @param {object} options - addtional options
+        * @param {object} options - additional options
         * @return {undefined}
         */
         allOrders: function (symbol, callback, options = {}) {
@@ -1178,7 +1178,7 @@ let api = function Binance() {
         },
 
         /**
-        * Gets the depth infomrmation for a given symbol
+        * Gets the depth information for a given symbol
         * @param {string} symbol - the symbol
         * @param {function} callback - the callback function
         * @param {int} limit - limit the number of returned orders
@@ -1230,7 +1230,7 @@ let api = function Binance() {
         },
 
         /**
-        * Gets the booktickers of given symbol(s)
+        * Gets the book tickers of given symbol(s)
         * @param {string} symbol - the symbol
         * @param {function} callback - the callback function
         * @return {undefined}
@@ -1332,7 +1332,7 @@ let api = function Binance() {
         /**
         * Get the deposit history
         * @param {function} callback - the callback function
-        * @param {object} params - addtional aprams
+        * @param {object} params - additional params
         * @return {undefined}
         */
         depositHistory: function (callback, params = {}) {
@@ -1383,7 +1383,7 @@ let api = function Binance() {
         * Get trades for a given symbol
         * @param {string} symbol - the symbol
         * @param {function} callback - the callback function
-        * @param {object} options - addtional optoins
+        * @param {object} options - additional options
         * @return {undefined}
         */
         trades: function (symbol, callback, options = {}) {
@@ -1394,7 +1394,7 @@ let api = function Binance() {
         },
 
         /**
-        * Tell api to iuse the server time to offset time indexes
+        * Tell api to use the server time to offset time indexes
         * @param {function} callback - the callback function
         * @return {undefined}
         */
@@ -1416,7 +1416,7 @@ let api = function Binance() {
         },
 
         /**
-        * Get agg trads for given symbol
+        * Get agg trades for given symbol
         * @param {string} symbol - the symbol
         * @param {object} options - addtional optoins
         * @param {function} callback - the callback function
@@ -1453,9 +1453,9 @@ let api = function Binance() {
         },
 
         /**
-        * convert chart data to highstock array [timestamp,open,high,low,close]
+        * Convert chart data to highstock array [timestamp,open,high,low,close]
         * @param {object} chart - the chart
-        * @param {boolean} include_volume - to include the voume or not
+        * @param {boolean} include_volume - to include the volume or not
         * @return {array} - an array
         */
         highstock: function (chart, include_volume = false) {
@@ -1476,9 +1476,9 @@ let api = function Binance() {
         },
 
         /**
-        * Populates hte ohlc infomration
+        * Populates hte OHLC information
         * @param {object} chart - the chart
-        * @return {object} - object with cnalde information
+        * @return {object} - object with candle information
         */
         ohlc: function (chart) {
             let open = [], high = [], low = [], close = [], volume = [];
@@ -1494,12 +1494,12 @@ let api = function Binance() {
         },
 
         /**
-        * gets the candles information for a given symbol
+        * Gets the candles information for a given symbol
         * intervals: 1m,3m,5m,15m,30m,1h,2h,4h,6h,8h,12h,1d,3d,1w,1M
         * @param {string} symbol - the symbol
         * @param {function} interval - the callback function
         * @param {function} callback - the callback function
-        * @param {object} options - addtitional options
+        * @param {object} options - additional options
         * @return {undefined}
         */
         candlesticks: function (symbol, interval = '5m', callback = false, options = { limit: 500 }) {
@@ -1535,7 +1535,7 @@ let api = function Binance() {
         },
 
         /**
-        * gets the market asset of given symbol
+        * Gets the market asset of given symbol
         * @param {string} symbol - the public api endpoint
         * @return {undefined}
         */
@@ -1646,7 +1646,7 @@ let api = function Binance() {
             * Websocket depth cache
             * @param {array/string} symbols - an array or string of symbols to query
             * @param {function} callback - callback function
-            * @param {int} limit - the number of entires
+            * @param {int} limit - the number of entries
             * @return {string} the websocket endpoint
             */
             depthCache: function depthCacheFunction(symbols, callback, limit = 500) {
@@ -1902,7 +1902,7 @@ let api = function Binance() {
             },
 
             /**
-            * Websocket miniticker
+            * Websocket mini ticker
             * @param {function} callback - callback function
             * @return {string} the websocket endpoint
             */
