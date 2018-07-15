@@ -20,7 +20,7 @@ npm install node-binance-api --save
 
 #### Getting started
 ```javascript
-const binance = require('node-binance-api').options({
+const binance = require('node-binance-api')().options({
   APIKEY: '<key>',
   APISECRET: '<secret>',
   useServerTime: true, // If you get timestamp errors, synchronize to server time at startup
@@ -1590,18 +1590,19 @@ binance.withdraw("BTC", "1C5gqLRs96Xq4V2ZZAR1347yUCpHie7sa", 0.2);
 
 ### Proxy Support
 For the standard REST API the https_proxy or socks_proxy variable is honoured
+*NOTE* proxy package has no dns name support, please use proxy IP address
 
 **Linux**
 ```bash
-export https_proxy=http://yourproxy.com:port
-#export socks_proxy=socks://yourproxy.com:port
+export https_proxy=http://ip:port
+#export socks_proxy=socks://ip:port
 # run your app
 ```
 
 **Windows**
 ```bash
-set https_proxy=http://yourproxy.com:port
-#set socks_proxy=socks://yourproxy.com:port
+set https_proxy=http://ip:port
+#set socks_proxy=socks://ip:port
 # run your app
 ```
 
@@ -1609,13 +1610,13 @@ For web sockets currently only the socks method is functional at this time
 
 **linux**
 ```bash
-export socks_proxy=socks://yourproxy.com:port
+export socks_proxy=socks://ip:port
 # run your app
 ```
 
 **windows**
 ```bash
-set socks_proxy=socks://yourproxy.com:port
+set socks_proxy=socks://ip:port
 # run your app
 ```
 
