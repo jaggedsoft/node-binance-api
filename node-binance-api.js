@@ -596,7 +596,29 @@ let api = function Binance() {
         }
         return balances;
     };
-
+     
+     /**ACTIVE
+     * Used by balance to get the non-zero balance data
+     * @param {array} data - account info object
+     * @return {object} - balances hel with available, onorder amounts
+     */
+    const activeBalanceData = function(data) {
+        let activeBalances = {};
+        if ( typeof data === 'undefined' ) return {};
+        if ( typeof data.balances === 'undefined' ) {
+            options.log('balanceData error', data);
+            return {};
+        }
+        for ( let obj of data.balances ) {
+          var avail = Number(obj.free);
+          var inOrder = Number(obj.locked);
+          if (avail !=0 || inOrder !=0) {
+            activeBalances[obj.asset] = {available:avail, onOrder:inOrder};
+          }
+        }
+        return activeBalances;
+    };
+  
     /**
      * Used by web sockets depth and populates OHLC and info
      * @param {string} symbol - symbol to get candlestick info
@@ -1365,7 +1387,7 @@ let api = function Binance() {
         * @return {undefined}
         */
         account: function (callback) {
-            signedRequest(base + 'v3/account', {}, callback);
+                                signedRequest(base + 'v3/account', {}, callback);
         },
 
         /**
@@ -1379,6 +1401,17 @@ let api = function Binance() {
             });
         },
 
+        /**
+        * Get the NON-zero balance data
+        * @param {function} callback - the callback function
+        * @return {undefined}
+        */
+        activeBalance: function(callback) {
+            signedRequest(base+'v3/account', {}, function(error, data) {
+                if ( callback ) callback( error, activeBalanceData(data) );
+            });
+        },
+        
         /**
         * Get trades for a given symbol
         * @param {string} symbol - the symbol
