@@ -1651,7 +1651,12 @@ let api = function Binance() {
             */
             depthCache: function depthCacheFunction(symbols, callback, limit = 500) {
                 let reconnect = function () {
-                    if (Binance.options.reconnect) depthCacheFunction(symbols, callback, limit);
+                    if (Binance.options.reconnect) {
+                      console.log('Reconnecting here------------------test');
+                      setTimeout(() => {
+                        depthCacheFunction(symbols, callback, limit)
+                      }, 20000);
+                    }
                 };
 
                 let symbolDepthInit = function (symbol) {
