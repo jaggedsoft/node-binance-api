@@ -1735,7 +1735,7 @@ let api = function Binance() {
                         return symbol.toLowerCase() + '@depth';
                     });
                     subscription = subscribeCombined(streams, handleDepthStreamData, reconnect, function () {
-                        async.mapLimit(symbols, symbols.length, getSymbolDepthSnapshot, (err, results) => {
+                        async.mapLimit(symbols, 50, getSymbolDepthSnapshot, (err, results) => {
                             if (err) throw err;
                             results.forEach(updateSymbolDepthCache);
                         });
