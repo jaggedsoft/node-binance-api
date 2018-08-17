@@ -1324,8 +1324,8 @@ let api = function Binance() {
         * @param {string} asset - the asset symbol
         * @return {undefined}
         */
-        withdrawHistory: function (callback, asset = false) {
-            let params = asset ? { asset: asset } : {};
+        withdrawHistory: function (callback, params = {}) {
+            if (typeof params === 'string') params = { asset: params }; // support limit and fromId parameters.
             signedRequest(wapi + 'v3/withdrawHistory.html', params, callback);
         },
 
