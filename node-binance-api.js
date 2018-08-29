@@ -1360,6 +1360,26 @@ let api = function Binance() {
         },
 
         /**
+        * Get the trade fee
+        * @param {function} callback - the callback function
+        * @param {string} symbol (optional)
+        * @return {undefined}
+        */
+        tradeFee: function (callback, symbol = false) {
+            let params = symbol ? {symbol:symbol} : {};
+            signedRequest(wapi + 'v3/tradeFee.html', params, callback);
+        },
+
+        /**
+        * Fetch asset detail (minWithdrawAmount, depositStatus, withdrawFee, withdrawStatus, depositTip)
+        * @param {function} callback - the callback function
+        * @return {undefined}
+        */
+        assetDetail: function (callback) {
+            signedRequest(wapi + 'v3/assetDetail.html', {}, callback);
+        },
+
+        /**
         * Get the account
         * @param {function} callback - the callback function
         * @return {undefined}
