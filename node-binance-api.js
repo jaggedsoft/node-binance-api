@@ -1652,8 +1652,9 @@ let api = function Binance() {
             depthCache: function depthCacheFunction(symbols, callback, limit = 500) {
                 let reconnect = function () {
                     if (Binance.options.reconnect) {
-                      console.log('Reconnecting here------------------test');
+                      console.log('Reconnecting called', Date.now());
                       setTimeout(() => {
+                        console.log('calling depth cache function now', Date.now());
                         depthCacheFunction(symbols, callback, limit)
                       }, 20000);
                     }
@@ -1740,8 +1741,11 @@ let api = function Binance() {
                         return symbol.toLowerCase() + '@depth';
                     });
                     subscription = subscribeCombined(streams, handleDepthStreamData, reconnect, function () {
-                        async.mapLimit(symbols, 50, getSymbolDepthSnapshot, (err, results) => {
-                            if (err) throw err;
+                        async.mapLimit(symbols, 10, getSymbolDepthSnapshot, (err, results) => {
+                            if (err) {
+                              console.log('Error----fuckin shit:', err);
+                              throw err;
+                            }
                             results.forEach(updateSymbolDepthCache);
                         });
                     });
