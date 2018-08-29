@@ -1321,11 +1321,11 @@ let api = function Binance() {
         /**
         * Get the Withdraws history for a given asset
         * @param {function} callback - the callback function
-        * @param {string} asset - the asset symbol
+        * @param {object} params - supports limit and fromId parameters
         * @return {undefined}
         */
-        withdrawHistory: function (callback, asset = false) {
-            let params = asset ? { asset: asset } : {};
+        withdrawHistory: function (callback, params = {}) {
+            if (typeof params === 'string') params = { asset: params };
             signedRequest(wapi + 'v3/withdrawHistory.html', params, callback);
         },
 
@@ -1357,6 +1357,26 @@ let api = function Binance() {
         */
         accountStatus: function (callback) {
             signedRequest(wapi + 'v3/accountStatus.html', {}, callback);
+        },
+
+        /**
+        * Get the trade fee
+        * @param {function} callback - the callback function
+        * @param {string} symbol (optional)
+        * @return {undefined}
+        */
+        tradeFee: function (callback, symbol = false) {
+            let params = symbol ? {symbol:symbol} : {};
+            signedRequest(wapi + 'v3/tradeFee.html', params, callback);
+        },
+
+        /**
+        * Fetch asset detail (minWithdrawAmount, depositStatus, withdrawFee, withdrawStatus, depositTip)
+        * @param {function} callback - the callback function
+        * @return {undefined}
+        */
+        assetDetail: function (callback) {
+            signedRequest(wapi + 'v3/assetDetail.html', {}, callback);
         },
 
         /**
@@ -1735,7 +1755,7 @@ let api = function Binance() {
                         return symbol.toLowerCase() + '@depth';
                     });
                     subscription = subscribeCombined(streams, handleDepthStreamData, reconnect, function () {
-                        async.mapLimit(symbols, symbols.length, getSymbolDepthSnapshot, (err, results) => {
+                        async.mapLimit(symbols, 50, getSymbolDepthSnapshot, (err, results) => {
                             if (err) throw err;
                             results.forEach(updateSymbolDepthCache);
                         });

@@ -25,7 +25,7 @@ let binance = new Binance();
 let util = require('util');
 
 let num_pairs = 299;
-let num_currencies = 156;
+let num_currencies = 155;
 
 let logger = {
   log: function (msg) {
