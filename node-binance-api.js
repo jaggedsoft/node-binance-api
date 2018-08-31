@@ -17,6 +17,7 @@ let api = function Binance() {
 
     const WebSocket = require('ws');
     const request = require('request');
+    const axios = require('axios');
     const crypto = require('crypto');
     const file = require('fs');
     const url = require('url');
@@ -91,6 +92,8 @@ let api = function Binance() {
 
         if (Binance.options.verbose) Binance.options.log('using socks proxy server ' + socksproxy);
 
+        opt.agent= false;
+        opt.pool= { maxSockets: 400 };
         opt.agentClass = SocksProxyAgent;
         opt.agentOptions = {
             protocol: parseProxy(socksproxy)[0],
@@ -1652,11 +1655,8 @@ let api = function Binance() {
             depthCache: function depthCacheFunction(symbols, callback, limit = 500) {
                 let reconnect = function () {
                     if (Binance.options.reconnect) {
-                      console.log('Reconnecting called', Date.now());
-                      setTimeout(() => {
-                        console.log('calling depth cache function now', Date.now());
-                        depthCacheFunction(symbols, callback, limit)
-                      }, 20000);
+                      console.log('Calling depth cache function now', Date.now());
+                      depthCacheFunction(symbols, callback, limit);
                     }
                 };
 
@@ -1694,14 +1694,21 @@ let api = function Binance() {
                 };
 
                 let getSymbolDepthSnapshot = function (symbol, cb) {
+                    const options = {
+                      method: 'GET',
+                      url: `${base}v1/depth`,
+                      params: {
+                        symbol,
+                        limit
+                      }
+                    };
 
-                    publicRequest(base + 'v1/depth', { symbol: symbol, limit: limit }, function (error, json) {
-                        if (error) {
-                            return cb(error, null);
-                        }
-                        // Store symbol next use
-                        json.symb = symbol;
-                        cb(null, json)
+                    axios(options).then(response => {
+                      const json = response.data;
+                      json.symb = symbol;
+                      cb(null, json);
+                    }).catch(error => {
+                      cb(error, null);
                     });
                 };
 
@@ -1743,7 +1750,7 @@ let api = function Binance() {
                     subscription = subscribeCombined(streams, handleDepthStreamData, reconnect, function () {
                         async.mapLimit(symbols, 10, getSymbolDepthSnapshot, (err, results) => {
                             if (err) {
-                              console.log('Error----fuckin shit:', err);
+                              console.log('Error occurred, reconnecting:', err);
                               throw err;
                             }
                             results.forEach(updateSymbolDepthCache);
