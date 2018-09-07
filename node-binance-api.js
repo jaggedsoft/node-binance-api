@@ -1658,7 +1658,7 @@ let api = function Binance() {
                 let reconnect = function () {
                     if (Binance.options.reconnect) {
                       console.log('Calling depth cache function now', Date.now());
-                      depthCacheFunction(symbols, callback, limit);
+                      depthCacheFunction(symbols, callback, limit, customCallback);
                     }
                 };
 
