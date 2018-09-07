@@ -5,6 +5,7 @@
   "main": "node-binance-api.js",
   "dependencies": {
     "async": "^2.6.1",
+    "axios": "^0.18.0",
     "https-proxy-agent": "^2.2.1",
     "request": "^2.85.0",
     "socks-proxy-agent": "^4.0.1",

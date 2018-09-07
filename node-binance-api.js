@@ -17,6 +17,7 @@ let api = function Binance() {
 
     const WebSocket = require('ws');
     const request = require('request');
+    const axios = require('axios');
     const crypto = require('crypto');
     const file = require('fs');
     const url = require('url');
@@ -40,7 +41,7 @@ let api = function Binance() {
         recvWindow: 5000,
         useServerTime: false,
         reconnect: true,
-        verbose: false,
+        verbose: true,
         test: false,
         log: function (...args) {
             console.log(Array.prototype.slice.call(args));
@@ -91,6 +92,8 @@ let api = function Binance() {
 
         if (Binance.options.verbose) Binance.options.log('using socks proxy server ' + socksproxy);
 
+        opt.agent= false;
+        opt.pool= { maxSockets: 400 };
         opt.agentClass = SocksProxyAgent;
         opt.agentOptions = {
             protocol: parseProxy(socksproxy)[0],
@@ -285,7 +288,8 @@ let api = function Binance() {
                 if (ws.readyState === WebSocket.OPEN) ws.ping(noop);
             } else {
                 if (Binance.options.verbose) Binance.options.log('Terminating inactive/broken WebSocket: ' + ws.endpoint);
-                if (ws.readyState === WebSocket.OPEN) ws.terminate();
+                // if (ws.readyState === WebSocket.OPEN) ws.terminate();
+                Binance.options.log('ws would terminate here');
             }
         }
     };
@@ -349,6 +353,7 @@ let api = function Binance() {
      * @return {undefined}
      */
     const handleSocketHeartbeat = function () {
+        Binance.options.log('ping/pong to keep alive');
         this.isAlive = true;
     };
 
@@ -1669,9 +1674,12 @@ let api = function Binance() {
             * @param {int} limit - the number of entries
             * @return {string} the websocket endpoint
             */
-            depthCache: function depthCacheFunction(symbols, callback, limit = 500) {
+            depthCache: function depthCacheFunction(symbols, callback, limit = 500, customCallback) {
                 let reconnect = function () {
-                    if (Binance.options.reconnect) depthCacheFunction(symbols, callback, limit);
+                    if (Binance.options.reconnect) {
+                      console.log('Calling depth cache function now', Date.now());
+                      depthCacheFunction(symbols, callback, limit, customCallback);
+                    }
                 };
 
                 let symbolDepthInit = function (symbol) {
@@ -1703,19 +1711,27 @@ let api = function Binance() {
                         } catch (err) {
                             return terminate(context.endpointId, true);
                         }
-                        if (callback) callback(symbol, Binance.depthCache[symbol], context);
+                        if (callback) callback(Binance.depthCache, depth);
+                        if (customCallback) customCallback(Binance.depthCache, depth);
                     }
                 };
 
                 let getSymbolDepthSnapshot = function (symbol, cb) {
+                    const options = {
+                      method: 'GET',
+                      url: `${base}v1/depth`,
+                      params: {
+                        symbol,
+                        limit
+                      }
+                    };
 
-                    publicRequest(base + 'v1/depth', { symbol: symbol, limit: limit }, function (error, json) {
-                        if (error) {
-                            return cb(error, null);
-                        }
-                        // Store symbol next use
-                        json.symb = symbol;
-                        cb(null, json)
+                    axios(options).then(response => {
+                      const json = response.data;
+                      json.symb = symbol;
+                      cb(null, json);
+                    }).catch(error => {
+                      cb(error, null);
                     });
                 };
 
@@ -1755,8 +1771,11 @@ let api = function Binance() {
                         return symbol.toLowerCase() + '@depth';
                     });
                     subscription = subscribeCombined(streams, handleDepthStreamData, reconnect, function () {
-                        async.mapLimit(symbols, 50, getSymbolDepthSnapshot, (err, results) => {
-                            if (err) throw err;
+                        async.mapLimit(symbols, 10, getSymbolDepthSnapshot, (err, results) => {
+                            if (err) {
+                              console.log('Error occurred, reconnecting:', err);
+                              throw err;
+                            }
                             results.forEach(updateSymbolDepthCache);
                         });
                     });
