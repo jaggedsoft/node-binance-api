@@ -814,13 +814,26 @@ let api = function Binance() {
 
         /**
         * rounds number with given step
-        * @param {float} number - number to round
-        * @param {float} stepSize - step size
+        * @param {float} number - quantity to round
+        * @param {float} stepSize - stepSize as specified by exchangeInfo
         * @return {float} - number
         */
         roundStep: function (number, stepSize) {
             const precision = stepSize.toString().split('.')[1].length || 0;
             return (((number / stepSize) | 0) * stepSize).toFixed(precision);
+        },
+        
+        /**
+        * rounds price to required precision
+        * @param {float} number - price to round
+        * @param {float} tickSize - tickSize as specified by exchangeInfo
+        * @return {float} - number
+        */
+        roundTicks: function (number, tickSize) {
+            const formatter = new Intl.NumberFormat('en-US', { style: 'decimal', minimumFractionDigits: 0, maximumFractionDigits: 8 });
+            const precision = formatter.format(tickSize).split('.')[1].length || 0;
+            if ( typeof number === 'string' ) number = parseFloat(number);
+            return number.toFixed(precision);
         },
 
         /**
