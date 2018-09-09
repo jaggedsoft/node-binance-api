@@ -833,7 +833,7 @@ let api = function Binance() {
             const formatter = new Intl.NumberFormat('en-US', { style: 'decimal', minimumFractionDigits: 0, maximumFractionDigits: 8 });
             const precision = formatter.format(tickSize).split('.')[1].length || 0;
             if ( typeof price === 'string' ) price = parseFloat(price);
-            return Number(price.toFixed(precision));
+            return price.toFixed(precision);
         },
 
         /**
