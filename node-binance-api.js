@@ -1479,9 +1479,9 @@ let api = function Binance() {
         * @param {int} fromId - from this id
         * @return {undefined}
         */
-        historicalTrades: function (symbol, callback, limit = 500, fromId = false) {
-            let parameters = { symbol: symbol, limit: limit };
-            if (fromId) parameters.fromId = fromId;
+        historicalTrades: function (options = {limit: 500, fromId: false}, callback) {
+            let parameters = { symbol: options.symbol, limit: options.limit };
+            if (fromId) parameters.fromId = options.fromId;
             marketRequest(base + 'v1/historicalTrades', parameters, callback);
         },
 
