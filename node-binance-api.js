@@ -313,14 +313,14 @@ let api = function Binance() {
      */
     const handleSocketClose = function (reconnect, code, reason) {
         delete Binance.subscriptions[this.endpoint];
-        if (Object.keys(Binance.subscriptions).length === 0) {
+        if ( Binance.subscriptions && Object.keys(Binance.subscriptions).length === 0 ) {
             clearInterval(Binance.socketHeartbeatInterval);
         }
         Binance.options.log('WebSocket closed: ' + this.endpoint +
             (code ? ' (' + code + ')' : '') +
             (reason ? ' ' + reason : ''));
-        if (Binance.options.reconnect && this.reconnect && reconnect) {
-            if (parseInt(this.endpoint.length, 10) === 60) Binance.options.log('Account data WebSocket reconnecting...');
+        if ( Binance.options.reconnect && this.reconnect && reconnect) {
+            if ( this.endpoint && parseInt(this.endpoint.length, 10) === 60) Binance.options.log('Account data WebSocket reconnecting...');
             else Binance.options.log('WebSocket reconnecting: ' + this.endpoint + '...');
             try {
                 reconnect();
@@ -336,7 +336,6 @@ let api = function Binance() {
      * @return {undefined}
      */
     const handleSocketError = function (error) {
-
         /* Errors ultimately result in a `close` event.
            see: https://github.com/websockets/ws/blob/828194044bf247af852b31c49e2800d557fedeff/lib/websocket.js#L126 */
         Binance.options.log('WebSocket error: ' + this.endpoint +
