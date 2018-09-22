@@ -129,6 +129,8 @@ binance.balance((error, balances) => {
   console.log("balances()", balances);
   console.log("ETH balance: ", balances.ETH.available);
 });
+// If you have problems with this function,
+// see Troubleshooting at the bottom of this page.
 ```
 <details>
  <summary>View Response</summary>
@@ -1624,17 +1626,6 @@ set socks_proxy=socks://ip:port
 ### Troubleshooting
 Verify that your system time is correct. If you have any suggestions don't hestitate to file an issue.
 
-Problems getting your balance? Wrap the entry point of your application in useServerTime:
-```js
-binance.useServerTime(function() {
-	binance.balance((error, balances) => {
-		if ( error ) return console.error(error);
-		console.log("balances()", balances);
-		console.log("BNB balance: ", balances.BNB.available);
-	});
-});
-```
-
 Having problems? Try adding `useServerTime` to your options or setting `recvWindow`:
 ```js
 binance.options({
@@ -1646,6 +1637,17 @@ binance.options({
   log: log => {
     console.log(log); // You can create your own logger here, or disable console output
   }
+});
+```
+
+Problems getting your balance? Wrap the entry point of your application in useServerTime:
+```js
+binance.useServerTime(function() {
+	binance.balance((error, balances) => {
+		if ( error ) return console.error(error);
+		console.log("balances()", balances);
+		console.log("BNB balance: ", balances.BNB.available);
+	});
 });
 ```
 
