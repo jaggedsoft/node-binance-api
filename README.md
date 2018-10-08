@@ -125,9 +125,12 @@ binance.prices((error, ticker) => {
 #### Getting list of current balances
 ```javascript
 binance.balance((error, balances) => {
+  if ( error ) return console.error(error);
   console.log("balances()", balances);
   console.log("ETH balance: ", balances.ETH.available);
 });
+// If you have problems with this function,
+// see Troubleshooting at the bottom of this page.
 ```
 <details>
  <summary>View Response</summary>
@@ -1634,6 +1637,17 @@ binance.options({
   log: log => {
     console.log(log); // You can create your own logger here, or disable console output
   }
+});
+```
+
+Problems getting your balance? Wrap the entry point of your application in useServerTime:
+```js
+binance.useServerTime(function() {
+	binance.balance((error, balances) => {
+		if ( error ) return console.error(error);
+		console.log("balances()", balances);
+		console.log("BNB balance: ", balances.BNB.available);
+	});
 });
 ```
 

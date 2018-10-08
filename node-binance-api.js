@@ -313,14 +313,14 @@ let api = function Binance() {
      */
     const handleSocketClose = function (reconnect, code, reason) {
         delete Binance.subscriptions[this.endpoint];
-        if (Object.keys(Binance.subscriptions).length === 0) {
+        if ( Binance.subscriptions && Object.keys(Binance.subscriptions).length === 0 ) {
             clearInterval(Binance.socketHeartbeatInterval);
         }
         Binance.options.log('WebSocket closed: ' + this.endpoint +
             (code ? ' (' + code + ')' : '') +
             (reason ? ' ' + reason : ''));
-        if (Binance.options.reconnect && this.reconnect && reconnect) {
-            if (parseInt(this.endpoint.length, 10) === 60) Binance.options.log('Account data WebSocket reconnecting...');
+        if ( Binance.options.reconnect && this.reconnect && reconnect) {
+            if ( this.endpoint && parseInt(this.endpoint.length, 10) === 60) Binance.options.log('Account data WebSocket reconnecting...');
             else Binance.options.log('WebSocket reconnecting: ' + this.endpoint + '...');
             try {
                 reconnect();
@@ -336,7 +336,6 @@ let api = function Binance() {
      * @return {undefined}
      */
     const handleSocketError = function (error) {
-
         /* Errors ultimately result in a `close` event.
            see: https://github.com/websockets/ws/blob/828194044bf247af852b31c49e2800d557fedeff/lib/websocket.js#L126 */
         Binance.options.log('WebSocket error: ' + this.endpoint +
@@ -814,26 +813,26 @@ let api = function Binance() {
 
         /**
         * rounds number with given step
-        * @param {float} number - quantity to round
+        * @param {float} qty - quantity to round
         * @param {float} stepSize - stepSize as specified by exchangeInfo
         * @return {float} - number
         */
-        roundStep: function (number, stepSize) {
+        roundStep: function (qty, stepSize) {
             const precision = stepSize.toString().split('.')[1].length || 0;
-            return (((number / stepSize) | 0) * stepSize).toFixed(precision);
+            return (((qty / stepSize) | 0) * stepSize).toFixed(precision);
         },
-        
+
         /**
         * rounds price to required precision
-        * @param {float} number - price to round
+        * @param {float} price - price to round
         * @param {float} tickSize - tickSize as specified by exchangeInfo
         * @return {float} - number
         */
-        roundTicks: function (number, tickSize) {
+        roundTicks: function (price, tickSize) {
             const formatter = new Intl.NumberFormat('en-US', { style: 'decimal', minimumFractionDigits: 0, maximumFractionDigits: 8 });
             const precision = formatter.format(tickSize).split('.')[1].length || 0;
-            if ( typeof number === 'string' ) number = parseFloat(number);
-            return number.toFixed(precision);
+            if ( typeof price === 'string' ) price = parseFloat(price);
+            return price.toFixed(precision);
         },
 
         /**
@@ -1703,7 +1702,7 @@ let api = function Binance() {
                         let context = Binance.depthCacheContext[symbol];
                         context.endpointId = endpointId;
                     }
-                }
+                };
 
                 let handleDepthStreamData = function (depth) {
                     let symbol = depth.s;
@@ -1786,6 +1785,29 @@ let api = function Binance() {
                     assignEndpointIdToContext(symbol, subscription.endpoint);
                 }
                 return subscription.endpoint;
+            },
+
+            /**
+             * Websocket staggered depth cache
+             * @param {array/string} symbols - an array of symbols to query
+             * @param {function} callback - callback function
+             * @param {int} limit - the number of entries
+             * @param {int} stagger - ms between each depth cache
+             * @return {Promise} the websocket endpoint
+             */
+            depthCacheStaggered: function(symbols, callback, limit=100, stagger=200) {
+                if (!Array.isArray(symbols)) symbols = [symbols];
+                let chain = null;
+
+                symbols.forEach(symbol => {
+                    let promise = () => new Promise(resolve => {
+                        this.depthCache(symbol, callback, limit);
+                        setTimeout(resolve, stagger);
+                    });
+                    chain = chain ? chain.then(promise) : promise();
+                });
+
+                return chain;
             },
 
             /**

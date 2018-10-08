@@ -1124,6 +1124,72 @@ describe('Websockets array depthcache', function () {
   });
 });
 
+describe('Staggered websockets symbol depthcache', function () {
+    let symbol;
+    let bids;
+    let asks;
+    let cnt = 0;
+    beforeEach(function (done) {
+        this.timeout(TIMEOUT);
+        binance.websockets.depthCacheStaggered('BNBBTC', (a_symbol, a_depth) => {
+            cnt++;
+            if (cnt > 1) return;
+            stopSockets(true);
+            symbol = a_symbol;
+            bids = a_depth.bids;
+            asks = a_depth.asks;
+            done();
+        });
+    });
+
+    bids = binance.sortBids(bids);
+    asks = binance.sortAsks(asks);
+
+    it('check result of depth cache', function () {
+        assert(typeof (bids) === 'object', WARN_SHOULD_BE_OBJ);
+        assert(typeof (asks) === 'object', WARN_SHOULD_BE_OBJ);
+        assert(typeof (symbol) === 'string', WARN_SHOULD_BE_OBJ);
+        assert(bids !== null, WARN_SHOULD_BE_NOT_NULL);
+        assert(asks !== null, WARN_SHOULD_BE_NOT_NULL);
+        assert(symbol !== null, WARN_SHOULD_BE_NOT_NULL);
+        assert(Object.keys(asks).length !== 0, 'should not be 0');
+        assert(Object.keys(bids).length !== 0, 'should not be 0');
+    });
+});
+
+describe('Staggered Websockets array depthcache', function () {
+    let symbol;
+    let bids;
+    let asks;
+    let cnt = 0;
+    beforeEach(function (done) {
+        this.timeout(TIMEOUT);
+        binance.websockets.depthCacheStaggered(['BNBBTC', 'TRXBTC'], (a_symbol, a_depth) => {
+            cnt++;
+            if (cnt > 1) return;
+            stopSockets();
+            symbol = a_symbol;
+            bids = a_depth.bids;
+            asks = a_depth.asks;
+            done();
+        });
+    });
+
+    bids = binance.sortBids(bids);
+    asks = binance.sortAsks(asks);
+
+    it('check result of symbols array depth cache', function () {
+        assert(typeof (bids) === 'object', WARN_SHOULD_BE_OBJ);
+        assert(typeof (asks) === 'object', WARN_SHOULD_BE_OBJ);
+        assert(typeof (symbol) === 'string', WARN_SHOULD_BE_OBJ);
+        assert(bids !== null, WARN_SHOULD_BE_NOT_NULL);
+        assert(asks !== null, WARN_SHOULD_BE_NOT_NULL);
+        assert(symbol !== null, WARN_SHOULD_BE_NOT_NULL);
+        assert(Object.keys(asks).length !== 0, 'should not be 0');
+        assert(Object.keys(bids).length !== 0, 'should not be 0');
+    });
+});
+
 describe('Websockets prevDay', function () {
   let response;
   let cnt = 0;
