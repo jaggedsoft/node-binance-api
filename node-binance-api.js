@@ -821,7 +821,7 @@ let api = function Binance() {
             const precision = stepSize.toString().split('.')[1].length || 0;
             return (((qty / stepSize) | 0) * stepSize).toFixed(precision);
         },
-        
+
         /**
         * rounds price to required precision
         * @param {float} price - price to round
@@ -1702,7 +1702,7 @@ let api = function Binance() {
                         let context = Binance.depthCacheContext[symbol];
                         context.endpointId = endpointId;
                     }
-                }
+                };
 
                 let handleDepthStreamData = function (depth) {
                     let symbol = depth.s;
@@ -1800,12 +1800,10 @@ let api = function Binance() {
                 let chain = null;
 
                 symbols.forEach(symbol => {
-                    let promise = () => {
-                        return new Promise(resolve => {
-                            this.depthCache(symbol, callback, limit);
-                            setTimeout(resolve, stagger);
-                        });
-                    };
+                    let promise = () => new Promise(resolve => {
+                        this.depthCache(symbol, callback, limit);
+                        setTimeout(resolve, stagger);
+                    });
                     chain = chain ? chain.then(promise) : promise();
                 });
 
