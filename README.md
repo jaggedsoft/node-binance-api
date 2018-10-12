@@ -24,6 +24,7 @@ const binance = require('node-binance-api')().options({
   APIKEY: '<key>',
   APISECRET: '<secret>',
   useServerTime: true, // If you get timestamp errors, synchronize to server time at startup
+  keepAlive: true, // set to true to keep alive socket between requests
   test: true // If you want to use sandbox mode where orders are simulated
 });
 ```

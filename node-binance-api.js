@@ -117,6 +117,7 @@ let api = function Binance() {
         qs: data,
         method: method,
         timeout: Binance.options.recvWindow,
+        forever: Binance.options.keepAlive,
         headers: {
             'User-Agent': userAgent,
             'Content-type': contentType,
