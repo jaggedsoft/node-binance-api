@@ -819,7 +819,7 @@ let api = function Binance() {
         */
         roundStep: function (qty, stepSize) {
             const precision = stepSize.toString().split('.')[1].length || 0;
-            return (((qty / stepSize) | 0) * stepSize).toFixed(precision);
+            return ((Math.round(qty / stepSize) | 0) * stepSize).toFixed(precision);
         },
 
         /**
