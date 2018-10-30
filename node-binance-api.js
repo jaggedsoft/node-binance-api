@@ -18,6 +18,7 @@ let api = function Binance() {
     const WebSocket = require('ws');
     const request = require('request');
     const axios = require('axios');
+    const PROXY_HOST = process.env.PROXY_HOST || '';
     const crypto = require('crypto');
     const file = require('fs');
     const url = require('url');
@@ -1699,7 +1700,7 @@ let api = function Binance() {
                 let getSymbolDepthSnapshot = function (symbol, cb) {
                     const options = {
                       method: 'GET',
-                      url: `${base}v1/depth`,
+                      url: `${PROXY_HOST}${base}v1/depth`,
                       params: {
                         symbol,
                         limit
