@@ -1865,11 +1865,12 @@ let api = function Binance() {
             * @param {array/string} symbols - an array or string of symbols to query
             * @param {string} interval - the time interval
             * @param {function} callback - callback function
+            * @param {int} limit - maximum results, no more than 1000
             * @return {string} the websocket endpoint
             */
-            chart: function chart(symbols, interval, callback) {
+            chart: function chart(symbols, interval, callback, limit = 500) {
                 let reconnect = function () {
-                    if (Binance.options.reconnect) chart(symbols, interval, callback);
+                    if (Binance.options.reconnect) chart(symbols, interval, callback, limit);
                 };
 
                 let symbolChartInit = function (symbol) {
@@ -1897,8 +1898,8 @@ let api = function Binance() {
                     }
                 };
 
-                let getSymbolKlineSnapshot = function (symbol) {
-                    publicRequest(base + 'v1/klines', { symbol: symbol, interval: interval }, function (error, data) {
+                let getSymbolKlineSnapshot = function (symbol, limit = 500) {
+                    publicRequest(base + 'v1/klines', { symbol: symbol, interval: interval, limit: limit }, function (error, data) {
                         klineData(symbol, interval, data);
                         //Binance.options.log('/klines at ' + Binance.info[symbol][interval].timestamp);
                         if (typeof Binance.klineQueue[symbol][interval] !== 'undefined') {
@@ -1917,12 +1918,12 @@ let api = function Binance() {
                         return symbol.toLowerCase() + '@kline_' + interval;
                     });
                     subscription = subscribeCombined(streams, handleKlineStreamData, reconnect);
-                    symbols.forEach(getSymbolKlineSnapshot);
+                    symbols.forEach(element => getSymbolKlineSnapshot(element, limit));
                 } else {
                     let symbol = symbols;
                     symbolChartInit(symbol);
                     subscription = subscribe(symbol.toLowerCase() + '@kline_' + interval, handleKlineStreamData, reconnect);
-                    getSymbolKlineSnapshot(symbol);
+                    getSymbolKlineSnapshot(symbol, limit);
                 }
                 return subscription.endpoint;
             },
