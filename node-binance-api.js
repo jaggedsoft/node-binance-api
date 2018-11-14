@@ -819,7 +819,7 @@ let api = function Binance() {
         */
         roundStep: function (qty, stepSize) {
             const precision = stepSize.toString().split('.')[1].length || 0;
-            return ((Math.round(qty / stepSize) | 0) * stepSize).toFixed(precision);
+            return ((Math.floor(qty / stepSize) | 0) * stepSize).toFixed(precision);
         },
 
         /**
@@ -1186,6 +1186,55 @@ let api = function Binance() {
             let parameters = Object.assign({ symbol: symbol }, options);
             signedRequest(base + 'v3/allOrders', parameters, function (error, data) {
                 if (callback) return callback.call(this, error, data, symbol);
+            });
+        },
+        
+        /**
+        * Gets the depth information for a given symbol
+        * @param {string} symbol - the symbol
+        * @param {function} callback - the callback function
+        * @param {int} limit - limit the number of returned orders
+        * @return {undefined}
+        */
+        depth: function (symbol, callback, limit = 100) {
+            publicRequest(base + 'v1/depth', { symbol: symbol, limit: limit }, function (error, data) {
+                return callback.call(this, error, depthData(data), symbol);
+            });
+        },
+
+        /**
+        * Gets the average prices of a given symbol
+        * @param {string} symbol - the symbol
+        * @param {function} callback - the callback function
+        * @return {undefined}
+        */
+        avgPrice: function (symbol, callback = false) {
+            let socksproxy = process.env.socks_proxy || false;
+
+            let opt = {
+                url: base + 'v3/avgPrice?symbol=' + symbol,
+                timeout: Binance.options.recvWindow
+            };
+
+            if (socksproxy !== false) {
+                socksproxy = proxyReplacewithIp(socksproxy);
+                if (Binance.options.verbose) Binance.options.log('using socks proxy server ' + socksproxy);
+                opt.agentClass = SocksProxyAgent;
+                opt.agentOptions = {
+                    protocol: parseProxy(socksproxy)[0],
+                    host: parseProxy(socksproxy)[1],
+                    port: parseProxy(socksproxy)[2]
+                }
+            }
+
+            request(opt, function (error, response, body) {
+                if (!callback) return;
+
+                if (error) return callback(error);
+
+                if (response && response.statusCode !== 200) return callback(response);
+
+                if (callback) return callback(null, priceData(JSON.parse(body)));
             });
         },
 
