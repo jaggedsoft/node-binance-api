@@ -1127,7 +1127,7 @@ let api = function Binance() {
         },
 
         /**
-        * Cancels an order
+        * Gets the status of an order
         * @param {string} symbol - the symbol to check
         * @param {string} orderid - the orderid to check
         * @param {function} callback - the callback function
@@ -1188,7 +1188,7 @@ let api = function Binance() {
                 if (callback) return callback.call(this, error, data, symbol);
             });
         },
-        
+
         /**
         * Gets the depth information for a given symbol
         * @param {string} symbol - the symbol
