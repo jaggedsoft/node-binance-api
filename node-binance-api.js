@@ -198,14 +198,22 @@ let api = function Binance() {
             return a;
         }, []).join('&');
         let signature = crypto.createHmac('sha256', Binance.options.APISECRET).update(query).digest('hex'); // set the HMAC hash header
-
-        let opt = reqObj(
-            url + '?' + query + '&signature=' + signature,
-            data,
-            method,
-            Binance.options.APIKEY
-        );
-        proxyRequest(opt, callback);
+		if(method=='POST')
+			let opt = reqObj(
+				url + '?' + 'signature=' + signature,
+				data,
+				method,
+				Binance.options.APIKEY
+				);
+        	proxyRequest(opt, callback);
+		else
+        	let opt = reqObj(
+           		url + '?' + query + '&signature=' + signature,
+                data,
+                method,
+                Binance.options.APIKEY
+    	    );
+        	proxyRequest(opt, callback);
     };
 
     /**
