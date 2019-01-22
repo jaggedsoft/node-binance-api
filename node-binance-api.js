@@ -198,23 +198,14 @@ let api = function Binance() {
             return a;
         }, []).join('&');
         let signature = crypto.createHmac('sha256', Binance.options.APISECRET).update(query).digest('hex'); // set the HMAC hash header
-		if (method==='POST') {
-            let opt = reqObj(
-                url + '?signature=' + signature,
-                data,
-                method,
-                Binance.options.APIKEY
-            );
-            proxyRequest(opt, callback);
-        } else {
-            let opt = reqObj(
-                url + '?' + query + '&signature=' + signature,
-                data,
-                method,
-                Binance.options.APIKEY
-            );
-            proxyRequest(opt, callback);
-        }
+        let urlstring = method === 'POST' ? `${url}?signature=${signature}` : `${url}?${query}&signature=${signature}`;
+        let opt = reqObj(
+            urlstring,
+            data,
+            method,
+            Binance.options.APIKEY
+        );
+        proxyRequest(opt, callback);
     };
 
     /**
@@ -322,14 +313,14 @@ let api = function Binance() {
      */
     const handleSocketClose = function (reconnect, code, reason) {
         delete Binance.subscriptions[this.endpoint];
-        if ( Binance.subscriptions && Object.keys(Binance.subscriptions).length === 0 ) {
+        if (Binance.subscriptions && Object.keys(Binance.subscriptions).length === 0) {
             clearInterval(Binance.socketHeartbeatInterval);
         }
         Binance.options.log('WebSocket closed: ' + this.endpoint +
             (code ? ' (' + code + ')' : '') +
             (reason ? ' ' + reason : ''));
-        if ( Binance.options.reconnect && this.reconnect && reconnect) {
-            if ( this.endpoint && parseInt(this.endpoint.length, 10) === 60) Binance.options.log('Account data WebSocket reconnecting...');
+        if (Binance.options.reconnect && this.reconnect && reconnect) {
+            if (this.endpoint && parseInt(this.endpoint.length, 10) === 60) Binance.options.log('Account data WebSocket reconnecting...');
             else Binance.options.log('WebSocket reconnecting: ' + this.endpoint + '...');
             try {
                 reconnect();
@@ -844,7 +835,7 @@ let api = function Binance() {
         roundTicks: function (price, tickSize) {
             const formatter = new Intl.NumberFormat('en-US', { style: 'decimal', minimumFractionDigits: 0, maximumFractionDigits: 8 });
             const precision = formatter.format(tickSize).split('.')[1].length || 0;
-            if ( typeof price === 'string' ) price = parseFloat(price);
+            if (typeof price === 'string') price = parseFloat(price);
             return price.toFixed(precision);
         },
 
@@ -1427,7 +1418,7 @@ let api = function Binance() {
         * @return {undefined}
         */
         tradeFee: function (callback, symbol = false) {
-            let params = symbol ? {symbol:symbol} : {};
+            let params = symbol ? { symbol: symbol } : {};
             signedRequest(wapi + 'v3/tradeFee.html', params, callback);
         },
 
@@ -1844,7 +1835,7 @@ let api = function Binance() {
              * @param {int} stagger - ms between each depth cache
              * @return {Promise} the websocket endpoint
              */
-            depthCacheStaggered: function(symbols, callback, limit=100, stagger=200) {
+            depthCacheStaggered: function (symbols, callback, limit = 100, stagger = 200) {
                 if (!Array.isArray(symbols)) symbols = [symbols];
                 let chain = null;
 
