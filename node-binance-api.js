@@ -826,8 +826,12 @@ let api = function Binance() {
         * @return {float} - number
         */
         roundStep: function (qty, stepSize) {
-            const precision = stepSize.toString().split('.')[1].length || 0;
-            return ((Math.floor(qty / stepSize) | 0) * stepSize).toFixed(precision);
+            // Integers do not require rounding
+            if (Number.isInteger(qty)) return qty;
+            const qtyString = qty.toFixed(16);
+            const desiredDecimals = Math.max(stepSize.indexOf('1') - 1, 0);
+            const decimalIndex = qtyString.indexOf('.');
+            return parseFloat(qtyString.slice(0, decimalIndex + desiredDecimals + 1));
         },
 
         /**
