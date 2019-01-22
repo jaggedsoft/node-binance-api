@@ -814,15 +814,6 @@ describe('Account', function () {
   }).timeout(TIMEOUT);
 });
 
-describe('Use Server Time', function () {
-  it('Gets the server time and sets it ass the offset for http connections', function (done) {
-    //binance.useServerTime( ( error, data ) => {
-    // debug( data );
-    done();
-    //});
-  }).timeout(TIMEOUT);
-});
-
 describe('Time', function () {
   it('Attempt to get server time', function (done) {
     binance.time((error, data) => {
