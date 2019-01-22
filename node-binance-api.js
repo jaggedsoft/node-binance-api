@@ -198,22 +198,23 @@ let api = function Binance() {
             return a;
         }, []).join('&');
         let signature = crypto.createHmac('sha256', Binance.options.APISECRET).update(query).digest('hex'); // set the HMAC hash header
-		if(method=='POST')
-			let opt = reqObj(
-				url + '?' + 'signature=' + signature,
-				data,
-				method,
-				Binance.options.APIKEY
-				);
-        	proxyRequest(opt, callback);
-		else
-        	let opt = reqObj(
-           		url + '?' + query + '&signature=' + signature,
+		if (method==='POST') {
+            let opt = reqObj(
+                url + '?signature=' + signature,
                 data,
                 method,
                 Binance.options.APIKEY
-    	    );
-        	proxyRequest(opt, callback);
+            );
+            proxyRequest(opt, callback);
+        } else {
+            let opt = reqObj(
+                url + '?' + query + '&signature=' + signature,
+                data,
+                method,
+                Binance.options.APIKEY
+            );
+            proxyRequest(opt, callback);
+        }
     };
 
     /**
@@ -815,7 +816,7 @@ let api = function Binance() {
         * @param {float} float - get the price precision point
         * @return {int} - number of place
         */
-        getPrecision: function (float) { //
+        getPrecision: function (float) {
             return float.toString().split('.')[1].length || 0;
         },
 
