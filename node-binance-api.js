@@ -123,7 +123,17 @@ let api = function Binance() {
             'X-MBX-APIKEY': key || ''
         }
     })
-
+    const reqObjPOST = (url, data = {}, method = 'POST', key) => ({
+        url: url,
+        form: data,
+        method: method,
+        timeout: Binance.options.recvWindow,
+        headers: {
+            'User-Agent': userAgent,
+            'Content-type': contentType,
+            'X-MBX-APIKEY': key || ''
+        }
+    })
     /**
      * Create a http request to the public API
      * @param {string} url - The http endpoint
@@ -198,14 +208,23 @@ let api = function Binance() {
             return a;
         }, []).join('&');
         let signature = crypto.createHmac('sha256', Binance.options.APISECRET).update(query).digest('hex'); // set the HMAC hash header
-
-        let opt = reqObj(
-            url + '?' + query + '&signature=' + signature,
-            data,
-            method,
-            Binance.options.APIKEY
-        );
-        proxyRequest(opt, callback);
+        if (method === 'POST') {
+            let opt = reqObjPOST(
+                url + '?signature=' + signature,
+                data,
+                method,
+                Binance.options.APIKEY
+            );
+            proxyRequest(opt, callback);
+        } else {
+            let opt = reqObj(
+                url + '?' + query + '&signature=' + signature,
+                data,
+                method,
+                Binance.options.APIKEY
+            );
+            proxyRequest(opt, callback);
+        }
     };
 
     /**
@@ -313,14 +332,14 @@ let api = function Binance() {
      */
     const handleSocketClose = function (reconnect, code, reason) {
         delete Binance.subscriptions[this.endpoint];
-        if ( Binance.subscriptions && Object.keys(Binance.subscriptions).length === 0 ) {
+        if (Binance.subscriptions && Object.keys(Binance.subscriptions).length === 0) {
             clearInterval(Binance.socketHeartbeatInterval);
         }
         Binance.options.log('WebSocket closed: ' + this.endpoint +
             (code ? ' (' + code + ')' : '') +
             (reason ? ' ' + reason : ''));
-        if ( Binance.options.reconnect && this.reconnect && reconnect) {
-            if ( this.endpoint && parseInt(this.endpoint.length, 10) === 60) Binance.options.log('Account data WebSocket reconnecting...');
+        if (Binance.options.reconnect && this.reconnect && reconnect) {
+            if (this.endpoint && parseInt(this.endpoint.length, 10) === 60) Binance.options.log('Account data WebSocket reconnecting...');
             else Binance.options.log('WebSocket reconnecting: ' + this.endpoint + '...');
             try {
                 reconnect();
@@ -807,7 +826,7 @@ let api = function Binance() {
         * @param {float} float - get the price precision point
         * @return {int} - number of place
         */
-        getPrecision: function (float) { //
+        getPrecision: function (float) {
             return float.toString().split('.')[1].length || 0;
         },
 
@@ -818,8 +837,12 @@ let api = function Binance() {
         * @return {float} - number
         */
         roundStep: function (qty, stepSize) {
-            const precision = stepSize.toString().split('.')[1].length || 0;
-            return ((Math.floor(qty / stepSize) | 0) * stepSize).toFixed(precision);
+            // Integers do not require rounding
+            if (Number.isInteger(qty)) return qty;
+            const qtyString = qty.toFixed(16);
+            const desiredDecimals = Math.max(stepSize.indexOf('1') - 1, 0);
+            const decimalIndex = qtyString.indexOf('.');
+            return parseFloat(qtyString.slice(0, decimalIndex + desiredDecimals + 1));
         },
 
         /**
@@ -831,7 +854,7 @@ let api = function Binance() {
         roundTicks: function (price, tickSize) {
             const formatter = new Intl.NumberFormat('en-US', { style: 'decimal', minimumFractionDigits: 0, maximumFractionDigits: 8 });
             const precision = formatter.format(tickSize).split('.')[1].length || 0;
-            if ( typeof price === 'string' ) price = parseFloat(price);
+            if (typeof price === 'string') price = parseFloat(price);
             return price.toFixed(precision);
         },
 
@@ -1127,7 +1150,7 @@ let api = function Binance() {
         },
 
         /**
-        * Cancels an order
+        * Gets the status of an order
         * @param {string} symbol - the symbol to check
         * @param {string} orderid - the orderid to check
         * @param {function} callback - the callback function
@@ -1188,7 +1211,7 @@ let api = function Binance() {
                 if (callback) return callback.call(this, error, data, symbol);
             });
         },
-        
+
         /**
         * Gets the depth information for a given symbol
         * @param {string} symbol - the symbol
@@ -1235,19 +1258,6 @@ let api = function Binance() {
                 if (response && response.statusCode !== 200) return callback(response);
 
                 if (callback) return callback(null, priceData(JSON.parse(body)));
-            });
-        },
-
-        /**
-        * Gets the depth information for a given symbol
-        * @param {string} symbol - the symbol
-        * @param {function} callback - the callback function
-        * @param {int} limit - limit the number of returned orders
-        * @return {undefined}
-        */
-        depth: function (symbol, callback, limit = 100) {
-            publicRequest(base + 'v1/depth', { symbol: symbol, limit: limit }, function (error, data) {
-                return callback.call(this, error, depthData(data), symbol);
             });
         },
 
@@ -1427,7 +1437,7 @@ let api = function Binance() {
         * @return {undefined}
         */
         tradeFee: function (callback, symbol = false) {
-            let params = symbol ? {symbol:symbol} : {};
+            let params = symbol ? { symbol: symbol } : {};
             signedRequest(wapi + 'v3/tradeFee.html', params, callback);
         },
 
@@ -1844,7 +1854,7 @@ let api = function Binance() {
              * @param {int} stagger - ms between each depth cache
              * @return {Promise} the websocket endpoint
              */
-            depthCacheStaggered: function(symbols, callback, limit=100, stagger=200) {
+            depthCacheStaggered: function (symbols, callback, limit = 100, stagger = 200) {
                 if (!Array.isArray(symbols)) symbols = [symbols];
                 let chain = null;
 

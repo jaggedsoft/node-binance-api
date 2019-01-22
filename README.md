@@ -23,21 +23,7 @@ npm install node-binance-api --save
 const binance = require('node-binance-api')().options({
   APIKEY: '<key>',
   APISECRET: '<secret>',
-  useServerTime: true, // If you get timestamp errors, synchronize to server time at startup
-  test: true // If you want to use sandbox mode where orders are simulated
-});
-```
-
-#### Instantiating Multiple Instances
-```javascript
-const Binance = require('node-binance-api');
-
-const instance1 = new Binance().options({
-  // ...
-});
-
-const instance2 = new Binance().options({
-  // ...
+  useServerTime: true // If you get timestamp errors, synchronize to server time at startup
 });
 ```
 
@@ -1654,3 +1640,6 @@ binance.useServerTime(function() {
 [![Views](http://hits.dwyl.io/jaggedsoft/node-binance-api.svg)](http://hits.dwyl.io/jaggedsoft/node-binance-api)
 
 Thank you to all contributors: dmzoneill, dmitriz, keith1024, usama33, yanislk, learnathoner, vaielab, nickreese, Tuitio, grandmore, itnok, CollinEstes, sethyx, mstijak, MadDeveloper, balthazar, bitoiu, matthewwoop, robaleman, hems and others!
+
+> # ⚠️ Binance no longer offers support for API projects.
+> ## No support is offered. No questions will be answered.
