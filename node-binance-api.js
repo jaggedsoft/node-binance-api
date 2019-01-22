@@ -123,7 +123,17 @@ let api = function Binance() {
             'X-MBX-APIKEY': key || ''
         }
     })
-
+    const reqObjPOST  = (url, data = {}, method = 'POST', key) => ({
+    	  	url: url,
+		form : data,
+        method: method,
+        timeout: Binance.options.recvWindow,
+        headers: {
+            'User-Agent': userAgent,
+            'Content-type': contentType,
+            'X-MBX-APIKEY': key || ''
+        }
+    })
     /**
      * Create a http request to the public API
      * @param {string} url - The http endpoint
@@ -198,14 +208,23 @@ let api = function Binance() {
             return a;
         }, []).join('&');
         let signature = crypto.createHmac('sha256', Binance.options.APISECRET).update(query).digest('hex'); // set the HMAC hash header
-        let urlstring = method === 'POST' ? `${url}?signature=${signature}` : `${url}?${query}&signature=${signature}`;
-        let opt = reqObj(
-            urlstring,
-            data,
-            method,
-            Binance.options.APIKEY
-        );
-        proxyRequest(opt, callback);
+		if (method==='POST') {
+		    let opt = reqObjPOST(
+                url + '?signature=' + signature,
+                data,
+                method,
+                Binance.options.APIKEY
+            );  
+            proxyRequest(opt, callback);
+        } else {
+            let opt = reqObj(
+                url + '?' + query + '&signature=' + signature,
+                data,
+                method,
+                Binance.options.APIKEY
+            );
+            proxyRequest(opt, callback);
+        }
     };
 
     /**
