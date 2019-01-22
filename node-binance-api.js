@@ -123,9 +123,9 @@ let api = function Binance() {
             'X-MBX-APIKEY': key || ''
         }
     })
-    const reqObjPOST  = (url, data = {}, method = 'POST', key) => ({
-    	  	url: url,
-		form : data,
+    const reqObjPOST = (url, data = {}, method = 'POST', key) => ({
+        url: url,
+        form: data,
         method: method,
         timeout: Binance.options.recvWindow,
         headers: {
@@ -208,13 +208,13 @@ let api = function Binance() {
             return a;
         }, []).join('&');
         let signature = crypto.createHmac('sha256', Binance.options.APISECRET).update(query).digest('hex'); // set the HMAC hash header
-		if (method==='POST') {
-		    let opt = reqObjPOST(
+        if (method === 'POST') {
+            let opt = reqObjPOST(
                 url + '?signature=' + signature,
                 data,
                 method,
                 Binance.options.APIKEY
-            );  
+            );
             proxyRequest(opt, callback);
         } else {
             let opt = reqObj(
