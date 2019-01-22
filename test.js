@@ -260,20 +260,11 @@ describe('MarketSell', function () {
 
 describe('Buy order advanced', function () {
   it('Attempt to buy BNB specifying order type', function (done) {
+    let type = 'LIMIT';
     let quantity = 1;
     let price = 0.069;
-    binance.buy('BNBETH', quantity, price, { type: 'LIMIT' }, (error, response) => {
-      debug(error);
-      debug(response);
-      assert(typeof (error) === 'object', WARN_SHOULD_BE_OBJ);
-      assert(typeof (response) === 'object', WARN_SHOULD_BE_OBJ);
-      assert(error !== null, WARN_SHOULD_BE_NOT_NULL);
-      assert(response !== null, WARN_SHOULD_BE_NOT_NULL);
-      assert(error.body === '{"code":-2010,"msg":"Account has insufficient balance for requested action."}');
-      assert(typeof (response.orderId) === 'undefined', WARN_SHOULD_BE_UNDEFINED);
-      assert(Object.keys(response).length === 0);
-      done();
-    });
+    assert(typeof (binance.buy('BNBETH', quantity, price, { type: type })) === 'undefined', WARN_SHOULD_BE_UNDEFINED);
+    done();
   }).timeout(TIMEOUT);
 });
 
