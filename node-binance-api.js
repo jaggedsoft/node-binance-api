@@ -827,6 +827,7 @@ let api = function Binance() {
         * @return {int} - number of place
         */
         getPrecision: function (float) {
+            if ( !float || Number.isInteger( float ) ) return 0;
             return float.toString().split('.')[1].length || 0;
         },
 
