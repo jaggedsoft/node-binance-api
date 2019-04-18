@@ -713,6 +713,7 @@ let api = function Binance() {
         let context = Binance.depthCacheContext[symbol];
 
         let updateDepthCache = function () {
+            Binance.depthCache[symbol].eventTime = depth.E;
             for (obj of depth.b) { //bids
                 Binance.depthCache[symbol].bids[obj[0]] = parseFloat(obj[1]);
                 if (obj[1] === '0.00000000') {
