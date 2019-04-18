@@ -1472,6 +1472,7 @@ binance.websockets.depthCache(['BNBBTC'], (symbol, depth) => {
   console.log("asks", asks);
   console.log("best bid: "+binance.first(bids));
   console.log("best ask: "+binance.first(asks));
+  console.log("last updated: " + new Date(depth.eventTime));
 });
 ```
 
@@ -1502,8 +1503,9 @@ bids { '0.00025203': 0.201624,
   '0.00025100': 0.02259,
   '0.00025072': 0.012536,
   '0.00025071': 0.00401136 }
-//ask: 0.00025400
-//bid: 0.00025203
+//best ask: 0.00025400
+//best bid: 0.00025203
+//last updated: Thu Apr 18 2019 00:52:49 GMT-0400 (Eastern Daylight Time)
 ```
 </details>
 
@@ -1610,7 +1612,7 @@ set socks_proxy=socks://ip:port
 ```
 
 ### Troubleshooting
-Verify that your system time is correct. If you have any suggestions don't hestitate to file an issue.
+Verify that your system time is correct. If you have any suggestions don't hesitate to file an issue.
 
 Having problems? Try adding `useServerTime` to your options or setting `recvWindow`:
 ```js
