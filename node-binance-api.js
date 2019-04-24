@@ -1365,7 +1365,14 @@ let api = function Binance() {
         exchangeInfo: function (callback) {
             publicRequest(base + 'v1/exchangeInfo', {}, callback);
         },
-
+        /**
+        * Gets the dust log for user
+        * @param {function} callback - the callback function
+        * @return {undefined}
+        */
+        dustLog: function (callback) {
+          signedRequest(wapi + '/v3/userAssetDribbletLog.html', {}, callback);
+        },
         /**
         * Gets the the system status
         * @param {function} callback - the callback function
