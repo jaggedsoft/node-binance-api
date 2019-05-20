@@ -203,7 +203,7 @@ let api = function Binance() {
         if (!Binance.options.APISECRET) throw Error('signedRequest: Invalid API Secret');
         data.timestamp = new Date().getTime() + Binance.info.timeOffset;
         if (typeof data.recvWindow === 'undefined') data.recvWindow = Binance.options.recvWindow;
-        let query = Object.keys(data).reduce(function (a, k) {
+        let query = method === 'POST' ? '' : Object.keys(data).reduce(function (a, k) {
             a.push(k + '=' + encodeURIComponent(data[k]));
             return a;
         }, []).join('&');
