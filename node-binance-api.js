@@ -716,21 +716,23 @@ let api = function Binance() {
         let updateDepthCache = function () {
             Binance.depthCache[symbol].eventTime = depth.E;
             for (obj of depth.b) { //bids
-                Binance.depthCache[symbol].bids[obj[0]] = parseFloat(obj[1]);
                 if (obj[1] === '0.00000000') {
                     delete Binance.depthCache[symbol].bids[obj[0]];
+                } else {
+                    Binance.depthCache[symbol].bids[obj[0]] = parseFloat(obj[1]);
                 }
             }
             for (obj of depth.a) { //asks
-                Binance.depthCache[symbol].asks[obj[0]] = parseFloat(obj[1]);
                 if (obj[1] === '0.00000000') {
                     delete Binance.depthCache[symbol].asks[obj[0]];
+                } else {
+                    Binance.depthCache[symbol].asks[obj[0]] = parseFloat(obj[1]);
                 }
             }
             context.skipCount = 0;
             context.lastEventUpdateId = depth.u;
             context.lastEventUpdateTime = depth.E;
-        }
+        };
 
         // This now conforms 100% to the Binance docs constraints on managing a local order book
         if (context.lastEventUpdateId) {
