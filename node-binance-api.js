@@ -505,62 +505,84 @@ let api = function Binance() {
     };
 
     /**
+     * Converts the previous day stream into friendly object
+     * @param {object} data - user data callback data type
+     * @return {object} - user friendly data type
+     */
+    const prevDayConvertData = function(data) {
+        let convertData = function(data) {
+            let {
+                e: eventType,
+                E: eventTime,
+                s: symbol,
+                p: priceChange,
+                P: percentChange,
+                w: averagePrice,
+                x: prevClose,
+                c: close,
+                Q: closeQty,
+                b: bestBid,
+                B: bestBidQty,
+                a: bestAsk,
+                A: bestAskQty,
+                o: open,
+                h: high,
+                l: low,
+                v: volume,
+                q: quoteVolume,
+                O: openTime,
+                C: closeTime,
+                F: firstTradeId,
+                L: lastTradeId,
+                n: numTrades
+            } = data;
+            return {
+                eventType,
+                eventTime,
+                symbol,
+                priceChange,
+                percentChange,
+                averagePrice,
+                prevClose,
+                close,
+                closeQty,
+                bestBid,
+                bestBidQty,
+                bestAsk,
+                bestAskQty,
+                open,
+                high,
+                low,
+                volume,
+                quoteVolume,
+                openTime,
+                closeTime,
+                firstTradeId,
+                lastTradeId,
+                numTrades
+            };
+        }
+        if (Array.isArray(data)) {
+            const result = [];
+            for (let obj of data) {
+                let converted = convertData(obj);
+                result.push(converted);
+            }
+            return result;
+        } else {
+            return convertData(data);
+        }
+    }
+    
+    /**
      * Parses the previous day stream and calls the user callback with friendly object
      * @param {object} data - user data callback data type
      * @param {function} callback - user data callback data type
      * @return {undefined}
      */
     const prevDayStreamHandler = function (data, callback) {
-        let {
-            e: eventType,
-            E: eventTime,
-            s: symbol,
-            p: priceChange,
-            P: percentChange,
-            w: averagePrice,
-            x: prevClose,
-            c: close,
-            Q: closeQty,
-            b: bestBid,
-            B: bestBidQty,
-            a: bestAsk,
-            A: bestAskQty,
-            o: open,
-            h: high,
-            l: low,
-            v: volume,
-            q: quoteVolume,
-            O: openTime,
-            C: closeTime,
-            F: firstTradeId,
-            L: lastTradeId,
-            n: numTrades
-        } = data;
-        callback(null, {
-            eventType,
-            eventTime,
-            symbol,
-            priceChange,
-            percentChange,
-            averagePrice,
-            prevClose,
-            close,
-            closeQty,
-            bestBid,
-            bestBidQty,
-            bestAsk,
-            bestAskQty,
-            open,
-            high,
-            low,
-            volume,
-            quoteVolume,
-            openTime,
-            closeTime,
-            firstTradeId,
-            lastTradeId,
-            numTrades
-        });
+        const converted = prevDayConvertData(data);
+        callback(null, converted);
     };
 
     /**
@@ -2020,9 +2042,10 @@ let api = function Binance() {
             * Websocket prevday percentage
             * @param {array/string} symbols - an array or string of symbols to query
             * @param {function} callback - callback function
+            * @param {boolean} singleCallback - avoid call one callback for each symbol in data array
             * @return {string} the websocket endpoint
             */
-            prevDay: function prevDay(symbols, callback) {
+            prevDay: function prevDay(symbols, callback, singleCallback) {
                 let reconnect = function () {
                     if (Binance.options.reconnect) prevDay(symbols, callback);
                 };
@@ -2046,8 +2069,12 @@ let api = function Binance() {
                     // Raw stream of all listed symbols
                 } else {
                     subscription = subscribe('!ticker@arr', function (data) {
-                        for (let line of data) {
-                            prevDayStreamHandler(line, callback);
+                        if (singleCallback) {
+                            prevDayStreamHandler(data, callback);
+                        } else {
+                            for (let line of data) {
+                                prevDayStreamHandler(line, callback);
+                            }
                         }
                     }, reconnect);
                 }
