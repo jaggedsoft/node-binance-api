@@ -1846,10 +1846,7 @@ let api = function Binance() {
              * @param {String|Array} symbols   - a single symbol, or an array of symbols, to clear the cache of
              */
             clearDepthCache(symbols) {
-                const symbolsArr = [];
-                if (!Array.isArray(symbols)) {
-                    symbolsArr = [symbols]
-                }
+                const symbolsArr = Array.isArray(symbols) ? symbols : [symbols];
                 symbolsArr.forEach((thisSymbol) => {
                     delete Binance.depthCache[thisSymbol];
                 });
