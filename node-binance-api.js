@@ -1842,6 +1842,20 @@ let api = function Binance() {
             },
 
             /**
+             * Clear websocket depthcache
+             * @param {String|Array} symbols   - a single symbol, or an array of symbols, to clear the cache of
+             */
+            clearDepthCache(symbols) {
+                const symbolsArr = [];
+                if (!Array.isArray(symbols)) {
+                    symbolsArr = [symbols]
+                }
+                symbolsArr.forEach((thisSymbol) => {
+                    delete Binance.depthCache[thisSymbol];
+                });
+            },
+
+            /**
              * Websocket staggered depth cache
              * @param {array/string} symbols - an array of symbols to query
              * @param {function} callback - callback function
