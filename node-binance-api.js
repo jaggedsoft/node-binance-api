@@ -573,7 +573,7 @@ let api = function Binance() {
             return convertData(data);
         }
     }
-    
+
     /**
      * Parses the previous day stream and calls the user callback with friendly object
      * @param {object} data - user data callback data type
@@ -1263,15 +1263,23 @@ let api = function Binance() {
                 url: base + 'v3/avgPrice?symbol=' + symbol,
                 timeout: Binance.options.recvWindow
             };
-
+            if (!callback) {
+                return new Promise((resolve, reject) => {
+                  request(addProxy(opt), function (error, response, body) {
+                    if (error) return reject(error);
+                    if (response.statusCode !== 200) return reject(response);
+                    let result = {};
+                    result[symbol] = JSON.parse(response.body).price;
+                    return resolve(result);
+                  });
+                });
+            };
             request(addProxy(opt), function (error, response, body) {
-                if (!callback) return;
-
                 if (error) return callback(error);
-
-                if (response && response.statusCode !== 200) return callback(response);
-
-                if (callback) return callback(null, priceData(JSON.parse(body)));
+                if (response.statusCode !== 200) return callback(response);
+                let result = {};
+                result[symbol] = JSON.parse(response.body).price;
+                return callback(null, result);
             });
         },
 
@@ -1289,15 +1297,19 @@ let api = function Binance() {
                 url: base + 'v3/ticker/price' + params,
                 timeout: Binance.options.recvWindow
             };
-
+            if (!callback) {
+                return new Promise((resolve, reject) => {
+                  request(addProxy(opt), function (error, response, body) {
+                    if (error) return reject(error);
+                    if (response.statusCode !== 200) return reject(response);
+                    return resolve(priceData(JSON.parse(body)));
+                  });
+                });
+            };
             request(addProxy(opt), function (error, response, body) {
-                if (!callback) return;
-
                 if (error) return callback(error);
-
-                if (response && response.statusCode !== 200) return callback(response);
-
-                if (callback) return callback(null, priceData(JSON.parse(body)));
+                if (response.statusCode !== 200) return callback(response);
+                return callback(null, priceData(JSON.parse(body)));
             });
         },
 
@@ -1315,18 +1327,21 @@ let api = function Binance() {
                 url: base + 'v3/ticker/bookTicker' + params,
                 timeout: Binance.options.recvWindow
             };
-
-            request(addProxy(opt), function (error, response, body) {
-                if (!callback) return;
-
-                if (error) return callback(error);
-
-                if (response && response.statusCode !== 200) return callback(response);
-
-                if (callback) {
+            if (!callback) {
+                return new Promise((resolve, reject) => {
+                  request(addProxy(opt), function (error, response, body) {
+                    if (error) return reject(error);
+                    if (response.statusCode !== 200) return reject(response);
                     const result = symbol ? JSON.parse(body) : bookPriceData(JSON.parse(body));
-                    return callback(null, result);
-                }
+                    return resolve(result);
+                  });
+                });
+            };
+            request(addProxy(opt), function (error, response, body) {
+                if (error) return callback(error);
+                if (response.statusCode !== 200) return callback(response);
+                const result = symbol ? JSON.parse(body) : bookPriceData(JSON.parse(body));
+                return callback(null, result);
             });
         },
 

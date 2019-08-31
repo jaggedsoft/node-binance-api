@@ -1,4 +1,4 @@
-![Downloads](https://img.shields.io/npm/dt/node-binance-api.svg?style=for-the-badge&maxAge=86400) ![Stars](https://img.shields.io/github/stars/jaggedsoft/node-binance-api.svg?style=for-the-badge&label=Stars) ![Contributors](https://img.shields.io/github/contributors/jaggedsoft/node-binance-api.svg?style=for-the-badge&maxAge=86400) ![Issues](https://img.shields.io/github/issues/jaggedsoft/node-binance-api.svg?style=for-the-badge&maxAge=86400) ![Issue Closure](https://img.shields.io/issuestats/i/github/jaggedsoft/node-binance-api.svg?style=for-the-badge&maxAge=86400) 
+![Downloads](https://img.shields.io/npm/dt/node-binance-api.svg?style=for-the-badge&maxAge=86400) ![Stars](https://img.shields.io/github/stars/jaggedsoft/node-binance-api.svg?style=for-the-badge&label=Stars) ![Contributors](https://img.shields.io/github/contributors/jaggedsoft/node-binance-api.svg?style=for-the-badge&maxAge=86400) ![Issues](https://img.shields.io/github/issues/jaggedsoft/node-binance-api.svg?style=for-the-badge&maxAge=86400) ![Issue Closure](https://img.shields.io/issuestats/i/github/jaggedsoft/node-binance-api.svg?style=for-the-badge&maxAge=86400)
 ## Advanced Examples
 
 #### exchangeInfo(): Pull minimum order size, quantity, etc.
@@ -178,7 +178,7 @@ binance.marketBuy("BNBBTC", quantity, flags, function(error, response) {
 ```
 ![image](https://user-images.githubusercontent.com/4283360/36094574-acb15ae6-0fa3-11e8-9209-e6f528e09e84.png)
 > First price: 0.00106140
-  
+
 #### Recent Trades (historicalTrades, recentTrades, aggTrades functions)
 
 ```js
@@ -197,4 +197,30 @@ binance.recentTrades("BNBBTC", (error, response)=>{
 binance.historicalTrades("BNBBTC", (error, response)=>{
 	console.log("historicalTrades", response);
 });
+```
+
+#### Asynchronous Syntax Options
+> The examples below show three most common syntaxes for asynchronous API calls and their respective methods of error handling. If you do not pass a callback function as an argument, the API call returns a promise instead.
+
+```js
+const callback = binance.prices("NEOBTC", (error, response) => {
+  if (error) {
+    console.error(error)
+  } else {
+    console.log(response)
+  }
+})
+
+const classicPromise = binance.prices("NEOBTC")
+  .then(response => console.log(response))
+  .catch(error => console.error(error))
+
+const asyncAwait = (async _ => {
+  try {
+    const response = await binance.prices("NEOBTC")
+    console.log(response)
+  } catch (error) {
+    console.error(error)
+  }
+})()
 ```
