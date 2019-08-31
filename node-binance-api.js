@@ -1100,6 +1100,11 @@ let api = function Binance() {
         * @return {undefined}
         */
         order: function (side, symbol, quantity, price, flags = {}, callback = false) {
+            if (!callback) {
+              return new Promise((resolve, reject) => {
+                order(side, symbol, quantity, price, flags, callback);
+              })
+            }
             order(side, symbol, quantity, price, flags, callback);
         },
 
