@@ -1658,7 +1658,12 @@ let api = function Binance() {
             if (substring === 'BTC') return 'BTC';
             else if (substring === 'ETH') return 'ETH';
             else if (substring === 'BNB') return 'BNB';
+            else if (substring === 'XRP') return 'XRP';
+            else if (substring === 'PAX') return 'PAX';
             else if (symbol.substr(-4) === 'USDT') return 'USDT';
+            else if (symbol.substr(-4) === 'USDC') return 'USDC';
+            else if (symbol.substr(-4) === 'USDS') return 'USDS';
+            else if (symbol.substr(-4) === 'TUSD') return 'TUSD';
         },
         websockets: {
             /**
