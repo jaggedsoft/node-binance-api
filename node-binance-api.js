@@ -1088,7 +1088,6 @@ let api = function Binance() {
             return this;
         },
 
-
         /**
         * Creates an order
         * @param {string} side - BUY or SELL
@@ -1104,9 +1103,9 @@ let api = function Binance() {
             return new Promise((resolve, reject) => {
               callback = (error, response) => {
                 if (error) {
-                  reject(error)
+                  reject(error);
                 } else {
-                  resolve(response)
+                  resolve(response);
                 }
               }
               order(side, symbol, quantity, price, flags, callback);
@@ -1126,7 +1125,20 @@ let api = function Binance() {
         * @return {undefined}
         */
         buy: function (symbol, quantity, price, flags = {}, callback = false) {
+          if (!callback) {
+            return new Promise((resolve, reject) => {
+              callback = (error, response) => {
+                if (error) {
+                  reject(error);
+                } else {
+                  resolve(response);
+                }
+              }
+              order('BUY', symbol, quantity, price, flags, callback);
+            })
+          } else {
             order('BUY', symbol, quantity, price, flags, callback);
+          }
         },
 
         /**
@@ -1139,7 +1151,21 @@ let api = function Binance() {
         * @return {undefined}
         */
         sell: function (symbol, quantity, price, flags = {}, callback = false) {
+          if (!callback) {
+            return new Promise((resolve, reject) => {
+              callback = (error, response) => {
+                if (error) {
+                  reject(error);
+                } else {
+                  resolve(response);
+                }
+              }
+              order('SELL', symbol, quantity, price, flags, callback);
+            })
+          } else {
             order('SELL', symbol, quantity, price, flags, callback);
+          }
+
         },
 
         /**
@@ -1156,7 +1182,20 @@ let api = function Binance() {
                 flags = { type: 'MARKET' };
             }
             if (typeof flags.type === 'undefined') flags.type = 'MARKET';
-            order('BUY', symbol, quantity, 0, flags, callback);
+            if (!callback) {
+              return new Promise((resolve, reject) => {
+                callback = (error, response) => {
+                  if (error) {
+                    reject(error);
+                  } else {
+                    resolve(response);
+                  }
+                }
+                order('BUY', symbol, quantity, 0, flags, callback);
+              })
+            } else {
+              order('BUY', symbol, quantity, 0, flags, callback);
+            }
         },
 
         /**
@@ -1173,7 +1212,20 @@ let api = function Binance() {
                 flags = { type: 'MARKET' };
             }
             if (typeof flags.type === 'undefined') flags.type = 'MARKET';
-            order('SELL', symbol, quantity, 0, flags, callback);
+            if (!callback) {
+              return new Promise((resolve, reject) => {
+                callback = (error, response) => {
+                  if (error) {
+                    reject(error);
+                  } else {
+                    resolve(response);
+                  }
+                }
+                order('SELL', symbol, quantity, 0, flags, callback);
+              })
+            } else {
+              order('SELL', symbol, quantity, 0, flags, callback);
+            }
         },
 
         /**
@@ -1184,9 +1236,24 @@ let api = function Binance() {
         * @return {undefined}
         */
         cancel: function (symbol, orderid, callback = false) {
+          if (!callback) {
+            return new Promise((resolve, reject) => {
+              callback = (error, response) => {
+                if (error) {
+                  reject(error);
+                } else {
+                  resolve(response);
+                }
+              }
+              signedRequest(base + 'v3/order', { symbol: symbol, orderId: orderid }, function (error, data) {
+                  return callback.call(this, error, data, symbol);
+              }, 'DELETE');
+            })
+          } else {
             signedRequest(base + 'v3/order', { symbol: symbol, orderId: orderid }, function (error, data) {
-                if (callback) return callback.call(this, error, data, symbol);
+                return callback.call(this, error, data, symbol);
             }, 'DELETE');
+          }
         },
 
         /**
@@ -1199,9 +1266,24 @@ let api = function Binance() {
         */
         orderStatus: function (symbol, orderid, callback, flags = {}) {
             let parameters = Object.assign({ symbol: symbol, orderId: orderid }, flags);
-            signedRequest(base + 'v3/order', parameters, function (error, data) {
-                if (callback) return callback.call(this, error, data, symbol);
-            });
+            if (!callback) {
+              return new Promise((resolve, reject) => {
+                callback = (error, response) => {
+                  if (error) {
+                    reject(error);
+                  } else {
+                    resolve(response);
+                  }
+                }
+                signedRequest(base + 'v3/order', parameters, function (error, data) {
+                    return callback.call(this, error, data, symbol);
+                });
+              })
+            } else {
+              signedRequest(base + 'v3/order', parameters, function (error, data) {
+                  return callback.call(this, error, data, symbol);
+              });
+            }
         },
 
         /**
@@ -1212,9 +1294,24 @@ let api = function Binance() {
         */
         openOrders: function (symbol, callback) {
             let parameters = symbol ? { symbol: symbol } : {};
-            signedRequest(base + 'v3/openOrders', parameters, function (error, data) {
-                return callback.call(this, error, data, symbol);
-            });
+            if (!callback) {
+              return new Promise((resolve, reject) => {
+                callback = (error, response) => {
+                  if (error) {
+                    reject(error);
+                  } else {
+                    resolve(response);
+                  }
+                }
+                signedRequest(base + 'v3/openOrders', parameters, function (error, data) {
+                    return callback.call(this, error, data, symbol);
+                });
+              })
+            } else {
+              signedRequest(base + 'v3/openOrders', parameters, function (error, data) {
+                  return callback.call(this, error, data, symbol);
+              });
+            }
         },
 
         /**
@@ -1224,18 +1321,42 @@ let api = function Binance() {
         * @return {undefined}
         */
         cancelOrders: function (symbol, callback = false) {
+          if (!callback) {
+            return new Promise((resolve, reject) => {
+              callback = (error, response) => {
+                if (error) {
+                  reject(error);
+                } else {
+                  resolve(response);
+                }
+              }
+              signedRequest(base + 'v3/openOrders', { symbol: symbol }, function (error, json) {
+                  if (json.length === 0) {
+                      return callback.call(this, 'No orders present for this symbol', {}, symbol);
+                  }
+                  for (let obj of json) {
+                      let quantity = obj.origQty - obj.executedQty;
+                      Binance.options.log('cancel order: ' + obj.side + ' ' + symbol + ' ' + quantity + ' @ ' + obj.price + ' #' + obj.orderId);
+                      signedRequest(base + 'v3/order', { symbol: symbol, orderId: obj.orderId }, function (error, data) {
+                          return callback.call(this, error, data, symbol);
+                      }, 'DELETE');
+                  }
+              });
+            })
+          } else {
             signedRequest(base + 'v3/openOrders', { symbol: symbol }, function (error, json) {
                 if (json.length === 0) {
-                    if (callback) return callback.call(this, 'No orders present for this symbol', {}, symbol);
+                    return callback.call(this, 'No orders present for this symbol', {}, symbol);
                 }
                 for (let obj of json) {
                     let quantity = obj.origQty - obj.executedQty;
                     Binance.options.log('cancel order: ' + obj.side + ' ' + symbol + ' ' + quantity + ' @ ' + obj.price + ' #' + obj.orderId);
                     signedRequest(base + 'v3/order', { symbol: symbol, orderId: obj.orderId }, function (error, data) {
-                        if (callback) return callback.call(this, error, data, symbol);
+                        return callback.call(this, error, data, symbol);
                     }, 'DELETE');
                 }
             });
+          }
         },
 
         /**
@@ -1247,9 +1368,24 @@ let api = function Binance() {
         */
         allOrders: function (symbol, callback, options = {}) {
             let parameters = Object.assign({ symbol: symbol }, options);
-            signedRequest(base + 'v3/allOrders', parameters, function (error, data) {
-                if (callback) return callback.call(this, error, data, symbol);
-            });
+            if (!callback) {
+              return new Promise((resolve, reject) => {
+                callback = (error, response) => {
+                  if (error) {
+                    reject(error);
+                  } else {
+                    resolve(response);
+                  }
+                }
+                signedRequest(base + 'v3/allOrders', parameters, function (error, data) {
+                    return callback.call(this, error, data, symbol);
+                });
+              })
+            } else {
+              signedRequest(base + 'v3/allOrders', parameters, function (error, data) {
+                  return callback.call(this, error, data, symbol);
+              });
+            }
         },
 
         /**
@@ -1260,9 +1396,24 @@ let api = function Binance() {
         * @return {undefined}
         */
         depth: function (symbol, callback, limit = 100) {
+          if (!callback) {
+            return new Promise((resolve, reject) => {
+              callback = (error, response) => {
+                if (error) {
+                  reject(error);
+                } else {
+                  resolve(response);
+                }
+              }
+              publicRequest(base + 'v1/depth', { symbol: symbol, limit: limit }, function (error, data) {
+                  return callback.call(this, error, depthData(data), symbol);
+              });
+            })
+          } else {
             publicRequest(base + 'v1/depth', { symbol: symbol, limit: limit }, function (error, data) {
                 return callback.call(this, error, depthData(data), symbol);
             });
+          }
         },
 
         /**
@@ -1335,7 +1486,6 @@ let api = function Binance() {
         bookTickers: function (symbol, callback) {
             const params = typeof symbol === 'string' ? '?symbol=' + symbol : '';
             if (typeof symbol === 'function') callback = symbol; // backwards compatibility
-
             let opt = {
                 url: base + 'v3/ticker/bookTicker' + params,
                 timeout: Binance.options.recvWindow
@@ -1366,9 +1516,24 @@ let api = function Binance() {
         */
         prevDay: function (symbol, callback) {
             let input = symbol ? { symbol: symbol } : {};
-            publicRequest(base + 'v1/ticker/24hr', input, function (error, data) {
-                if (callback) return callback.call(this, error, data, symbol);
-            });
+            if (!callback) {
+              return new Promise((resolve, reject) => {
+                callback = (error, response) => {
+                  if (error) {
+                    reject(error);
+                  } else {
+                    resolve(response);
+                  }
+                }
+                publicRequest(base + 'v1/ticker/24hr', input, function (error, data) {
+                    return callback.call(this, error, data, symbol);
+                });
+              })
+            } else {
+              publicRequest(base + 'v1/ticker/24hr', input, function (error, data) {
+                  return callback.call(this, error, data, symbol);
+              });
+            }
         },
 
         /**
@@ -1377,23 +1542,64 @@ let api = function Binance() {
         * @return {undefined}
         */
         exchangeInfo: function (callback) {
+          if (!callback) {
+            return new Promise((resolve, reject) => {
+              callback = (error, response) => {
+                if (error) {
+                  reject(error);
+                } else {
+                  resolve(response);
+                }
+              }
+              publicRequest(base + 'v1/exchangeInfo', {}, callback);
+            })
+          } else {
             publicRequest(base + 'v1/exchangeInfo', {}, callback);
+          }
         },
+
         /**
         * Gets the dust log for user
         * @param {function} callback - the callback function
         * @return {undefined}
         */
         dustLog: function (callback) {
-          signedRequest(wapi + '/v3/userAssetDribbletLog.html', {}, callback);
+          if (!callback) {
+            return new Promise((resolve, reject) => {
+              callback = (error, response) => {
+                if (error) {
+                  reject(error);
+                } else {
+                  resolve(response);
+                }
+              }
+              signedRequest(wapi + '/v3/userAssetDribbletLog.html', {}, callback);
+            })
+          } else {
+            signedRequest(wapi + '/v3/userAssetDribbletLog.html', {}, callback);
+          }
         },
+
         /**
         * Gets the the system status
         * @param {function} callback - the callback function
         * @return {undefined}
         */
         systemStatus: function (callback) {
+          if (!callback) {
+            return new Promise((resolve, reject) => {
+              callback = (error, response) => {
+                if (error) {
+                  reject(error);
+                } else {
+                  resolve(response);
+                }
+              }
+              publicRequest(wapi + 'v3/systemStatus.html', {}, callback);
+            })
+          } else {
             publicRequest(wapi + 'v3/systemStatus.html', {}, callback);
+          }
         },
 
         /**
@@ -1409,7 +1615,20 @@ let api = function Binance() {
             let params = { asset, address, amount };
             params.name = 'API Withdraw';
             if (addressTag) params.addressTag = addressTag;
-            signedRequest(wapi + 'v3/withdraw.html', params, callback, 'POST');
+            if (!callback) {
+              return new Promise((resolve, reject) => {
+                callback = (error, response) => {
+                  if (error) {
+                    reject(error);
+                  } else {
+                    resolve(response);
+                  }
+                }
+                signedRequest(wapi + 'v3/withdraw.html', params, callback, 'POST');
+              })
+            } else {
+              signedRequest(wapi + 'v3/withdraw.html', params, callback, 'POST');
+            }
         },
 
         /**
@@ -1420,7 +1639,20 @@ let api = function Binance() {
         */
         withdrawHistory: function (callback, params = {}) {
             if (typeof params === 'string') params = { asset: params };
-            signedRequest(wapi + 'v3/withdrawHistory.html', params, callback);
+            if (!callback) {
+              return new Promise((resolve, reject) => {
+                callback = (error, response) => {
+                  if (error) {
+                    reject(error);
+                  } else {
+                    resolve(response);
+                  }
+                }
+                signedRequest(wapi + 'v3/withdrawHistory.html', params, callback);
+              })
+            } else {
+              signedRequest(wapi + 'v3/withdrawHistory.html', params, callback);
+            }
         },
 
         /**
@@ -1431,7 +1663,20 @@ let api = function Binance() {
         */
         depositHistory: function (callback, params = {}) {
             if (typeof params === 'string') params = { asset: params }; // Support 'asset' (string) or optional parameters (object)
-            signedRequest(wapi + 'v3/depositHistory.html', params, callback);
+            if (!callback) {
+              return new Promise((resolve, reject) => {
+                callback = (error, response) => {
+                  if (error) {
+                    reject(error);
+                  } else {
+                    resolve(response);
+                  }
+                }
+                signedRequest(wapi + 'v3/depositHistory.html', params, callback);
+              })
+            } else {
+              signedRequest(wapi + 'v3/depositHistory.html', params, callback);
+            }
         },
 
         /**
@@ -1441,7 +1686,20 @@ let api = function Binance() {
         * @return {undefined}
         */
         depositAddress: function (asset, callback) {
+          if (!callback) {
+            return new Promise((resolve, reject) => {
+              callback = (error, response) => {
+                if (error) {
+                  reject(error);
+                } else {
+                  resolve(response);
+                }
+              }
+              signedRequest(wapi + 'v3/depositAddress.html', { asset: asset }, callback);
+            })
+          } else {
             signedRequest(wapi + 'v3/depositAddress.html', { asset: asset }, callback);
+          }
         },
 
         /**
@@ -1450,7 +1708,20 @@ let api = function Binance() {
         * @return {undefined}
         */
         accountStatus: function (callback) {
+          if (!callback) {
+            return new Promise((resolve, reject) => {
+              callback = (error, response) => {
+                if (error) {
+                  reject(error);
+                } else {
+                  resolve(response);
+                }
+              }
+              signedRequest(wapi + 'v3/accountStatus.html', {}, callback);
+            })
+          } else {
             signedRequest(wapi + 'v3/accountStatus.html', {}, callback);
+          }
         },
 
         /**
@@ -1461,7 +1732,20 @@ let api = function Binance() {
         */
         tradeFee: function (callback, symbol = false) {
             let params = symbol ? { symbol: symbol } : {};
-            signedRequest(wapi + 'v3/tradeFee.html', params, callback);
+            if (!callback) {
+              return new Promise((resolve, reject) => {
+                callback = (error, response) => {
+                  if (error) {
+                    reject(error);
+                  } else {
+                    resolve(response);
+                  }
+                }
+                signedRequest(wapi + 'v3/tradeFee.html', params, callback);
+              })
+            } else {
+              signedRequest(wapi + 'v3/tradeFee.html', params, callback);
+            }
         },
 
         /**
@@ -1470,7 +1754,20 @@ let api = function Binance() {
         * @return {undefined}
         */
         assetDetail: function (callback) {
+          if (!callback) {
+            return new Promise((resolve, reject) => {
+              callback = (error, response) => {
+                if (error) {
+                  reject(error);
+                } else {
+                  resolve(response);
+                }
+              }
+              signedRequest(wapi + 'v3/assetDetail.html', {}, callback);
+            })
+          } else {
             signedRequest(wapi + 'v3/assetDetail.html', {}, callback);
+          }
         },
 
         /**
@@ -1479,7 +1776,20 @@ let api = function Binance() {
         * @return {undefined}
         */
         account: function (callback) {
+          if (!callback) {
+            return new Promise((resolve, reject) => {
+              callback = (error, response) => {
+                if (error) {
+                  reject(error);
+                } else {
+                  resolve(response);
+                }
+              }
+              signedRequest(base + 'v3/account', {}, callback);
+            })
+          } else {
             signedRequest(base + 'v3/account', {}, callback);
+          }
         },
 
         /**
@@ -1488,9 +1798,24 @@ let api = function Binance() {
         * @return {undefined}
         */
         balance: function (callback) {
+          if (!callback) {
+            return new Promise((resolve, reject) => {
+              callback = (error, response) => {
+                if (error) {
+                  reject(error);
+                } else {
+                  resolve(response);
+                }
+              }
+              signedRequest(base + 'v3/account', {}, function (error, data) {
+                  callback(error, balanceData(data));
+              });
+            })
+          } else {
             signedRequest(base + 'v3/account', {}, function (error, data) {
-                if (callback) callback(error, balanceData(data));
+                callback(error, balanceData(data));
             });
+          }
         },
 
         /**
@@ -1502,9 +1827,24 @@ let api = function Binance() {
         */
         trades: function (symbol, callback, options = {}) {
             let parameters = Object.assign({ symbol: symbol }, options);
-            signedRequest(base + 'v3/myTrades', parameters, function (error, data) {
-                if (callback) return callback.call(this, error, data, symbol);
-            });
+            if (!callback) {
+              return new Promise((resolve, reject) => {
+                callback = (error, response) => {
+                  if (error) {
+                    reject(error);
+                  } else {
+                    resolve(response);
+                  }
+                }
+                signedRequest(base + 'v3/myTrades', parameters, function (error, data) {
+                    return callback.call(this, error, data, symbol);
+                });
+              })
+            } else {
+              signedRequest(base + 'v3/myTrades', parameters, function (error, data) {
+                  return callback.call(this, error, data, symbol);
+              });
+            }
         },
 
         /**
@@ -1513,11 +1853,28 @@ let api = function Binance() {
         * @return {undefined}
         */
         useServerTime: function (callback = false) {
+          if (!callback) {
+            return new Promise((resolve, reject) => {
+              callback = (error, response) => {
+                if (error) {
+                  reject(error);
+                } else {
+                  resolve(response);
+                }
+              }
+              apiRequest(base + 'v1/time', {}, function (error, response) {
+                  Binance.info.timeOffset = response.serverTime - new Date().getTime();
+                  //Binance.options.log("server time set: ", response.serverTime, Binance.info.timeOffset);
+                  callback(error, response);
+              });
+            })
+          } else {
             apiRequest(base + 'v1/time', {}, function (error, response) {
                 Binance.info.timeOffset = response.serverTime - new Date().getTime();
                 //Binance.options.log("server time set: ", response.serverTime, Binance.info.timeOffset);
-                if (callback) callback();
+                callback(error, response);
             });
+          }
         },
 
         /**
@@ -1526,7 +1883,20 @@ let api = function Binance() {
         * @return {undefined}
         */
         time: function (callback) {
+          if (!callback) {
+            return new Promise((resolve, reject) => {
+              callback = (error, response) => {
+                if (error) {
+                  reject(error);
+                } else {
+                  resolve(response);
+                }
+              }
+              apiRequest(base + 'v1/time', {}, callback);
+            })
+          } else {
             apiRequest(base + 'v1/time', {}, callback);
+          }
         },
 
         /**
@@ -1538,7 +1908,20 @@ let api = function Binance() {
         */
         aggTrades: function (symbol, options = {}, callback = false) { //fromId startTime endTime limit
             let parameters = Object.assign({ symbol }, options);
-            marketRequest(base + 'v1/aggTrades', parameters, callback);
+            if (!callback) {
+              return new Promise((resolve, reject) => {
+                callback = (error, response) => {
+                  if (error) {
+                    reject(error);
+                  } else {
+                    resolve(response);
+                  }
+                }
+                marketRequest(base + 'v1/aggTrades', parameters, callback);
+              })
+            } else {
+              marketRequest(base + 'v1/aggTrades', parameters, callback);
+            }
         },
 
         /**
@@ -1549,7 +1932,20 @@ let api = function Binance() {
         * @return {undefined}
         */
         recentTrades: function (symbol, callback, limit = 500) {
+          if (!callback) {
+            return new Promise((resolve, reject) => {
+              callback = (error, response) => {
+                if (error) {
+                  reject(error);
+                } else {
+                  resolve(response);
+                }
+              }
+              marketRequest(base + 'v1/trades', { symbol: symbol, limit: limit }, callback);
+            })
+          } else {
             marketRequest(base + 'v1/trades', { symbol: symbol, limit: limit }, callback);
+          }
         },
 
         /**
@@ -1563,7 +1959,20 @@ let api = function Binance() {
         historicalTrades: function (symbol, callback, limit = 500, fromId = false) {
             let parameters = { symbol: symbol, limit: limit };
             if (fromId) parameters.fromId = fromId;
-            marketRequest(base + 'v1/historicalTrades', parameters, callback);
+            if (!callback) {
+              return new Promise((resolve, reject) => {
+                callback = (error, response) => {
+                  if (error) {
+                    reject(error);
+                  } else {
+                    resolve(response);
+                  }
+                }
+                marketRequest(base + 'v1/historicalTrades', parameters, callback);
+              })
+            } else {
+              marketRequest(base + 'v1/historicalTrades', parameters, callback);
+            }
         },
 
         /**
@@ -1617,11 +2026,25 @@ let api = function Binance() {
         * @return {undefined}
         */
         candlesticks: function (symbol, interval = '5m', callback = false, options = { limit: 500 }) {
-            if (!callback) return;
             let params = Object.assign({ symbol: symbol, interval: interval }, options);
-            publicRequest(base + 'v1/klines', params, function (error, data) {
-                return callback.call(this, error, data, symbol);
-            });
+            if (!callback) {
+              return new Promise((resolve, reject) => {
+                callback = (error, response) => {
+                  if (error) {
+                    reject(error);
+                  } else {
+                    resolve(response);
+                  }
+                }
+                publicRequest(base + 'v1/klines', params, function (error, data) {
+                    return callback.call(this, error, data, symbol);
+                });
+              })
+            } else {
+              publicRequest(base + 'v1/klines', params, function (error, data) {
+                  return callback.call(this, error, data, symbol);
+              });
+            }
         },
 
         /**
@@ -1633,7 +2056,20 @@ let api = function Binance() {
         * @return {undefined}
         */
         publicRequest: function (url, data, callback, method = 'GET') {
-            publicRequest(url, data, callback, method)
+          if (!callback) {
+            return new Promise((resolve, reject) => {
+              callback = (error, response) => {
+                if (error) {
+                  reject(error);
+                } else {
+                  resolve(response);
+                }
+              }
+              publicRequest(url, data, callback, method);
+            })
+          } else {
+            publicRequest(url, data, callback, method);
+          }
         },
 
         /**
@@ -1645,7 +2081,20 @@ let api = function Binance() {
         * @return {undefined}
         */
         signedRequest: function (url, data, callback, method = 'GET') {
+          if (!callback) {
+            return new Promise((resolve, reject) => {
+              callback = (error, response) => {
+                if (error) {
+                  reject(error);
+                } else {
+                  resolve(response);
+                }
+              }
+              signedRequest(url, data, callback, method);
+            })
+          } else {
             signedRequest(url, data, callback, method);
+          }
         },
 
         /**
@@ -1665,6 +2114,7 @@ let api = function Binance() {
             else if (symbol.substr(-4) === 'USDS') return 'USDS';
             else if (symbol.substr(-4) === 'TUSD') return 'TUSD';
         },
+
         websockets: {
             /**
             * Userdata websockets function
