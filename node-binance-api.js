@@ -1096,7 +1096,7 @@ let api = function Binance() {
         * @param {numeric} price - the price to pay for each unit
         * @param {object} flags - aadditionalbuy order flags
         * @param {function} callback - the callback function
-        * @return {undefined}
+        * @return {promise or undefined} - omitting the callback returns a promise
         */
         order: function (side, symbol, quantity, price, flags = {}, callback = false) {
           if (!callback) {
@@ -1122,7 +1122,7 @@ let api = function Binance() {
         * @param {numeric} price - the price to pay for each unit
         * @param {object} flags - additional buy order flags
         * @param {function} callback - the callback function
-        * @return {undefined}
+        * @return {promise or undefined} - omitting the callback returns a promise
         */
         buy: function (symbol, quantity, price, flags = {}, callback = false) {
           if (!callback) {
@@ -1148,7 +1148,7 @@ let api = function Binance() {
         * @param {numeric} price - the price to sell each unit for
         * @param {object} flags - additional order flags
         * @param {function} callback - the callback function
-        * @return {undefined}
+        * @return {promise or undefined} - omitting the callback returns a promise
         */
         sell: function (symbol, quantity, price, flags = {}, callback = false) {
           if (!callback) {
@@ -1174,7 +1174,7 @@ let api = function Binance() {
         * @param {numeric} quantity - the quantity required
         * @param {object} flags - additional buy order flags
         * @param {function} callback - the callback function
-        * @return {undefined}
+        * @return {promise or undefined} - omitting the callback returns a promise
         */
         marketBuy: function (symbol, quantity, flags = { type: 'MARKET' }, callback = false) {
             if (typeof flags === 'function') { // Accept callback as third parameter
@@ -1204,7 +1204,7 @@ let api = function Binance() {
         * @param {numeric} quantity - the quantity required
         * @param {object} flags - additional sell order flags
         * @param {function} callback - the callback function
-        * @return {undefined}
+        * @return {promise or undefined} - omitting the callback returns a promise
         */
         marketSell: function (symbol, quantity, flags = { type: 'MARKET' }, callback = false) {
             if (typeof flags === 'function') { // Accept callback as third parameter
@@ -1233,7 +1233,7 @@ let api = function Binance() {
         * @param {string} symbol - the symbol to cancel
         * @param {string} orderid - the orderid to cancel
         * @param {function} callback - the callback function
-        * @return {undefined}
+        * @return {promise or undefined} - omitting the callback returns a promise
         */
         cancel: function (symbol, orderid, callback = false) {
           if (!callback) {
@@ -1262,7 +1262,7 @@ let api = function Binance() {
         * @param {string} orderid - the orderid to check
         * @param {function} callback - the callback function
         * @param {object} flags - any additional flags
-        * @return {undefined}
+        * @return {promise or undefined} - omitting the callback returns a promise
         */
         orderStatus: function (symbol, orderid, callback, flags = {}) {
             let parameters = Object.assign({ symbol: symbol, orderId: orderid }, flags);
@@ -1290,7 +1290,7 @@ let api = function Binance() {
         * Gets open orders
         * @param {string} symbol - the symbol to get
         * @param {function} callback - the callback function
-        * @return {undefined}
+        * @return {promise or undefined} - omitting the callback returns a promise
         */
         openOrders: function (symbol, callback) {
             let parameters = symbol ? { symbol: symbol } : {};
@@ -1318,7 +1318,7 @@ let api = function Binance() {
         * Cancels all order of a given symbol
         * @param {string} symbol - the symbol to cancel all orders for
         * @param {function} callback - the callback function
-        * @return {undefined}
+        * @return {promise or undefined} - omitting the callback returns a promise
         */
         cancelOrders: function (symbol, callback = false) {
           if (!callback) {
@@ -1364,7 +1364,7 @@ let api = function Binance() {
         * @param {string} symbol - the symbol
         * @param {function} callback - the callback function
         * @param {object} options - additional options
-        * @return {undefined}
+        * @return {promise or undefined} - omitting the callback returns a promise
         */
         allOrders: function (symbol, callback, options = {}) {
             let parameters = Object.assign({ symbol: symbol }, options);
@@ -1393,7 +1393,7 @@ let api = function Binance() {
         * @param {string} symbol - the symbol
         * @param {function} callback - the callback function
         * @param {int} limit - limit the number of returned orders
-        * @return {undefined}
+        * @return {promise or undefined} - omitting the callback returns a promise
         */
         depth: function (symbol, callback, limit = 100) {
           if (!callback) {
@@ -1420,7 +1420,7 @@ let api = function Binance() {
         * Gets the average prices of a given symbol
         * @param {string} symbol - the symbol
         * @param {function} callback - the callback function
-        * @return {undefined}
+        * @return {promise or undefined} - omitting the callback returns a promise
         */
         avgPrice: function (symbol, callback = false) {
             let opt = {
@@ -1451,7 +1451,7 @@ let api = function Binance() {
         * Gets the prices of a given symbol(s)
         * @param {string} symbol - the symbol
         * @param {function} callback - the callback function
-        * @return {undefined}
+        * @return {promise or undefined} - omitting the callback returns a promise
         */
         prices: function (symbol, callback = false) {
             const params = typeof symbol === 'string' ? '?symbol=' + symbol : '';
@@ -1481,7 +1481,7 @@ let api = function Binance() {
         * Gets the book tickers of given symbol(s)
         * @param {string} symbol - the symbol
         * @param {function} callback - the callback function
-        * @return {undefined}
+        * @return {promise or undefined} - omitting the callback returns a promise
         */
         bookTickers: function (symbol, callback) {
             const params = typeof symbol === 'string' ? '?symbol=' + symbol : '';
@@ -1512,7 +1512,7 @@ let api = function Binance() {
         * Gets the prevday percentage change
         * @param {string} symbol - the symbol or symbols
         * @param {function} callback - the callback function
-        * @return {undefined}
+        * @return {promise or undefined} - omitting the callback returns a promise
         */
         prevDay: function (symbol, callback) {
             let input = symbol ? { symbol: symbol } : {};
@@ -1539,7 +1539,7 @@ let api = function Binance() {
         /**
         * Gets the the exchange info
         * @param {function} callback - the callback function
-        * @return {undefined}
+        * @return {promise or undefined} - omitting the callback returns a promise
         */
         exchangeInfo: function (callback) {
           if (!callback) {
@@ -1561,7 +1561,7 @@ let api = function Binance() {
         /**
         * Gets the dust log for user
         * @param {function} callback - the callback function
-        * @return {undefined}
+        * @return {promise or undefined} - omitting the callback returns a promise
         */
         dustLog: function (callback) {
           if (!callback) {
@@ -1583,7 +1583,7 @@ let api = function Binance() {
         /**
         * Gets the the system status
         * @param {function} callback - the callback function
-        * @return {undefined}
+        * @return {promise or undefined} - omitting the callback returns a promise
         */
         systemStatus: function (callback) {
           if (!callback) {
@@ -1609,7 +1609,7 @@ let api = function Binance() {
         * @param {number} amount - the amount to transfer
         * @param {string} addressTag - and addtional address tag
         * @param {function} callback - the callback function
-        * @return {undefined}
+        * @return {promise or undefined} - omitting the callback returns a promise
         */
         withdraw: function (asset, address, amount, addressTag = false, callback = false) {
             let params = { asset, address, amount };
@@ -1635,7 +1635,7 @@ let api = function Binance() {
         * Get the Withdraws history for a given asset
         * @param {function} callback - the callback function
         * @param {object} params - supports limit and fromId parameters
-        * @return {undefined}
+        * @return {promise or undefined} - omitting the callback returns a promise
         */
         withdrawHistory: function (callback, params = {}) {
             if (typeof params === 'string') params = { asset: params };
@@ -1659,7 +1659,7 @@ let api = function Binance() {
         * Get the deposit history
         * @param {function} callback - the callback function
         * @param {object} params - additional params
-        * @return {undefined}
+        * @return {promise or undefined} - omitting the callback returns a promise
         */
         depositHistory: function (callback, params = {}) {
             if (typeof params === 'string') params = { asset: params }; // Support 'asset' (string) or optional parameters (object)
@@ -1683,7 +1683,7 @@ let api = function Binance() {
         * Get the deposit history for given asset
         * @param {string} asset - the asset
         * @param {function} callback - the callback function
-        * @return {undefined}
+        * @return {promise or undefined} - omitting the callback returns a promise
         */
         depositAddress: function (asset, callback) {
           if (!callback) {
@@ -1705,7 +1705,7 @@ let api = function Binance() {
         /**
         * Get the account status
         * @param {function} callback - the callback function
-        * @return {undefined}
+        * @return {promise or undefined} - omitting the callback returns a promise
         */
         accountStatus: function (callback) {
           if (!callback) {
@@ -1728,7 +1728,7 @@ let api = function Binance() {
         * Get the trade fee
         * @param {function} callback - the callback function
         * @param {string} symbol (optional)
-        * @return {undefined}
+        * @return {promise or undefined} - omitting the callback returns a promise
         */
         tradeFee: function (callback, symbol = false) {
             let params = symbol ? { symbol: symbol } : {};
@@ -1751,7 +1751,7 @@ let api = function Binance() {
         /**
         * Fetch asset detail (minWithdrawAmount, depositStatus, withdrawFee, withdrawStatus, depositTip)
         * @param {function} callback - the callback function
-        * @return {undefined}
+        * @return {promise or undefined} - omitting the callback returns a promise
         */
         assetDetail: function (callback) {
           if (!callback) {
@@ -1773,7 +1773,7 @@ let api = function Binance() {
         /**
         * Get the account
         * @param {function} callback - the callback function
-        * @return {undefined}
+        * @return {promise or undefined} - omitting the callback returns a promise
         */
         account: function (callback) {
           if (!callback) {
@@ -1795,7 +1795,7 @@ let api = function Binance() {
         /**
         * Get the balance data
         * @param {function} callback - the callback function
-        * @return {undefined}
+        * @return {promise or undefined} - omitting the callback returns a promise
         */
         balance: function (callback) {
           if (!callback) {
@@ -1823,7 +1823,7 @@ let api = function Binance() {
         * @param {string} symbol - the symbol
         * @param {function} callback - the callback function
         * @param {object} options - additional options
-        * @return {undefined}
+        * @return {promise or undefined} - omitting the callback returns a promise
         */
         trades: function (symbol, callback, options = {}) {
             let parameters = Object.assign({ symbol: symbol }, options);
@@ -1850,7 +1850,7 @@ let api = function Binance() {
         /**
         * Tell api to use the server time to offset time indexes
         * @param {function} callback - the callback function
-        * @return {undefined}
+        * @return {promise or undefined} - omitting the callback returns a promise
         */
         useServerTime: function (callback = false) {
           if (!callback) {
@@ -1880,7 +1880,7 @@ let api = function Binance() {
         /**
         * Gets the time
         * @param {function} callback - the callback function
-        * @return {undefined}
+        * @return {promise or undefined} - omitting the callback returns a promise
         */
         time: function (callback) {
           if (!callback) {
@@ -1904,7 +1904,7 @@ let api = function Binance() {
         * @param {string} symbol - the symbol
         * @param {object} options - addtional optoins
         * @param {function} callback - the callback function
-        * @return {undefined}
+        * @return {promise or undefined} - omitting the callback returns a promise
         */
         aggTrades: function (symbol, options = {}, callback = false) { //fromId startTime endTime limit
             let parameters = Object.assign({ symbol }, options);
@@ -1929,7 +1929,7 @@ let api = function Binance() {
         * @param {string} symbol - the symbol
         * @param {function} callback - the callback function
         * @param {int} limit - limit the number of items returned
-        * @return {undefined}
+        * @return {promise or undefined} - omitting the callback returns a promise
         */
         recentTrades: function (symbol, callback, limit = 500) {
           if (!callback) {
@@ -1954,7 +1954,7 @@ let api = function Binance() {
         * @param {function} callback - the callback function
         * @param {int} limit - limit the number of items returned
         * @param {int} fromId - from this id
-        * @return {undefined}
+        * @return {promise or undefined} - omitting the callback returns a promise
         */
         historicalTrades: function (symbol, callback, limit = 500, fromId = false) {
             let parameters = { symbol: symbol, limit: limit };
@@ -2023,7 +2023,7 @@ let api = function Binance() {
         * @param {function} interval - the callback function
         * @param {function} callback - the callback function
         * @param {object} options - additional options
-        * @return {undefined}
+        * @return {promise or undefined} - omitting the callback returns a promise
         */
         candlesticks: function (symbol, interval = '5m', callback = false, options = { limit: 500 }) {
             let params = Object.assign({ symbol: symbol, interval: interval }, options);
@@ -2053,7 +2053,7 @@ let api = function Binance() {
         * @param {object} data - the data to send
         * @param {function} callback - the callback function
         * @param {string} method - the http method
-        * @return {undefined}
+        * @return {promise or undefined} - omitting the callback returns a promise
         */
         publicRequest: function (url, data, callback, method = 'GET') {
           if (!callback) {
@@ -2078,7 +2078,7 @@ let api = function Binance() {
         * @param {object} data - the data to send
         * @param {function} callback - the callback function
         * @param {string} method - the http method
-        * @return {undefined}
+        * @return {promise or undefined} - omitting the callback returns a promise
         */
         signedRequest: function (url, data, callback, method = 'GET') {
           if (!callback) {
