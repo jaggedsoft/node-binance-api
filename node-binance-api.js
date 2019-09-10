@@ -42,7 +42,8 @@ let api = function Binance() {
         reconnect: true,
         verbose: false,
         test: false,
-        log: function (...args) {
+        localAddress: '127.0.0.1',
+	log: function (...args) {
             console.log(Array.prototype.slice.call(args));
         }
     };
@@ -122,7 +123,8 @@ let api = function Binance() {
             'User-Agent': userAgent,
             'Content-type': contentType,
             'X-MBX-APIKEY': key || ''
-        }
+        },
+	localAddress: Binance.options.localAddress
     })
     const reqObjPOST = (url, data = {}, method = 'POST', key) => ({
         url: url,
@@ -1078,7 +1080,8 @@ let api = function Binance() {
             if (typeof Binance.options.test === 'undefined') Binance.options.test = default_options.test;
             if (typeof Binance.options.log === 'undefined') Binance.options.log = default_options.log;
             if (typeof Binance.options.verbose === 'undefined') Binance.options.verbose = default_options.verbose;
-            if (Binance.options.useServerTime) {
+            if (typeof Binance.options.localAddress === 'undefined') Binance.options.localAddress = default_options.localAddress;
+	    if (Binance.options.useServerTime) {
                 apiRequest(base + 'v1/time', {}, function (error, response) {
                     Binance.info.timeOffset = response.serverTime - new Date().getTime();
                     //Binance.options.log("server time set: ", response.serverTime, Binance.info.timeOffset);
