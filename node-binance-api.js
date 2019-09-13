@@ -250,7 +250,9 @@ let api = function Binance() {
         if (typeof flags.type !== 'undefined') opt.type = flags.type;
         if (opt.type.includes('LIMIT')) {
             opt.price = price;
-            opt.timeInForce = 'GTC';
+            if (opt.type !== 'LIMIT_MAKER') {
+                opt.timeInForce = 'GTC';
+            }
         }
         if (typeof flags.timeInForce !== 'undefined') opt.timeInForce = flags.timeInForce;
         if (typeof flags.newOrderRespType !== 'undefined') opt.newOrderRespType = flags.newOrderRespType;
