@@ -501,6 +501,8 @@ let api = function Binance() {
             Binance.options.balance_callback(data);
         } else if (type === 'executionReport') {
             if (Binance.options.execution_callback) Binance.options.execution_callback(data);
+        } else if (type === 'listStatus') {
+            if (Binance.options.list_status_callback) Binance.options.list_status_callback(data);
         } else {
             Binance.options.log('Unexpected userData: ' + type);
         }
@@ -1642,7 +1644,7 @@ let api = function Binance() {
             * @param {function} subscribed_callback - subscription callback
             * @return {undefined}
             */
-            userData: function userData(callback, execution_callback = false, subscribed_callback = false) {
+            userData: function userData(callback, execution_callback = false, subscribed_callback = false, list_status_callback = false) {
                 let reconnect = function () {
                     if (Binance.options.reconnect) userData(callback, execution_callback, subscribed_callback);
                 };
@@ -1660,6 +1662,7 @@ let api = function Binance() {
                     }, 60 * 30 * 1000); // 30 minute keepalive
                     Binance.options.balance_callback = callback;
                     Binance.options.execution_callback = execution_callback;
+                    Binance.options.list_status_callback = list_status_callback;
                     const subscription = subscribe(Binance.options.listenKey, userDataHandler, reconnect);
                     if (subscribed_callback) subscribed_callback(subscription.endpoint);
                 }, 'POST');
