@@ -239,7 +239,7 @@ let api = function Binance() {
      * @return {undefined}
      */
     const order = function (side, symbol, quantity, price, flags = {}, callback = false) {
-        let endpoint = 'v3/order';
+        let endpoint = flags.type === 'OCO' ? 'v3/order/oco' : 'v3/order';
         if (Binance.options.test) endpoint += '/test';
         let opt = {
             symbol: symbol,
@@ -253,6 +253,12 @@ let api = function Binance() {
             if (opt.type !== 'LIMIT_MAKER') {
                 opt.timeInForce = 'GTC';
             }
+        }
+        if (opt.type === 'OCO') {
+          opt.price = price;
+          opt.stopLimitPrice = flags.stopLimitPrice;
+          opt.stopLimitTimeInForce = 'GTC';
+          delete opt.type;
         }
         if (typeof flags.timeInForce !== 'undefined') opt.timeInForce = flags.timeInForce;
         if (typeof flags.newOrderRespType !== 'undefined') opt.newOrderRespType = flags.newOrderRespType;
@@ -501,6 +507,8 @@ let api = function Binance() {
             Binance.options.balance_callback(data);
         } else if (type === 'executionReport') {
             if (Binance.options.execution_callback) Binance.options.execution_callback(data);
+        } else if (type === 'listStatus') {
+            if (Binance.options.list_status_callback) Binance.options.list_status_callback(data);
         } else {
             Binance.options.log('Unexpected userData: ' + type);
         }
@@ -1642,7 +1650,7 @@ let api = function Binance() {
             * @param {function} subscribed_callback - subscription callback
             * @return {undefined}
             */
-            userData: function userData(callback, execution_callback = false, subscribed_callback = false) {
+            userData: function userData(callback, execution_callback = false, subscribed_callback = false, list_status_callback = false) {
                 let reconnect = function () {
                     if (Binance.options.reconnect) userData(callback, execution_callback, subscribed_callback);
                 };
@@ -1660,6 +1668,7 @@ let api = function Binance() {
                     }, 60 * 30 * 1000); // 30 minute keepalive
                     Binance.options.balance_callback = callback;
                     Binance.options.execution_callback = execution_callback;
+                    Binance.options.list_status_callback = list_status_callback;
                     const subscription = subscribe(Binance.options.listenKey, userDataHandler, reconnect);
                     if (subscribed_callback) subscribed_callback(subscription.endpoint);
                 }, 'POST');
