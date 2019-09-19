@@ -239,7 +239,7 @@ let api = function Binance() {
      * @return {undefined}
      */
     const order = function (side, symbol, quantity, price, flags = {}, callback = false) {
-        let endpoint = 'v3/order';
+        let endpoint = flags.type === 'OCO' ? 'v3/order/oco' : 'v3/order';
         if (Binance.options.test) endpoint += '/test';
         let opt = {
             symbol: symbol,
@@ -253,6 +253,12 @@ let api = function Binance() {
             if (opt.type !== 'LIMIT_MAKER') {
                 opt.timeInForce = 'GTC';
             }
+        }
+        if (opt.type === 'OCO') {
+          opt.price = price;
+          opt.stopLimitPrice = flags.stopLimitPrice;
+          opt.stopLimitTimeInForce = 'GTC';
+          delete opt.type;
         }
         if (typeof flags.timeInForce !== 'undefined') opt.timeInForce = flags.timeInForce;
         if (typeof flags.newOrderRespType !== 'undefined') opt.newOrderRespType = flags.newOrderRespType;
