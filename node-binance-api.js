@@ -374,9 +374,9 @@ let api = function Binance() {
     /**
      * Used to subscribe to a single websocket endpoint
      * @param {string} endpoint - endpoint to connect to
-     * @param {function} callback - the function to called when information is received
+     * @param {function} callback - the function to call when information is received
      * @param {boolean} reconnect - whether to reconnect on disconnect
-     * @param {object} opened_callback - the function to called when opened
+     * @param {object} opened_callback - the function to call when opened
      * @return {WebSocket} - websocket reference
      */
     const subscribe = function (endpoint, callback, reconnect = false, opened_callback = false) {
@@ -424,9 +424,9 @@ let api = function Binance() {
     /**
      * Used to subscribe to a combined websocket endpoint
      * @param {string} streams - streams to connect to
-     * @param {function} callback - the function to called when information is received
+     * @param {function} callback - the function to call when information is received
      * @param {boolean} reconnect - whether to reconnect on disconnect
-     * @param {object} opened_callback - the function to called when opened
+     * @param {object} opened_callback - the function to call when opened
      * @return {WebSocket} - websocket reference
      */
     const subscribeCombined = function (streams, callback, reconnect = false, opened_callback = false) {
@@ -1469,7 +1469,7 @@ let api = function Binance() {
                     return resolve(priceData(JSON.parse(body)));
                   });
                 });
-            };
+            }
             request(addProxy(opt), function (error, response, body) {
                 if (error) return callback(error);
                 if (response.statusCode !== 200) return callback(response);
