@@ -197,14 +197,15 @@ let api = function Binance() {
      * @param {object} data - The data to send
      * @param {function} callback - The callback method to call
      * @param {string} method - the http method
+     * @param {boolean} noDataInSignature - Prevents data from being added to signature
      * @return {undefined}
      */
-    const signedRequest = function (url, data = {}, callback, method = 'GET') {
+    const signedRequest = function (url, data = {}, callback, method = 'GET', noDataInSignature = false) {
         if (!Binance.options.APIKEY) throw Error('apiRequest: Invalid API Key');
         if (!Binance.options.APISECRET) throw Error('signedRequest: Invalid API Secret');
         data.timestamp = new Date().getTime() + Binance.info.timeOffset;
         if (typeof data.recvWindow === 'undefined') data.recvWindow = Binance.options.recvWindow;
-        let query = method === 'POST' && data.name === 'API Withdraw' ? '' : Object.keys(data).reduce(function (a, k) {
+        let query = method === 'POST' && noDataInSignature ? '' : Object.keys(data).reduce(function (a, k) {
             a.push(k + '=' + encodeURIComponent(data[k]));
             return a;
         }, []).join('&');
@@ -583,7 +584,7 @@ let api = function Binance() {
             return convertData(data);
         }
     }
-    
+
     /**
      * Parses the previous day stream and calls the user callback with friendly object
      * @param {object} data - user data callback data type
@@ -1385,13 +1386,14 @@ let api = function Binance() {
         * @param {number} amount - the amount to transfer
         * @param {string} addressTag - and addtional address tag
         * @param {function} callback - the callback function
+        * @param {string} name - the name to save the address as. Set falsy to prevent Binance saving to address book
         * @return {undefined}
         */
-        withdraw: function (asset, address, amount, addressTag = false, callback = false) {
+        withdraw: function (asset, address, amount, addressTag = false, callback = false, name = 'API Withdraw') {
             let params = { asset, address, amount };
-            params.name = 'API Withdraw';
             if (addressTag) params.addressTag = addressTag;
-            signedRequest(wapi + 'v3/withdraw.html', params, callback, 'POST');
+            if (name) params.name = name
+            signedRequest(wapi + 'v3/withdraw.html', params, callback, 'POST', true);
         },
 
         /**
@@ -1624,10 +1626,11 @@ let api = function Binance() {
         * @param {object} data - the data to send
         * @param {function} callback - the callback function
         * @param {string} method - the http method
+        * @param {boolean} noDataInSignature - Prevents data from being added to signature
         * @return {undefined}
         */
-        signedRequest: function (url, data, callback, method = 'GET') {
-            signedRequest(url, data, callback, method);
+        signedRequest: function (url, data, callback, method = 'GET', noDataInSignature) {
+            signedRequest(url, data, callback, method, noDataInSignature);
         },
 
         /**

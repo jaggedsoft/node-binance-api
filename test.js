@@ -685,6 +685,22 @@ describe('Withdraw', function () {
       done();
     });
   }).timeout(TIMEOUT);
+
+  it('Attempt to withdraw BNB without saving to address book', function (done) {
+    binance.withdraw('BNBBTC', 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', '5', false, (error, result) => {
+      debug(error);
+      debug(result);
+      assert(typeof (error) === 'object', WARN_SHOULD_BE_OBJ);
+      assert(typeof (result) === 'object', WARN_SHOULD_BE_OBJ);
+      assert(error === null, WARN_SHOULD_BE_NULL);
+      assert(result !== null, WARN_SHOULD_BE_NOT_NULL);
+      assert(Object.prototype.hasOwnProperty.call(result, 'msg'), WARN_SHOULD_HAVE_KEY + 'msg');
+      assert(result.msg === 'You don\'t have permission.');
+      assert(Object.prototype.hasOwnProperty.call(result, 'success'), WARN_SHOULD_HAVE_KEY + 'success');
+      assert(result.success === false);
+      done();
+    }, false);
+  }).timeout(TIMEOUT);
 });
 
 describe('Withdraw history', function () {
