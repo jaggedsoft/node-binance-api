@@ -1386,13 +1386,14 @@ let api = function Binance() {
         * @param {number} amount - the amount to transfer
         * @param {string} addressTag - and addtional address tag
         * @param {function} callback - the callback function
+        * @param {string} name - the name to save the address as. Set falsy to prevent Binance saving to address book
         * @return {undefined}
         */
-        withdraw: function (asset, address, amount, addressTag = false, callback = false) {
+        withdraw: function (asset, address, amount, addressTag = false, callback = false, name = 'API Withdraw') {
             let params = { asset, address, amount };
-            params.name = 'API Withdraw';
             if (addressTag) params.addressTag = addressTag;
-            signedRequest(wapi + 'v3/withdraw.html', params, callback, 'POST');
+            if (name) params.name = name
+            signedRequest(wapi + 'v3/withdraw.html', params, callback, 'POST', true);
         },
 
         /**
