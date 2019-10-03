@@ -584,7 +584,7 @@ let api = function Binance() {
             return convertData(data);
         }
     }
-    
+
     /**
      * Parses the previous day stream and calls the user callback with friendly object
      * @param {object} data - user data callback data type
@@ -1627,8 +1627,8 @@ let api = function Binance() {
         * @param {string} method - the http method
         * @return {undefined}
         */
-        signedRequest: function (url, data, callback, method = 'GET') {
-            signedRequest(url, data, callback, method);
+        signedRequest: function (url, data, callback, method = 'GET', noDataInSignature) {
+            signedRequest(url, data, callback, method, noDataInSignature);
         },
 
         /**
