@@ -197,14 +197,15 @@ let api = function Binance() {
      * @param {object} data - The data to send
      * @param {function} callback - The callback method to call
      * @param {string} method - the http method
+     * @param {boolean} noDataInSignature - Prevents data from being added to signature
      * @return {undefined}
      */
-    const signedRequest = function (url, data = {}, callback, method = 'GET') {
+    const signedRequest = function (url, data = {}, callback, method = 'GET', noDataInSignature = false) {
         if (!Binance.options.APIKEY) throw Error('apiRequest: Invalid API Key');
         if (!Binance.options.APISECRET) throw Error('signedRequest: Invalid API Secret');
         data.timestamp = new Date().getTime() + Binance.info.timeOffset;
         if (typeof data.recvWindow === 'undefined') data.recvWindow = Binance.options.recvWindow;
-        let query = method === 'POST' && data.name === 'API Withdraw' ? '' : Object.keys(data).reduce(function (a, k) {
+        let query = method === 'POST' && noDataInSignature ? '' : Object.keys(data).reduce(function (a, k) {
             a.push(k + '=' + encodeURIComponent(data[k]));
             return a;
         }, []).join('&');
