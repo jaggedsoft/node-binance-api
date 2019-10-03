@@ -1626,6 +1626,7 @@ let api = function Binance() {
         * @param {object} data - the data to send
         * @param {function} callback - the callback function
         * @param {string} method - the http method
+        * @param {boolean} noDataInSignature - Prevents data from being added to signature
         * @return {undefined}
         */
         signedRequest: function (url, data, callback, method = 'GET', noDataInSignature) {
