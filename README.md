@@ -1,10 +1,11 @@
-[![Latest Version](https://img.shields.io/github/release/jaggedsoft/node-binance-api.svg?style=flat-square)](https://github.com/jaggedsoft/node-binance-api/releases) 
+[![Latest Version](https://img.shields.io/github/release/jaggedsoft/node-binance-api.svg?style=flat-square)](https://github.com/jaggedsoft/node-binance-api/releases)
 [![GitHub last commit](https://img.shields.io/github/last-commit/jaggedsoft/node-binance-api.svg?maxAge=2400)](#)
 [![npm downloads](https://img.shields.io/npm/dt/node-binance-api.svg?maxAge=7200)](https://www.npmjs.com/package/node-binance-api)
+[![jaggedsoft on Twitter](https://img.shields.io/twitter/follow/jaggedsoft.svg?style=social)](https://twitter.com/jaggedsoft)
 
 [![NPM](https://nodei.co/npm/node-binance-api.png?compact=true)](https://npmjs.org/package/node-binance-api)
 
-[![Build Status](https://travis-ci.org/jaggedsoft/node-binance-api.svg?branch=master&style=flat-square)](https://travis-ci.org/jaggedsoft/node-binance-api) 
+[![Build Status](https://travis-ci.org/jaggedsoft/node-binance-api.svg?branch=master&style=flat-square)](https://travis-ci.org/jaggedsoft/node-binance-api)
 [![Coverage Status](https://coveralls.io/repos/github/jaggedsoft/node-binance-api/badge.svg?branch=master&style=flat-square)](https://coveralls.io/github/jaggedsoft/node-binance-api)
 [![CodeCov](https://codecov.io/gh/jaggedsoft/node-binance-api/branch/master/graph/badge.svg?style=flat-square)](https://codecov.io/github/jaggedsoft/node-binance-api/)
 [![Codacy Badge](https://api.codacy.com/project/badge/Coverage/996757cec66542c0a64fca2b4cf8a936)](https://www.codacy.com/app/dmzoneill/node-binance-api?utm_source=github.com&utm_medium=referral&utm_content=jaggedsoft/node-binance-api&utm_campaign=Badge_Coverage)
@@ -1239,6 +1240,13 @@ binance.allOrders("ETHBTC", (error, orders, symbol) => {
 });
 ```
 
+#### Get dust log
+```javascript
+binance.dustLog((error, dustlog) => {
+  console.log(dustlog);
+})
+```
+
 #### Get 24hr ticker price change statistics for all symbols
 ```javascript
 binance.prevDay(false, (error, prevDay) => {
@@ -1472,6 +1480,7 @@ binance.websockets.depthCache(['BNBBTC'], (symbol, depth) => {
   console.log("asks", asks);
   console.log("best bid: "+binance.first(bids));
   console.log("best ask: "+binance.first(asks));
+  console.log("last updated: " + new Date(depth.eventTime));
 });
 ```
 
@@ -1502,8 +1511,9 @@ bids { '0.00025203': 0.201624,
   '0.00025100': 0.02259,
   '0.00025072': 0.012536,
   '0.00025071': 0.00401136 }
-//ask: 0.00025400
-//bid: 0.00025203
+//best ask: 0.00025400
+//best bid: 0.00025203
+//last updated: Thu Apr 18 2019 00:52:49 GMT-0400 (Eastern Daylight Time)
 ```
 </details>
 
@@ -1565,6 +1575,13 @@ binance.withdraw("ETH", "0x1d2034348c851ea29c7d03731c7968a5bcc91564", 1, false, 
 binance.withdraw("BTC", "1C5gqLRs96Xq4V2ZZAR1347yUCpHie7sa", 0.2);
 ```
 
+#### Withdraw with custom name
+```js
+// let name = false // Falsy value won't save address to address book
+let name = 'My Withdrawal Address'
+binance.withdraw("BTC", "1C5gqLRs96Xq4V2ZZAR1347yUCpHie7sa", 0.2, undefined, name)
+```
+
 #### [Advanced Examples](https://github.com/jaggedsoft/node-binance-api/blob/master/examples/advanced.md)
 > [exchangeInfo: Pull minimum order size, quantity, etc](https://github.com/jaggedsoft/node-binance-api/blob/master/examples/advanced.md#exchangeinfo-pull-minimum-order-size-quantity-etc)\
 [Clamp order quantities to required amounts via minQty, minNotional, stepSize when placing orders](https://github.com/jaggedsoft/node-binance-api/blob/master/examples/advanced.md#clamp-order-quantities-to-required-amounts-via-minqty-minnotional-stepsize-when-placing-orders)\
@@ -1610,7 +1627,7 @@ set socks_proxy=socks://ip:port
 ```
 
 ### Troubleshooting
-Verify that your system time is correct. If you have any suggestions don't hestitate to file an issue.
+Verify that your system time is correct. If you have any suggestions don't hesitate to file an issue.
 
 Having problems? Try adding `useServerTime` to your options or setting `recvWindow`:
 ```js
@@ -1637,9 +1654,16 @@ binance.useServerTime(function() {
 });
 ```
 
-[![Views](http://hits.dwyl.io/jaggedsoft/node-binance-api.svg)](http://hits.dwyl.io/jaggedsoft/node-binance-api)
-
-Thank you to all contributors: dmzoneill, dmitriz, keith1024, usama33, yanislk, learnathoner, vaielab, nickreese, Tuitio, grandmore, itnok, CollinEstes, sethyx, mstijak, MadDeveloper, balthazar, bitoiu, matthewwoop, robaleman, hems and others!
+Thank you to all contributors: bmino, dmzoneill, dmitriz, keith1024, pavlovdog, usama33, yanislk, learnathoner, vaielab, nickreese, Tuitio, grandmore, itnok, CollinEstes, sethyx, mstijak, MadDeveloper, balthazar, bitoiu, matthewwoop, robaleman, hems and others!
 
 > # ⚠️ Binance no longer offers support for API projects.
-> ## No support is offered. No questions will be answered.
+> ## No support is offered. No questions will be answered. Pull requests are still welcome.
+
+
+## Stargazers over time
+
+[![Stargazers over time](https://starcharts.herokuapp.com/jaggedsoft/node-binance-api.svg)](https://starcharts.herokuapp.com/jaggedsoft/node-binance-api)
+
+[![Views](http://hits.dwyl.io/jaggedsoft/node-binance-api.svg)](http://hits.dwyl.io/jaggedsoft/node-binance-api)
+[![jaggedsoft on Twitter](https://img.shields.io/twitter/follow/jaggedsoft.svg?style=social)](https://twitter.com/jaggedsoft)
+[![Chartaholic on Twitter](https://img.shields.io/twitter/follow/Chartaholic.svg?style=social)](https://twitter.com/Chartaholic)

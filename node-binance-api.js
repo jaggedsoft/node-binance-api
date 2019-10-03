@@ -85,17 +85,18 @@ let api = function Binance() {
     }
 
     const addProxy = opt => {
-        let socksproxy = process.env.socks_proxy || false;
-        if (socksproxy === false) return opt;
-        socksproxy = proxyReplacewithIp(socksproxy);
-
-        if (Binance.options.verbose) Binance.options.log('using socks proxy server ' + socksproxy);
-
-        opt.agentClass = SocksProxyAgent;
-        opt.agentOptions = {
-            protocol: parseProxy(socksproxy)[0],
-            host: parseProxy(socksproxy)[1],
-            port: parseProxy(socksproxy)[2]
+        let proxy = Binance.options.proxy
+            ? `http://${
+                Binance.options.proxy.auth
+                    ? Binance.options.proxy.auth.username +
+                    ':' +
+                    Binance.options.proxy.auth.password +
+                    '@'
+                    : ''
+                }${Binance.options.proxy.host}:${Binance.options.proxy.port}`
+            : '';
+        if (proxy) {
+            opt.proxy = proxy;
         }
         return opt;
     }
@@ -196,14 +197,15 @@ let api = function Binance() {
      * @param {object} data - The data to send
      * @param {function} callback - The callback method to call
      * @param {string} method - the http method
+     * @param {boolean} noDataInSignature - Prevents data from being added to signature
      * @return {undefined}
      */
-    const signedRequest = function (url, data = {}, callback, method = 'GET') {
+    const signedRequest = function (url, data = {}, callback, method = 'GET', noDataInSignature = false) {
         if (!Binance.options.APIKEY) throw Error('apiRequest: Invalid API Key');
         if (!Binance.options.APISECRET) throw Error('signedRequest: Invalid API Secret');
         data.timestamp = new Date().getTime() + Binance.info.timeOffset;
         if (typeof data.recvWindow === 'undefined') data.recvWindow = Binance.options.recvWindow;
-        let query = Object.keys(data).reduce(function (a, k) {
+        let query = method === 'POST' && noDataInSignature ? '' : Object.keys(data).reduce(function (a, k) {
             a.push(k + '=' + encodeURIComponent(data[k]));
             return a;
         }, []).join('&');
@@ -238,7 +240,7 @@ let api = function Binance() {
      * @return {undefined}
      */
     const order = function (side, symbol, quantity, price, flags = {}, callback = false) {
-        let endpoint = 'v3/order';
+        let endpoint = flags.type === 'OCO' ? 'v3/order/oco' : 'v3/order';
         if (Binance.options.test) endpoint += '/test';
         let opt = {
             symbol: symbol,
@@ -249,7 +251,15 @@ let api = function Binance() {
         if (typeof flags.type !== 'undefined') opt.type = flags.type;
         if (opt.type.includes('LIMIT')) {
             opt.price = price;
-            opt.timeInForce = 'GTC';
+            if (opt.type !== 'LIMIT_MAKER') {
+                opt.timeInForce = 'GTC';
+            }
+        }
+        if (opt.type === 'OCO') {
+          opt.price = price;
+          opt.stopLimitPrice = flags.stopLimitPrice;
+          opt.stopLimitTimeInForce = 'GTC';
+          delete opt.type;
         }
         if (typeof flags.timeInForce !== 'undefined') opt.timeInForce = flags.timeInForce;
         if (typeof flags.newOrderRespType !== 'undefined') opt.newOrderRespType = flags.newOrderRespType;
@@ -498,10 +508,82 @@ let api = function Binance() {
             Binance.options.balance_callback(data);
         } else if (type === 'executionReport') {
             if (Binance.options.execution_callback) Binance.options.execution_callback(data);
+        } else if (type === 'listStatus') {
+            if (Binance.options.list_status_callback) Binance.options.list_status_callback(data);
         } else {
             Binance.options.log('Unexpected userData: ' + type);
         }
     };
+
+    /**
+     * Converts the previous day stream into friendly object
+     * @param {object} data - user data callback data type
+     * @return {object} - user friendly data type
+     */
+    const prevDayConvertData = function(data) {
+        let convertData = function(data) {
+            let {
+                e: eventType,
+                E: eventTime,
+                s: symbol,
+                p: priceChange,
+                P: percentChange,
+                w: averagePrice,
+                x: prevClose,
+                c: close,
+                Q: closeQty,
+                b: bestBid,
+                B: bestBidQty,
+                a: bestAsk,
+                A: bestAskQty,
+                o: open,
+                h: high,
+                l: low,
+                v: volume,
+                q: quoteVolume,
+                O: openTime,
+                C: closeTime,
+                F: firstTradeId,
+                L: lastTradeId,
+                n: numTrades
+            } = data;
+            return {
+                eventType,
+                eventTime,
+                symbol,
+                priceChange,
+                percentChange,
+                averagePrice,
+                prevClose,
+                close,
+                closeQty,
+                bestBid,
+                bestBidQty,
+                bestAsk,
+                bestAskQty,
+                open,
+                high,
+                low,
+                volume,
+                quoteVolume,
+                openTime,
+                closeTime,
+                firstTradeId,
+                lastTradeId,
+                numTrades
+            };
+        }
+        if (Array.isArray(data)) {
+            const result = [];
+            for (let obj of data) {
+                let converted = convertData(obj);
+                result.push(converted);
+            }
+            return result;
+        } else {
+            return convertData(data);
+        }
+    }
 
     /**
      * Parses the previous day stream and calls the user callback with friendly object
@@ -510,56 +592,8 @@ let api = function Binance() {
      * @return {undefined}
      */
     const prevDayStreamHandler = function (data, callback) {
-        let {
-            e: eventType,
-            E: eventTime,
-            s: symbol,
-            p: priceChange,
-            P: percentChange,
-            w: averagePrice,
-            x: prevClose,
-            c: close,
-            Q: closeQty,
-            b: bestBid,
-            B: bestBidQty,
-            a: bestAsk,
-            A: bestAskQty,
-            o: open,
-            h: high,
-            l: low,
-            v: volume,
-            q: quoteVolume,
-            O: openTime,
-            C: closeTime,
-            F: firstTradeId,
-            L: lastTradeId,
-            n: numTrades
-        } = data;
-        callback(null, {
-            eventType,
-            eventTime,
-            symbol,
-            priceChange,
-            percentChange,
-            averagePrice,
-            prevClose,
-            close,
-            closeQty,
-            bestBid,
-            bestBidQty,
-            bestAsk,
-            bestAskQty,
-            open,
-            high,
-            low,
-            volume,
-            quoteVolume,
-            openTime,
-            closeTime,
-            firstTradeId,
-            lastTradeId,
-            numTrades
-        });
+        const converted = prevDayConvertData(data);
+        callback(null, converted);
     };
 
     /**
@@ -713,22 +747,25 @@ let api = function Binance() {
         let context = Binance.depthCacheContext[symbol];
 
         let updateDepthCache = function () {
+            Binance.depthCache[symbol].eventTime = depth.E;
             for (obj of depth.b) { //bids
-                Binance.depthCache[symbol].bids[obj[0]] = parseFloat(obj[1]);
                 if (obj[1] === '0.00000000') {
                     delete Binance.depthCache[symbol].bids[obj[0]];
+                } else {
+                    Binance.depthCache[symbol].bids[obj[0]] = parseFloat(obj[1]);
                 }
             }
             for (obj of depth.a) { //asks
-                Binance.depthCache[symbol].asks[obj[0]] = parseFloat(obj[1]);
                 if (obj[1] === '0.00000000') {
                     delete Binance.depthCache[symbol].asks[obj[0]];
+                } else {
+                    Binance.depthCache[symbol].asks[obj[0]] = parseFloat(obj[1]);
                 }
             }
             context.skipCount = 0;
             context.lastEventUpdateId = depth.u;
             context.lastEventUpdateTime = depth.E;
-        }
+        };
 
         // This now conforms 100% to the Binance docs constraints on managing a local order book
         if (context.lastEventUpdateId) {
@@ -827,6 +864,7 @@ let api = function Binance() {
         * @return {int} - number of place
         */
         getPrecision: function (float) {
+            if ( !float || Number.isInteger( float ) ) return 0;
             return float.toString().split('.')[1].length || 0;
         },
 
@@ -1232,25 +1270,12 @@ let api = function Binance() {
         * @return {undefined}
         */
         avgPrice: function (symbol, callback = false) {
-            let socksproxy = process.env.socks_proxy || false;
-
             let opt = {
                 url: base + 'v3/avgPrice?symbol=' + symbol,
                 timeout: Binance.options.recvWindow
             };
 
-            if (socksproxy !== false) {
-                socksproxy = proxyReplacewithIp(socksproxy);
-                if (Binance.options.verbose) Binance.options.log('using socks proxy server ' + socksproxy);
-                opt.agentClass = SocksProxyAgent;
-                opt.agentOptions = {
-                    protocol: parseProxy(socksproxy)[0],
-                    host: parseProxy(socksproxy)[1],
-                    port: parseProxy(socksproxy)[2]
-                }
-            }
-
-            request(opt, function (error, response, body) {
+            request(addProxy(opt), function (error, response, body) {
                 if (!callback) return;
 
                 if (error) return callback(error);
@@ -1271,25 +1296,12 @@ let api = function Binance() {
             const params = typeof symbol === 'string' ? '?symbol=' + symbol : '';
             if (typeof symbol === 'function') callback = symbol; // backwards compatibility
 
-            let socksproxy = process.env.socks_proxy || false;
-
             let opt = {
                 url: base + 'v3/ticker/price' + params,
                 timeout: Binance.options.recvWindow
             };
 
-            if (socksproxy !== false) {
-                socksproxy = proxyReplacewithIp(socksproxy);
-                if (Binance.options.verbose) Binance.options.log('using socks proxy server ' + socksproxy);
-                opt.agentClass = SocksProxyAgent;
-                opt.agentOptions = {
-                    protocol: parseProxy(socksproxy)[0],
-                    host: parseProxy(socksproxy)[1],
-                    port: parseProxy(socksproxy)[2]
-                }
-            }
-
-            request(opt, function (error, response, body) {
+            request(addProxy(opt), function (error, response, body) {
                 if (!callback) return;
 
                 if (error) return callback(error);
@@ -1310,25 +1322,12 @@ let api = function Binance() {
             const params = typeof symbol === 'string' ? '?symbol=' + symbol : '';
             if (typeof symbol === 'function') callback = symbol; // backwards compatibility
 
-            let socksproxy = process.env.socks_proxy || false;
-
             let opt = {
                 url: base + 'v3/ticker/bookTicker' + params,
                 timeout: Binance.options.recvWindow
             };
 
-            if (socksproxy !== false) {
-                socksproxy = proxyReplacewithIp(socksproxy);
-                if (Binance.options.verbose) Binance.options.log('using socks proxy server ' + socksproxy);
-                opt.agentClass = SocksProxyAgent;
-                opt.agentOptions = {
-                    protocol: parseProxy(socksproxy)[0],
-                    host: parseProxy(socksproxy)[1],
-                    port: parseProxy(socksproxy)[2]
-                }
-            }
-
-            request(opt, function (error, response, body) {
+            request(addProxy(opt), function (error, response, body) {
                 if (!callback) return;
 
                 if (error) return callback(error);
@@ -1363,7 +1362,14 @@ let api = function Binance() {
         exchangeInfo: function (callback) {
             publicRequest(base + 'v1/exchangeInfo', {}, callback);
         },
-
+        /**
+        * Gets the dust log for user
+        * @param {function} callback - the callback function
+        * @return {undefined}
+        */
+        dustLog: function (callback) {
+          signedRequest(wapi + '/v3/userAssetDribbletLog.html', {}, callback);
+        },
         /**
         * Gets the the system status
         * @param {function} callback - the callback function
@@ -1380,13 +1386,14 @@ let api = function Binance() {
         * @param {number} amount - the amount to transfer
         * @param {string} addressTag - and addtional address tag
         * @param {function} callback - the callback function
+        * @param {string} name - the name to save the address as. Set falsy to prevent Binance saving to address book
         * @return {undefined}
         */
-        withdraw: function (asset, address, amount, addressTag = false, callback = false) {
+        withdraw: function (asset, address, amount, addressTag = false, callback = false, name = 'API Withdraw') {
             let params = { asset, address, amount };
-            params.name = 'API Withdraw';
             if (addressTag) params.addressTag = addressTag;
-            signedRequest(wapi + 'v3/withdraw.html', params, callback, 'POST');
+            if (name) params.name = name
+            signedRequest(wapi + 'v3/withdraw.html', params, callback, 'POST', true);
         },
 
         /**
@@ -1619,10 +1626,11 @@ let api = function Binance() {
         * @param {object} data - the data to send
         * @param {function} callback - the callback function
         * @param {string} method - the http method
+        * @param {boolean} noDataInSignature - Prevents data from being added to signature
         * @return {undefined}
         */
-        signedRequest: function (url, data, callback, method = 'GET') {
-            signedRequest(url, data, callback, method);
+        signedRequest: function (url, data, callback, method = 'GET', noDataInSignature) {
+            signedRequest(url, data, callback, method, noDataInSignature);
         },
 
         /**
@@ -1645,7 +1653,7 @@ let api = function Binance() {
             * @param {function} subscribed_callback - subscription callback
             * @return {undefined}
             */
-            userData: function userData(callback, execution_callback = false, subscribed_callback = false) {
+            userData: function userData(callback, execution_callback = false, subscribed_callback = false, list_status_callback = false) {
                 let reconnect = function () {
                     if (Binance.options.reconnect) userData(callback, execution_callback, subscribed_callback);
                 };
@@ -1663,6 +1671,7 @@ let api = function Binance() {
                     }, 60 * 30 * 1000); // 30 minute keepalive
                     Binance.options.balance_callback = callback;
                     Binance.options.execution_callback = execution_callback;
+                    Binance.options.list_status_callback = list_status_callback;
                     const subscription = subscribe(Binance.options.listenKey, userDataHandler, reconnect);
                     if (subscribed_callback) subscribed_callback(subscription.endpoint);
                 }, 'POST');
@@ -1844,6 +1853,17 @@ let api = function Binance() {
                     assignEndpointIdToContext(symbol, subscription.endpoint);
                 }
                 return subscription.endpoint;
+            },
+
+            /**
+             * Clear websocket depthcache
+             * @param {String|Array} symbols   - a single symbol, or an array of symbols, to clear the cache of
+             */
+            clearDepthCache(symbols) {
+                const symbolsArr = Array.isArray(symbols) ? symbols : [symbols];
+                symbolsArr.forEach((thisSymbol) => {
+                    delete Binance.depthCache[thisSymbol];
+                });
             },
 
             /**
@@ -2047,9 +2067,10 @@ let api = function Binance() {
             * Websocket prevday percentage
             * @param {array/string} symbols - an array or string of symbols to query
             * @param {function} callback - callback function
+            * @param {boolean} singleCallback - avoid call one callback for each symbol in data array
             * @return {string} the websocket endpoint
             */
-            prevDay: function prevDay(symbols, callback) {
+            prevDay: function prevDay(symbols, callback, singleCallback) {
                 let reconnect = function () {
                     if (Binance.options.reconnect) prevDay(symbols, callback);
                 };
@@ -2073,8 +2094,12 @@ let api = function Binance() {
                     // Raw stream of all listed symbols
                 } else {
                     subscription = subscribe('!ticker@arr', function (data) {
-                        for (let line of data) {
-                            prevDayStreamHandler(line, callback);
+                        if (singleCallback) {
+                            prevDayStreamHandler(data, callback);
+                        } else {
+                            for (let line of data) {
+                                prevDayStreamHandler(line, callback);
+                            }
                         }
                     }, reconnect);
                 }
