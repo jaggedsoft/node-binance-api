@@ -1437,7 +1437,7 @@ let api = function Binance() {
                     return resolve(result);
                   });
                 });
-            };
+            }
             request(addProxy(opt), function (error, response, body) {
                 if (error) return callback(error);
                 if (response.statusCode !== 200) return callback(response);
