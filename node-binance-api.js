@@ -1694,12 +1694,45 @@ let api = function Binance() {
         * @param {string} asset - the asset
         * @param {number} amount - the asset
         * @param {function} callback - the callback function
-        * @param {object} options - additional options
         * @return {undefined}
         */
         mgTransferMarginToMain: function (asset, amount, callback) {
             let parameters = Object.assign({ asset: asset, amount: amount, type: 2 });
             signedRequest(sapi + 'v1/margin/transfer', parameters, function (error, data) {
+                if (!Object.prototype.hasOwnProperty.call(data, 'tranId')) {
+                    error = data.body;
+                }
+                if (callback) return callback(error, data);
+            }, 'POST');
+        },
+
+        /**
+        * Margin account borrow/loan
+        * @param {string} asset - the asset
+        * @param {number} amount - the asset
+        * @param {function} callback - the callback function
+        * @return {undefined}
+        */
+        mgBorrow: function (asset, amount, callback) {
+            let parameters = Object.assign({ asset: asset, amount: amount });
+            signedRequest(sapi + 'v1/margin/loan', parameters, function (error, data) {
+                if (!Object.prototype.hasOwnProperty.call(data, 'tranId')) {
+                    error = data.body;
+                }
+                if (callback) return callback(error, data);
+            }, 'POST');
+        },
+
+        /**
+        * Margin account repay
+        * @param {string} asset - the asset
+        * @param {number} amount - the asset
+        * @param {function} callback - the callback function
+        * @return {undefined}
+        */
+        mgRepay: function (asset, amount, callback) {
+            let parameters = Object.assign({ asset: asset, amount: amount });
+            signedRequest(sapi + 'v1/margin/repay', parameters, function (error, data) {
                 if (!Object.prototype.hasOwnProperty.call(data, 'tranId')) {
                     error = data.body;
                 }
