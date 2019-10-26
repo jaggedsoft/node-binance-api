@@ -26,6 +26,7 @@ let api = function Binance() {
     const async = require('async');
     const base = 'https://api.binance.com/api/';
     const wapi = 'https://api.binance.com/wapi/';
+    const sapi = 'https://api.binance.com/sapi/';
     const stream = 'wss://stream.binance.com:9443/ws/';
     const combineStream = 'wss://stream.binance.com:9443/stream?streams=';
     const userAgent = 'Mozilla/4.0 (compatible; Node Binance API)';
@@ -87,13 +88,13 @@ let api = function Binance() {
     const addProxy = opt => {
         let proxy = Binance.options.proxy
             ? `http://${
-                Binance.options.proxy.auth
-                    ? Binance.options.proxy.auth.username +
-                    ':' +
-                    Binance.options.proxy.auth.password +
-                    '@'
-                    : ''
-                }${Binance.options.proxy.host}:${Binance.options.proxy.port}`
+            Binance.options.proxy.auth
+                ? Binance.options.proxy.auth.username +
+                ':' +
+                Binance.options.proxy.auth.password +
+                '@'
+                : ''
+            }${Binance.options.proxy.host}:${Binance.options.proxy.port}`
             : '';
         if (proxy) {
             opt.proxy = proxy;
@@ -256,10 +257,10 @@ let api = function Binance() {
             }
         }
         if (opt.type === 'OCO') {
-          opt.price = price;
-          opt.stopLimitPrice = flags.stopLimitPrice;
-          opt.stopLimitTimeInForce = 'GTC';
-          delete opt.type;
+            opt.price = price;
+            opt.stopLimitPrice = flags.stopLimitPrice;
+            opt.stopLimitTimeInForce = 'GTC';
+            delete opt.type;
         }
         if (typeof flags.timeInForce !== 'undefined') opt.timeInForce = flags.timeInForce;
         if (typeof flags.newOrderRespType !== 'undefined') opt.newOrderRespType = flags.newOrderRespType;
@@ -510,8 +511,30 @@ let api = function Binance() {
             if (Binance.options.execution_callback) Binance.options.execution_callback(data);
         } else if (type === 'listStatus') {
             if (Binance.options.list_status_callback) Binance.options.list_status_callback(data);
+        } else if (type === 'outboundAccountPosition') {
+            // TODO: Does this mean something?
         } else {
             Binance.options.log('Unexpected userData: ' + type);
+        }
+    };
+
+    /**
+    * Used as part of the user data websockets callback
+    * @param {object} data - user data callback data type
+    * @return {undefined}
+    */
+    const userMarginDataHandler = function (data) {
+        let type = data.e;
+        if (type === 'outboundAccountInfo') {
+            Binance.options.margin_balance_callback(data);
+        } else if (type === 'executionReport') {
+            if (Binance.options.margin_execution_callback) Binance.options.margin_execution_callback(data);
+        } else if (type === 'listStatus') {
+            if (Binance.options.margin_list_status_callback) Binance.options.margin_list_status_callback(data);
+        } else if (type === 'outboundAccountPosition') {
+            // TODO: Does this mean something?
+        } else {
+            Binance.options.log('Unexpected userMarginData: ' + type);
         }
     };
 
@@ -520,8 +543,8 @@ let api = function Binance() {
      * @param {object} data - user data callback data type
      * @return {object} - user friendly data type
      */
-    const prevDayConvertData = function(data) {
-        let convertData = function(data) {
+    const prevDayConvertData = function (data) {
+        let convertData = function (data) {
             let {
                 e: eventType,
                 E: eventTime,
@@ -580,6 +603,7 @@ let api = function Binance() {
                 result.push(converted);
             }
             return result;
+            // eslint-disable-next-line no-else-return
         } else {
             return convertData(data);
         }
@@ -864,7 +888,7 @@ let api = function Binance() {
         * @return {int} - number of place
         */
         getPrecision: function (float) {
-            if ( !float || Number.isInteger( float ) ) return 0;
+            if (!float || Number.isInteger(float)) return 0;
             return float.toString().split('.')[1].length || 0;
         },
 
@@ -1368,7 +1392,7 @@ let api = function Binance() {
         * @return {undefined}
         */
         dustLog: function (callback) {
-          signedRequest(wapi + '/v3/userAssetDribbletLog.html', {}, callback);
+            signedRequest(wapi + '/v3/userAssetDribbletLog.html', {}, callback);
         },
         /**
         * Gets the the system status
@@ -1645,12 +1669,52 @@ let api = function Binance() {
             else if (substring === 'BNB') return 'BNB';
             else if (symbol.substr(-4) === 'USDT') return 'USDT';
         },
+        //** Margin actions */
+
+        /**
+        * Transfer from main account to margin account
+        * @param {string} asset - the asset
+        * @param {number} amount - the asset
+        * @param {function} callback - the callback function
+        * @param {object} options - additional options
+        * @return {undefined}
+        */
+        mgTransferMainToMargin: function (asset, amount, callback) {
+            let parameters = Object.assign({ asset: asset, amount: amount, type: 1 });
+            signedRequest(sapi + 'v1/margin/transfer', parameters, function (error, data) {
+                if (!Object.prototype.hasOwnProperty.call(data, 'tranId')) {
+                    error = data.body;
+                }
+                if (callback) return callback(error, data);
+            }, 'POST');
+        },
+
+        /**
+        * Transfer from margin account to main account
+        * @param {string} asset - the asset
+        * @param {number} amount - the asset
+        * @param {function} callback - the callback function
+        * @param {object} options - additional options
+        * @return {undefined}
+        */
+        mgTransferMarginToMain: function (asset, amount, callback) {
+            let parameters = Object.assign({ asset: asset, amount: amount, type: 2 });
+            signedRequest(sapi + 'v1/margin/transfer', parameters, function (error, data) {
+                if (!Object.prototype.hasOwnProperty.call(data, 'tranId')) {
+                    error = data.body;
+                }
+                if (callback) return callback(error, data);
+            }, 'POST');
+        },
+
+
         websockets: {
             /**
             * Userdata websockets function
             * @param {function} callback - the callback function
             * @param {function} execution_callback - optional execution callback
             * @param {function} subscribed_callback - subscription callback
+            * @param {function} list_status_callback - status callback
             * @return {undefined}
             */
             userData: function userData(callback, execution_callback = false, subscribed_callback = false, list_status_callback = false) {
@@ -1673,6 +1737,38 @@ let api = function Binance() {
                     Binance.options.execution_callback = execution_callback;
                     Binance.options.list_status_callback = list_status_callback;
                     const subscription = subscribe(Binance.options.listenKey, userDataHandler, reconnect);
+                    if (subscribed_callback) subscribed_callback(subscription.endpoint);
+                }, 'POST');
+            },
+
+            /**
+            * Margin Userdata websockets function
+            * @param {function} callback - the callback function
+            * @param {function} execution_callback - optional execution callback
+            * @param {function} subscribed_callback - subscription callback
+            * @param {function} list_status_callback - status callback
+            * @return {undefined}
+            */
+            userMarginData: function userMarginData(callback, execution_callback = false, subscribed_callback = false, list_status_callback = false) {
+                let reconnect = function () {
+                    if (Binance.options.reconnect) userMarginData(callback, execution_callback, subscribed_callback);
+                };
+                apiRequest(sapi + 'v1/userDataStream', {}, function (error, response) {
+                    Binance.options.listenMarginKey = response.listenKey;
+                    setTimeout(function userDataKeepAlive() { // keepalive
+                        try {
+                            apiRequest(sapi + 'v1/userDataStream?listenKey=' + Binance.options.listenMarginKey, {}, function (err) {
+                                if (err) setTimeout(userDataKeepAlive, 60000); // retry in 1 minute
+                                else setTimeout(userDataKeepAlive, 60 * 30 * 1000); // 30 minute keepalive
+                            }, 'PUT');
+                        } catch (error) {
+                            setTimeout(userDataKeepAlive, 60000); // retry in 1 minute
+                        }
+                    }, 60 * 30 * 1000); // 30 minute keepalive
+                    Binance.options.margin_balance_callback = callback;
+                    Binance.options.margin_execution_callback = execution_callback;
+                    Binance.options.margin_list_status_callback = list_status_callback;
+                    const subscription = subscribe(Binance.options.listenMarginKey, userMarginDataHandler, reconnect);
                     if (subscribed_callback) subscribed_callback(subscription.endpoint);
                 }, 'POST');
             },
@@ -1858,10 +1954,11 @@ let api = function Binance() {
             /**
              * Clear websocket depthcache
              * @param {String|Array} symbols   - a single symbol, or an array of symbols, to clear the cache of
+             * @returns {void}
              */
             clearDepthCache(symbols) {
                 const symbolsArr = Array.isArray(symbols) ? symbols : [symbols];
-                symbolsArr.forEach((thisSymbol) => {
+                symbolsArr.forEach(thisSymbol => {
                     delete Binance.depthCache[thisSymbol];
                 });
             },
