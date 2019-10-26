@@ -1597,7 +1597,7 @@ binance.mgTransferMainToMargin(asset, amount, (error, response) => {
 ```
 #### Transfer from Margin account to Main account
 ```js
-binance.mgTransferMainToMargin(asset, amount, (error, response) => {
+binance.mgTransferMarginToMain(asset, amount, (error, response) => {
     if (error) {
       // error from Binance endpoint
     } else {
