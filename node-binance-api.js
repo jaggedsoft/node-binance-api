@@ -1682,9 +1682,6 @@ let api = function Binance() {
         mgTransferMainToMargin: function (asset, amount, callback) {
             let parameters = Object.assign({ asset: asset, amount: amount, type: 1 });
             signedRequest(sapi + 'v1/margin/transfer', parameters, function (error, data) {
-                if (!Object.prototype.hasOwnProperty.call(data, 'tranId')) {
-                    error = data.body;
-                }
                 if (callback) return callback(error, data);
             }, 'POST');
         },
@@ -1699,9 +1696,6 @@ let api = function Binance() {
         mgTransferMarginToMain: function (asset, amount, callback) {
             let parameters = Object.assign({ asset: asset, amount: amount, type: 2 });
             signedRequest(sapi + 'v1/margin/transfer', parameters, function (error, data) {
-                if (!Object.prototype.hasOwnProperty.call(data, 'tranId')) {
-                    error = data.body;
-                }
                 if (callback) return callback(error, data);
             }, 'POST');
         },
@@ -1716,9 +1710,6 @@ let api = function Binance() {
         mgBorrow: function (asset, amount, callback) {
             let parameters = Object.assign({ asset: asset, amount: amount });
             signedRequest(sapi + 'v1/margin/loan', parameters, function (error, data) {
-                if (!Object.prototype.hasOwnProperty.call(data, 'tranId')) {
-                    error = data.body;
-                }
                 if (callback) return callback(error, data);
             }, 'POST');
         },
@@ -1733,9 +1724,6 @@ let api = function Binance() {
         mgRepay: function (asset, amount, callback) {
             let parameters = Object.assign({ asset: asset, amount: amount });
             signedRequest(sapi + 'v1/margin/repay', parameters, function (error, data) {
-                if (!Object.prototype.hasOwnProperty.call(data, 'tranId')) {
-                    error = data.body;
-                }
                 if (callback) return callback(error, data);
             }, 'POST');
         },
