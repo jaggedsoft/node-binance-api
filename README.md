@@ -1581,6 +1581,49 @@ binance.withdraw("BTC", "1C5gqLRs96Xq4V2ZZAR1347yUCpHie7sa", 0.2);
 let name = 'My Withdrawal Address'
 binance.withdraw("BTC", "1C5gqLRs96Xq4V2ZZAR1347yUCpHie7sa", 0.2, undefined, name)
 ```
+# Margin
+Margin is newly implemented and a work in progress. 
+For now:
+#### Transfer from Main account to Margin account
+```js
+binance.mgTransferMainToMargin(asset, amount, (error, response) => {
+    if (error) {
+      // error from Binance endpoint
+    } else {
+      // should get a tranId
+    }
+});
+```
+#### Transfer from Margin account to Main account
+```js
+binance.transferMarginToMain(asset, amount, (error, response) => {
+    if (error) {
+      // error from Binance endpoint
+    } else {
+      // should get a tranId
+    }
+});
+```
+#### Borrow from margin account
+```js
+binance.mgBorrow(asset, amount, (error, response) => {
+    if (error) {
+      // error from Binance endpoint
+    } else {
+      // should get a tranId
+    }
+});
+```
+#### Repay margin account
+```js
+binance.mgRepay(asset, amount, (error, response) => {
+    if (error) {
+      // error from Binance endpoint
+    } else {
+      // should get a tranId
+    }
+});
+```
 
 #### [Advanced Examples](https://github.com/jaggedsoft/node-binance-api/blob/master/examples/advanced.md)
 > [exchangeInfo: Pull minimum order size, quantity, etc](https://github.com/jaggedsoft/node-binance-api/blob/master/examples/advanced.md#exchangeinfo-pull-minimum-order-size-quantity-etc)\

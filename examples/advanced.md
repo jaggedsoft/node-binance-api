@@ -163,6 +163,15 @@ SNM     available: 0.76352833 (0.00000000 on order)
 ```
 </details>
 
+
+
+
+#### Margin User Data: Account Balance Updates, Trade Updates, New Orders, Filled Orders, Cancelled Orders via WebSocket
+This is exactly the same as the ws User Data but calling:
+```javascript
+binance.websockets.userMarginData(margin_balance_update, margin_execution_update);
+```
+
 #### newOrderRespType example when placing orders
 ```js
 // Returns additional information, such as filled orders
