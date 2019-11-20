@@ -1,4 +1,5 @@
-[![Latest Version](https://img.shields.io/github/release/jaggedsoft/node-binance-api.svg?style=flat-square)](https://github.com/dbvcode/node-binance-api/releases)
+
+[![Latest Version](https://img.shields.io/github/release/jaggedsoft/node-binance-api.svg?style=flat-square)](https://github.com/jaggedsoft/node-binance-api/releases)
 [![GitHub last commit](https://img.shields.io/github/last-commit/jaggedsoft/node-binance-api.svg?maxAge=2400)](#)
 [![npm downloads](https://img.shields.io/npm/dt/node-binance-api.svg?maxAge=7200)](https://www.npmjs.com/package/node-binance-api)
 [![jaggedsoft on Twitter](https://img.shields.io/twitter/follow/jaggedsoft.svg?style=social)](https://twitter.com/jaggedsoft)
@@ -1659,17 +1660,17 @@ binance.mgOrderStatus("ETHBTC", orderid, (error, orderStatus, symbol) => {
 ```
 
 
-#### [Advanced Examples](https://github.com/dbvcode/node-binance-api/blob/master/examples/advanced.md)
-> [exchangeInfo: Pull minimum order size, quantity, etc](https://github.com/dbvcode/node-binance-api/blob/master/examples/advanced.md#exchangeinfo-pull-minimum-order-size-quantity-etc)\
-[Clamp order quantities to required amounts via minQty, minNotional, stepSize when placing orders](https://github.com/dbvcode/node-binance-api/blob/master/examples/advanced.md#clamp-order-quantities-to-required-amounts-via-minqty-minnotional-stepsize-when-placing-orders)\
-[Show API Rate limits](https://github.com/dbvcode/node-binance-api/blob/master/examples/advanced.md#show-api-rate-limits)\
-[Connect to all WebSockets at once](https://github.com/dbvcode/node-binance-api/blob/master/examples/advanced.md#connect-to-all-websockets-at-once-thanks-keith1024)\
-[Get last order for a symbol](https://github.com/dbvcode/node-binance-api/blob/master/examples/advanced.md#get-last-order-for-a-symbol)\
-[newOrderRespType example](https://github.com/dbvcode/node-binance-api/blob/master/examples/advanced.md#neworderresptype-example-when-placing-orders)\
-[Recent Trades (historicalTrades, recentTrades, aggTrades functions)](https://github.com/dbvcode/node-binance-api/blob/master/examples/advanced.md#recent-trades-historicaltrades-recenttrades-aggtrades-functions)\
-[Terminate WebSocket connections](https://github.com/dbvcode/node-binance-api/blob/master/examples/advanced.md#terminate-websocket-connections)\
-[User Data: Account Balance Updates, Trade Updates, New Orders, Filled Orders, Cancelled Orders via WebSocket](https://github.com/dbvcode/node-binance-api/blob/master/examples/advanced.md#user-data-account-balance-updates-trade-updates-new-orders-filled-orders-cancelled-orders-via-websocket)
-[Margin User Data: Account Balance Updates, Trade Updates, New Orders, Filled Orders, Cancelled Orders via WebSocket](https://github.com/dbvcode/node-binance-api/blob/master/examples/advanced.md#margin-user-data-account-balance-updates-trade-updates-new-orders-filled-orders-cancelled-orders-via-websocket)
+#### [Advanced Examples](https://github.com/jaggedsoft/node-binance-api/blob/master/examples/advanced.md)
+> [exchangeInfo: Pull minimum order size, quantity, etc](https://github.com/jaggedsoft/node-binance-api/blob/master/examples/advanced.md#exchangeinfo-pull-minimum-order-size-quantity-etc)\
+[Clamp order quantities to required amounts via minQty, minNotional, stepSize when placing orders](https://github.com/jaggedsoft/node-binance-api/blob/master/examples/advanced.md#clamp-order-quantities-to-required-amounts-via-minqty-minnotional-stepsize-when-placing-orders)\
+[Show API Rate limits](https://github.com/jaggedsoft/node-binance-api/blob/master/examples/advanced.md#show-api-rate-limits)\
+[Connect to all WebSockets at once](https://github.com/jaggedsoft/node-binance-api/blob/master/examples/advanced.md#connect-to-all-websockets-at-once-thanks-keith1024)\
+[Get last order for a symbol](https://github.com/jaggedsoft/node-binance-api/blob/master/examples/advanced.md#get-last-order-for-a-symbol)\
+[newOrderRespType example](https://github.com/jaggedsoft/node-binance-api/blob/master/examples/advanced.md#neworderresptype-example-when-placing-orders)\
+[Recent Trades (historicalTrades, recentTrades, aggTrades functions)](https://github.com/jaggedsoft/node-binance-api/blob/master/examples/advanced.md#recent-trades-historicaltrades-recenttrades-aggtrades-functions)\
+[Terminate WebSocket connections](https://github.com/jaggedsoft/node-binance-api/blob/master/examples/advanced.md#terminate-websocket-connections)\
+[User Data: Account Balance Updates, Trade Updates, New Orders, Filled Orders, Cancelled Orders via WebSocket](https://github.com/jaggedsoft/node-binance-api/blob/master/examples/advanced.md#user-data-account-balance-updates-trade-updates-new-orders-filled-orders-cancelled-orders-via-websocket)
+[Margin User Data: Account Balance Updates, Trade Updates, New Orders, Filled Orders, Cancelled Orders via WebSocket](https://github.com/jaggedsoft/node-binance-api/blob/master/examples/advanced.md#margin-user-data-account-balance-updates-trade-updates-new-orders-filled-orders-cancelled-orders-via-websocket)
 
 
 ### Proxy Support
@@ -1732,7 +1733,7 @@ binance.useServerTime(function() {
 });
 ```
 
-Thank you to all contributors: bmino, dmzoneill, dmitriz, keith1024, pavlovdog, usama33, yanislk, learnathoner, vaielab, nickreese, Tuitio, grandmore, itnok, CollinEstes, sethyx, mstijak, MadDeveloper, balthazar, bitoiu, matthewwoop, robaleman, hems and others!
+Thank you to all contributors: dbvcode, bmino, dmzoneill, dmitriz, keith1024, pavlovdog, usama33, yanislk, learnathoner, vaielab, nickreese, Tuitio, grandmore, itnok, CollinEstes, sethyx, mstijak, MadDeveloper, balthazar, bitoiu, matthewwoop, robaleman, hems and others!
 
 > # ⚠️ Binance no longer offers support for API projects.
 > ## No support is offered. No questions will be answered. Pull requests are still welcome.
