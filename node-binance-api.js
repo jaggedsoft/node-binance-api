@@ -293,6 +293,62 @@ let api = function Binance() {
     };
 
     /**
+     * Create a signed http request to the signed API
+     * @param {string} side - BUY or SELL
+     * @param {string} symbol - The symbol to buy or sell
+     * @param {string} quantity - The quantity to buy or sell
+     * @param {string} price - The price per unit to transact each unit at
+     * @param {object} flags - additional order settings
+     * @param {function} callback - the callback function
+     * @return {undefined}
+     */
+    const marginOrder = function (side, symbol, quantity, price, flags = {}, callback = false) {
+        let endpoint = 'v1/margin/order';
+        if (Binance.options.test) endpoint += '/test';
+        let opt = {
+            symbol: symbol,
+            side: side,
+            type: 'LIMIT',
+            quantity: quantity
+        };
+        if (typeof flags.type !== 'undefined') opt.type = flags.type;
+        if (opt.type.includes('LIMIT')) {
+            opt.price = price;
+            if (opt.type !== 'LIMIT_MAKER') {
+                opt.timeInForce = 'GTC';
+            }
+        }
+
+        if (typeof flags.timeInForce !== 'undefined') opt.timeInForce = flags.timeInForce;
+        if (typeof flags.newOrderRespType !== 'undefined') opt.newOrderRespType = flags.newOrderRespType;
+        if (typeof flags.newClientOrderId !== 'undefined') opt.newClientOrderId = flags.newClientOrderId;
+
+        /*
+         * STOP_LOSS
+         * STOP_LOSS_LIMIT
+         * TAKE_PROFIT
+         * TAKE_PROFIT_LIMIT
+         */
+        if (typeof flags.icebergQty !== 'undefined') opt.icebergQty = flags.icebergQty;
+        if (typeof flags.stopPrice !== 'undefined') {
+            opt.stopPrice = flags.stopPrice;
+            if (opt.type === 'LIMIT') throw Error('stopPrice: Must set "type" to one of the following: STOP_LOSS, STOP_LOSS_LIMIT, TAKE_PROFIT, TAKE_PROFIT_LIMIT');
+        }
+        signedRequest(sapi + endpoint, opt, function (error, response) {
+            if (!response) {
+                if (callback) callback(error, response);
+                else Binance.options.log('Order() error:', error);
+                return;
+            }
+            if (typeof response.msg !== 'undefined' && response.msg === 'Filter failure: MIN_NOTIONAL') {
+                Binance.options.log('Order quantity too small. See exchangeInfo() for minimum amounts');
+            }
+            if (callback) callback(error, response);
+            else Binance.options.log(side + '(' + symbol + ',' + quantity + ',' + price + ') ', response);
+        }, 'POST');
+    };
+
+    /**
      * No-operation function
      * @return {undefined}
      */
@@ -1670,6 +1726,142 @@ let api = function Binance() {
             else if (symbol.substr(-4) === 'USDT') return 'USDT';
         },
         //** Margin actions */
+        /**
+        * Creates an order
+        * @param {string} side - BUY or SELL
+        * @param {string} symbol - the symbol to buy
+        * @param {numeric} quantity - the quantity required
+        * @param {numeric} price - the price to pay for each unit
+        * @param {object} flags - aadditionalbuy order flags
+        * @param {function} callback - the callback function
+        * @return {undefined}
+        */
+        mgOrder: function (side, symbol, quantity, price, flags = {}, callback = false) {
+            marginOrder(side, symbol, quantity, price, flags, callback);
+        },
+
+        /**
+        * Creates a buy order
+        * @param {string} symbol - the symbol to buy
+        * @param {numeric} quantity - the quantity required
+        * @param {numeric} price - the price to pay for each unit
+        * @param {object} flags - additional buy order flags
+        * @param {function} callback - the callback function
+        * @return {undefined}
+        */
+        mgBuy: function (symbol, quantity, price, flags = {}, callback = false) {
+            marginOrder('BUY', symbol, quantity, price, flags, callback);
+        },
+
+        /**
+        * Creates a sell order
+        * @param {string} symbol - the symbol to sell
+        * @param {numeric} quantity - the quantity required
+        * @param {numeric} price - the price to sell each unit for
+        * @param {object} flags - additional order flags
+        * @param {function} callback - the callback function
+        * @return {undefined}
+        */
+        mgSell: function (symbol, quantity, price, flags = {}, callback = false) {
+            marginOrder('SELL', symbol, quantity, price, flags, callback);
+        },
+
+        /**
+        * Creates a market buy order
+        * @param {string} symbol - the symbol to buy
+        * @param {numeric} quantity - the quantity required
+        * @param {object} flags - additional buy order flags
+        * @param {function} callback - the callback function
+        * @return {undefined}
+        */
+
+        mgMarketBuy: function (symbol, quantity, flags = { type: 'MARKET' }, callback = false) {
+            if (typeof flags === 'function') { // Accept callback as third parameter
+                callback = flags;
+                flags = { type: 'MARKET' };
+            }
+            if (typeof flags.type === 'undefined') flags.type = 'MARKET';
+            marginOrder('BUY', symbol, quantity, 0, flags, callback);
+        },
+
+        /**
+        * Creates a market sell order
+        * @param {string} symbol - the symbol to sell
+        * @param {numeric} quantity - the quantity required
+        * @param {object} flags - additional sell order flags
+        * @param {function} callback - the callback function
+        * @return {undefined}
+        */
+        mgMarketSell: function (symbol, quantity, flags = { type: 'MARKET' }, callback = false) {
+            if (typeof flags === 'function') { // Accept callback as third parameter
+                callback = flags;
+                flags = { type: 'MARKET' };
+            }
+            if (typeof flags.type === 'undefined') flags.type = 'MARKET';
+            marginOrder('SELL', symbol, quantity, 0, flags, callback);
+        },
+
+        /**
+        * Cancels an order
+        * @param {string} symbol - the symbol to cancel
+        * @param {string} orderid - the orderid to cancel
+        * @param {function} callback - the callback function
+        * @return {undefined}
+        */
+        mgCancel: function (symbol, orderid, callback = false) {
+            signedRequest(sapi + 'v1/margin/order', { symbol: symbol, orderId: orderid }, function (error, data) {
+                if (callback) return callback.call(this, error, data, symbol);
+            }, 'DELETE');
+        },
+
+        /**
+        * Gets the status of an order
+        * @param {string} symbol - the symbol to check
+        * @param {string} orderid - the orderid to check
+        * @param {function} callback - the callback function
+        * @param {object} flags - any additional flags
+        * @return {undefined}
+        */
+        mgOrderStatus: function (symbol, orderid, callback, flags = {}) {
+            let parameters = Object.assign({ symbol: symbol, orderId: orderid }, flags);
+            signedRequest(sapi + 'v1/margin/order', parameters, function (error, data) {
+                if (callback) return callback.call(this, error, data, symbol);
+            });
+        },
+
+        /**
+        * Gets open orders
+        * @param {string} symbol - the symbol to get
+        * @param {function} callback - the callback function
+        * @return {undefined}
+        */
+        mgOpenOrders: function (symbol, callback) {
+            let parameters = symbol ? { symbol: symbol } : {};
+            signedRequest(sapi + 'v1/margin/openOrders', parameters, function (error, data) {
+                return callback.call(this, error, data, symbol);
+            });
+        },
+
+        /**
+        * Cancels all order of a given symbol
+        * @param {string} symbol - the symbol to cancel all orders for
+        * @param {function} callback - the callback function
+        * @return {undefined}
+        */
+        mgCancelOrders: function (symbol, callback = false) {
+            signedRequest(sapi + 'v1/margin/openOrders', { symbol: symbol }, function (error, json) {
+                if (json.length === 0) {
+                    if (callback) return callback.call(this, 'No orders present for this symbol', {}, symbol);
+                }
+                for (let obj of json) {
+                    let quantity = obj.origQty - obj.executedQty;
+                    Binance.options.log('cancel order: ' + obj.side + ' ' + symbol + ' ' + quantity + ' @ ' + obj.price + ' #' + obj.orderId);
+                    signedRequest(sapi + 'v1/margin/order', { symbol: symbol, orderId: obj.orderId }, function (error, data) {
+                        if (callback) return callback.call(this, error, data, symbol);
+                    }, 'DELETE');
+                }
+            });
+        },
 
         /**
         * Transfer from main account to margin account
