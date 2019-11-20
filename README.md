@@ -1584,6 +1584,7 @@ binance.withdraw("BTC", "1C5gqLRs96Xq4V2ZZAR1347yUCpHie7sa", 0.2, undefined, nam
 # Margin
 Margin is newly implemented and a work in progress. 
 For now:
+
 #### Transfer from Main account to Margin account
 ```js
 binance.mgTransferMainToMargin(asset, amount, (error, response) => {
@@ -1593,6 +1594,7 @@ binance.mgTransferMainToMargin(asset, amount, (error, response) => {
       // should get a tranId
     }
 });
+
 ```
 #### Transfer from Margin account to Main account
 ```js
@@ -1604,6 +1606,7 @@ binance.mgTransferMarginToMain(asset, amount, (error, response) => {
     }
 });
 ```
+
 #### Borrow from margin account
 ```js
 binance.mgBorrow(asset, amount, (error, response) => {
@@ -1614,6 +1617,7 @@ binance.mgBorrow(asset, amount, (error, response) => {
     }
 });
 ```
+
 #### Repay margin account
 ```js
 binance.mgRepay(asset, amount, (error, response) => {
@@ -1624,6 +1628,34 @@ binance.mgRepay(asset, amount, (error, response) => {
     }
 });
 ```
+
+#### Margin BUY and SELL orders
+Instead of binance.buy() use binance.mgBuy() and instead of binance.sell() use binance.mgSell()
+For market orders use binance.mgMarketBuy() and binance.mgMarketSell()
+Usage and callbacks are the same as the 'regular account' counterparts.
+
+#### Cancel a margin order
+```javascript
+binance.mgCancel("ETHBTC", orderid, (error, response, symbol) => {
+  console.log(symbol+" cancel response:", response);
+});
+```
+
+#### Cancel all open margin orders
+```js
+binance.mgCancelOrders("XMRBTC", (error, response, symbol) => {
+  console.log(symbol+" cancel response:", response);
+});
+```
+
+#### Check a margin order's status
+```javascript
+let orderid = "7610385";
+binance.mgOrderStatus("ETHBTC", orderid, (error, orderStatus, symbol) => {
+  console.log(symbol+" order status:", orderStatus);
+});
+```
+
 
 #### [Advanced Examples](https://github.com/dbvcode/node-binance-api/blob/master/examples/advanced.md)
 > [exchangeInfo: Pull minimum order size, quantity, etc](https://github.com/dbvcode/node-binance-api/blob/master/examples/advanced.md#exchangeinfo-pull-minimum-order-size-quantity-etc)\
