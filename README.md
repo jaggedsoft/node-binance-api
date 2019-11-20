@@ -1630,8 +1630,10 @@ binance.mgRepay(asset, amount, (error, response) => {
 ```
 
 #### Margin BUY and SELL orders
-Instead of `binance.buy()` use `binance.mgBuy()` and instead of `binance.sell()` use `binance.mgSell()`
-For market orders use `binance.mgMarketBuy()` and `binance.mgMarketSell()`
+Instead of `binance.buy()` use `binance.mgBuy()` and instead of `binance.sell()` use `binance.mgSell()`.
+
+For market orders use `binance.mgMarketBuy()` and `binance.mgMarketSell()`.
+
 Usage and callbacks are the same as the 'regular account' counterparts.
 
 #### Cancel a margin order
