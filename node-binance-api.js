@@ -440,9 +440,9 @@ let api = function Binance() {
     /**
      * Used to subscribe to a single websocket endpoint
      * @param {string} endpoint - endpoint to connect to
-     * @param {function} callback - the function to called when information is received
+     * @param {function} callback - the function to call when information is received
      * @param {boolean} reconnect - whether to reconnect on disconnect
-     * @param {object} opened_callback - the function to called when opened
+     * @param {object} opened_callback - the function to call when opened
      * @return {WebSocket} - websocket reference
      */
     const subscribe = function (endpoint, callback, reconnect = false, opened_callback = false) {
@@ -490,9 +490,9 @@ let api = function Binance() {
     /**
      * Used to subscribe to a combined websocket endpoint
      * @param {string} streams - streams to connect to
-     * @param {function} callback - the function to called when information is received
+     * @param {function} callback - the function to call when information is received
      * @param {boolean} reconnect - whether to reconnect on disconnect
-     * @param {object} opened_callback - the function to called when opened
+     * @param {object} opened_callback - the function to call when opened
      * @return {WebSocket} - websocket reference
      */
     const subscribeCombined = function (streams, callback, reconnect = false, opened_callback = false) {
@@ -1179,7 +1179,6 @@ let api = function Binance() {
             return this;
         },
 
-
         /**
         * Creates an order
         * @param {string} side - BUY or SELL
@@ -1188,10 +1187,23 @@ let api = function Binance() {
         * @param {numeric} price - the price to pay for each unit
         * @param {object} flags - aadditionalbuy order flags
         * @param {function} callback - the callback function
-        * @return {undefined}
+        * @return {promise or undefined} - omitting the callback returns a promise
         */
         order: function (side, symbol, quantity, price, flags = {}, callback = false) {
+          if (!callback) {
+            return new Promise((resolve, reject) => {
+              callback = (error, response) => {
+                if (error) {
+                  reject(error);
+                } else {
+                  resolve(response);
+                }
+              }
+              order(side, symbol, quantity, price, flags, callback);
+            })
+          } else {
             order(side, symbol, quantity, price, flags, callback);
+          }
         },
 
         /**
@@ -1201,10 +1213,23 @@ let api = function Binance() {
         * @param {numeric} price - the price to pay for each unit
         * @param {object} flags - additional buy order flags
         * @param {function} callback - the callback function
-        * @return {undefined}
+        * @return {promise or undefined} - omitting the callback returns a promise
         */
         buy: function (symbol, quantity, price, flags = {}, callback = false) {
+          if (!callback) {
+            return new Promise((resolve, reject) => {
+              callback = (error, response) => {
+                if (error) {
+                  reject(error);
+                } else {
+                  resolve(response);
+                }
+              }
+              order('BUY', symbol, quantity, price, flags, callback);
+            })
+          } else {
             order('BUY', symbol, quantity, price, flags, callback);
+          }
         },
 
         /**
@@ -1214,10 +1239,24 @@ let api = function Binance() {
         * @param {numeric} price - the price to sell each unit for
         * @param {object} flags - additional order flags
         * @param {function} callback - the callback function
-        * @return {undefined}
+        * @return {promise or undefined} - omitting the callback returns a promise
         */
         sell: function (symbol, quantity, price, flags = {}, callback = false) {
+          if (!callback) {
+            return new Promise((resolve, reject) => {
+              callback = (error, response) => {
+                if (error) {
+                  reject(error);
+                } else {
+                  resolve(response);
+                }
+              }
+              order('SELL', symbol, quantity, price, flags, callback);
+            })
+          } else {
             order('SELL', symbol, quantity, price, flags, callback);
+          }
+
         },
 
         /**
@@ -1226,7 +1265,7 @@ let api = function Binance() {
         * @param {numeric} quantity - the quantity required
         * @param {object} flags - additional buy order flags
         * @param {function} callback - the callback function
-        * @return {undefined}
+        * @return {promise or undefined} - omitting the callback returns a promise
         */
         marketBuy: function (symbol, quantity, flags = { type: 'MARKET' }, callback = false) {
             if (typeof flags === 'function') { // Accept callback as third parameter
@@ -1234,7 +1273,20 @@ let api = function Binance() {
                 flags = { type: 'MARKET' };
             }
             if (typeof flags.type === 'undefined') flags.type = 'MARKET';
-            order('BUY', symbol, quantity, 0, flags, callback);
+            if (!callback) {
+              return new Promise((resolve, reject) => {
+                callback = (error, response) => {
+                  if (error) {
+                    reject(error);
+                  } else {
+                    resolve(response);
+                  }
+                }
+                order('BUY', symbol, quantity, 0, flags, callback);
+              })
+            } else {
+              order('BUY', symbol, quantity, 0, flags, callback);
+            }
         },
 
         /**
@@ -1243,7 +1295,7 @@ let api = function Binance() {
         * @param {numeric} quantity - the quantity required
         * @param {object} flags - additional sell order flags
         * @param {function} callback - the callback function
-        * @return {undefined}
+        * @return {promise or undefined} - omitting the callback returns a promise
         */
         marketSell: function (symbol, quantity, flags = { type: 'MARKET' }, callback = false) {
             if (typeof flags === 'function') { // Accept callback as third parameter
@@ -1251,7 +1303,20 @@ let api = function Binance() {
                 flags = { type: 'MARKET' };
             }
             if (typeof flags.type === 'undefined') flags.type = 'MARKET';
-            order('SELL', symbol, quantity, 0, flags, callback);
+            if (!callback) {
+              return new Promise((resolve, reject) => {
+                callback = (error, response) => {
+                  if (error) {
+                    reject(error);
+                  } else {
+                    resolve(response);
+                  }
+                }
+                order('SELL', symbol, quantity, 0, flags, callback);
+              })
+            } else {
+              order('SELL', symbol, quantity, 0, flags, callback);
+            }
         },
 
         /**
@@ -1259,12 +1324,27 @@ let api = function Binance() {
         * @param {string} symbol - the symbol to cancel
         * @param {string} orderid - the orderid to cancel
         * @param {function} callback - the callback function
-        * @return {undefined}
+        * @return {promise or undefined} - omitting the callback returns a promise
         */
         cancel: function (symbol, orderid, callback = false) {
+          if (!callback) {
+            return new Promise((resolve, reject) => {
+              callback = (error, response) => {
+                if (error) {
+                  reject(error);
+                } else {
+                  resolve(response);
+                }
+              }
+              signedRequest(base + 'v3/order', { symbol: symbol, orderId: orderid }, function (error, data) {
+                  return callback.call(this, error, data, symbol);
+              }, 'DELETE');
+            })
+          } else {
             signedRequest(base + 'v3/order', { symbol: symbol, orderId: orderid }, function (error, data) {
-                if (callback) return callback.call(this, error, data, symbol);
+                return callback.call(this, error, data, symbol);
             }, 'DELETE');
+          }
         },
 
         /**
@@ -1273,47 +1353,101 @@ let api = function Binance() {
         * @param {string} orderid - the orderid to check
         * @param {function} callback - the callback function
         * @param {object} flags - any additional flags
-        * @return {undefined}
+        * @return {promise or undefined} - omitting the callback returns a promise
         */
         orderStatus: function (symbol, orderid, callback, flags = {}) {
             let parameters = Object.assign({ symbol: symbol, orderId: orderid }, flags);
-            signedRequest(base + 'v3/order', parameters, function (error, data) {
-                if (callback) return callback.call(this, error, data, symbol);
-            });
+            if (!callback) {
+              return new Promise((resolve, reject) => {
+                callback = (error, response) => {
+                  if (error) {
+                    reject(error);
+                  } else {
+                    resolve(response);
+                  }
+                }
+                signedRequest(base + 'v3/order', parameters, function (error, data) {
+                    return callback.call(this, error, data, symbol);
+                });
+              })
+            } else {
+              signedRequest(base + 'v3/order', parameters, function (error, data) {
+                  return callback.call(this, error, data, symbol);
+              });
+            }
         },
 
         /**
         * Gets open orders
         * @param {string} symbol - the symbol to get
         * @param {function} callback - the callback function
-        * @return {undefined}
+        * @return {promise or undefined} - omitting the callback returns a promise
         */
         openOrders: function (symbol, callback) {
             let parameters = symbol ? { symbol: symbol } : {};
-            signedRequest(base + 'v3/openOrders', parameters, function (error, data) {
-                return callback.call(this, error, data, symbol);
-            });
+            if (!callback) {
+              return new Promise((resolve, reject) => {
+                callback = (error, response) => {
+                  if (error) {
+                    reject(error);
+                  } else {
+                    resolve(response);
+                  }
+                }
+                signedRequest(base + 'v3/openOrders', parameters, function (error, data) {
+                    return callback.call(this, error, data, symbol);
+                });
+              })
+            } else {
+              signedRequest(base + 'v3/openOrders', parameters, function (error, data) {
+                  return callback.call(this, error, data, symbol);
+              });
+            }
         },
 
         /**
         * Cancels all order of a given symbol
         * @param {string} symbol - the symbol to cancel all orders for
         * @param {function} callback - the callback function
-        * @return {undefined}
+        * @return {promise or undefined} - omitting the callback returns a promise
         */
         cancelOrders: function (symbol, callback = false) {
+          if (!callback) {
+            return new Promise((resolve, reject) => {
+              callback = (error, response) => {
+                if (error) {
+                  reject(error);
+                } else {
+                  resolve(response);
+                }
+              }
+              signedRequest(base + 'v3/openOrders', { symbol: symbol }, function (error, json) {
+                  if (json.length === 0) {
+                      return callback.call(this, 'No orders present for this symbol', {}, symbol);
+                  }
+                  for (let obj of json) {
+                      let quantity = obj.origQty - obj.executedQty;
+                      Binance.options.log('cancel order: ' + obj.side + ' ' + symbol + ' ' + quantity + ' @ ' + obj.price + ' #' + obj.orderId);
+                      signedRequest(base + 'v3/order', { symbol: symbol, orderId: obj.orderId }, function (error, data) {
+                          return callback.call(this, error, data, symbol);
+                      }, 'DELETE');
+                  }
+              });
+            })
+          } else {
             signedRequest(base + 'v3/openOrders', { symbol: symbol }, function (error, json) {
                 if (json.length === 0) {
-                    if (callback) return callback.call(this, 'No orders present for this symbol', {}, symbol);
+                    return callback.call(this, 'No orders present for this symbol', {}, symbol);
                 }
                 for (let obj of json) {
                     let quantity = obj.origQty - obj.executedQty;
                     Binance.options.log('cancel order: ' + obj.side + ' ' + symbol + ' ' + quantity + ' @ ' + obj.price + ' #' + obj.orderId);
                     signedRequest(base + 'v3/order', { symbol: symbol, orderId: obj.orderId }, function (error, data) {
-                        if (callback) return callback.call(this, error, data, symbol);
+                        return callback.call(this, error, data, symbol);
                     }, 'DELETE');
                 }
             });
+          }
         },
 
         /**
@@ -1321,13 +1455,28 @@ let api = function Binance() {
         * @param {string} symbol - the symbol
         * @param {function} callback - the callback function
         * @param {object} options - additional options
-        * @return {undefined}
+        * @return {promise or undefined} - omitting the callback returns a promise
         */
         allOrders: function (symbol, callback, options = {}) {
             let parameters = Object.assign({ symbol: symbol }, options);
-            signedRequest(base + 'v3/allOrders', parameters, function (error, data) {
-                if (callback) return callback.call(this, error, data, symbol);
-            });
+            if (!callback) {
+              return new Promise((resolve, reject) => {
+                callback = (error, response) => {
+                  if (error) {
+                    reject(error);
+                  } else {
+                    resolve(response);
+                  }
+                }
+                signedRequest(base + 'v3/allOrders', parameters, function (error, data) {
+                    return callback.call(this, error, data, symbol);
+                });
+              })
+            } else {
+              signedRequest(base + 'v3/allOrders', parameters, function (error, data) {
+                  return callback.call(this, error, data, symbol);
+              });
+            }
         },
 
         /**
@@ -1335,34 +1484,57 @@ let api = function Binance() {
         * @param {string} symbol - the symbol
         * @param {function} callback - the callback function
         * @param {int} limit - limit the number of returned orders
-        * @return {undefined}
+        * @return {promise or undefined} - omitting the callback returns a promise
         */
         depth: function (symbol, callback, limit = 100) {
+          if (!callback) {
+            return new Promise((resolve, reject) => {
+              callback = (error, response) => {
+                if (error) {
+                  reject(error);
+                } else {
+                  resolve(response);
+                }
+              }
+              publicRequest(base + 'v1/depth', { symbol: symbol, limit: limit }, function (error, data) {
+                  return callback.call(this, error, depthData(data), symbol);
+              });
+            })
+          } else {
             publicRequest(base + 'v1/depth', { symbol: symbol, limit: limit }, function (error, data) {
                 return callback.call(this, error, depthData(data), symbol);
             });
+          }
         },
 
         /**
         * Gets the average prices of a given symbol
         * @param {string} symbol - the symbol
         * @param {function} callback - the callback function
-        * @return {undefined}
+        * @return {promise or undefined} - omitting the callback returns a promise
         */
         avgPrice: function (symbol, callback = false) {
             let opt = {
                 url: base + 'v3/avgPrice?symbol=' + symbol,
                 timeout: Binance.options.recvWindow
             };
-
+            if (!callback) {
+                return new Promise((resolve, reject) => {
+                  request(addProxy(opt), function (error, response, body) {
+                    if (error) return reject(error);
+                    if (response.statusCode !== 200) return reject(response);
+                    let result = {};
+                    result[symbol] = JSON.parse(response.body).price;
+                    return resolve(result);
+                  });
+                });
+            }
             request(addProxy(opt), function (error, response, body) {
-                if (!callback) return;
-
                 if (error) return callback(error);
-
-                if (response && response.statusCode !== 200) return callback(response);
-
-                if (callback) return callback(null, priceData(JSON.parse(body)));
+                if (response.statusCode !== 200) return callback(response);
+                let result = {};
+                result[symbol] = JSON.parse(response.body).price;
+                return callback(null, result);
             });
         },
 
@@ -1370,7 +1542,7 @@ let api = function Binance() {
         * Gets the prices of a given symbol(s)
         * @param {string} symbol - the symbol
         * @param {function} callback - the callback function
-        * @return {undefined}
+        * @return {promise or undefined} - omitting the callback returns a promise
         */
         prices: function (symbol, callback = false) {
             const params = typeof symbol === 'string' ? '?symbol=' + symbol : '';
@@ -1380,15 +1552,19 @@ let api = function Binance() {
                 url: base + 'v3/ticker/price' + params,
                 timeout: Binance.options.recvWindow
             };
-
+            if (!callback) {
+                return new Promise((resolve, reject) => {
+                  request(addProxy(opt), function (error, response, body) {
+                    if (error) return reject(error);
+                    if (response.statusCode !== 200) return reject(response);
+                    return resolve(priceData(JSON.parse(body)));
+                  });
+                });
+            }
             request(addProxy(opt), function (error, response, body) {
-                if (!callback) return;
-
                 if (error) return callback(error);
-
-                if (response && response.statusCode !== 200) return callback(response);
-
-                if (callback) return callback(null, priceData(JSON.parse(body)));
+                if (response.statusCode !== 200) return callback(response);
+                return callback(null, priceData(JSON.parse(body)));
             });
         },
 
@@ -1396,28 +1572,30 @@ let api = function Binance() {
         * Gets the book tickers of given symbol(s)
         * @param {string} symbol - the symbol
         * @param {function} callback - the callback function
-        * @return {undefined}
+        * @return {promise or undefined} - omitting the callback returns a promise
         */
         bookTickers: function (symbol, callback) {
             const params = typeof symbol === 'string' ? '?symbol=' + symbol : '';
             if (typeof symbol === 'function') callback = symbol; // backwards compatibility
-
             let opt = {
                 url: base + 'v3/ticker/bookTicker' + params,
                 timeout: Binance.options.recvWindow
             };
-
-            request(addProxy(opt), function (error, response, body) {
-                if (!callback) return;
-
-                if (error) return callback(error);
-
-                if (response && response.statusCode !== 200) return callback(response);
-
-                if (callback) {
+            if (!callback) {
+                return new Promise((resolve, reject) => {
+                  request(addProxy(opt), function (error, response, body) {
+                    if (error) return reject(error);
+                    if (response.statusCode !== 200) return reject(response);
                     const result = symbol ? JSON.parse(body) : bookPriceData(JSON.parse(body));
-                    return callback(null, result);
-                }
+                    return resolve(result);
+                  });
+                });
+            }
+            request(addProxy(opt), function (error, response, body) {
+                if (error) return callback(error);
+                if (response.statusCode !== 200) return callback(response);
+                const result = symbol ? JSON.parse(body) : bookPriceData(JSON.parse(body));
+                return callback(null, result);
             });
         },
 
@@ -1425,38 +1603,94 @@ let api = function Binance() {
         * Gets the prevday percentage change
         * @param {string} symbol - the symbol or symbols
         * @param {function} callback - the callback function
-        * @return {undefined}
+        * @return {promise or undefined} - omitting the callback returns a promise
         */
         prevDay: function (symbol, callback) {
             let input = symbol ? { symbol: symbol } : {};
-            publicRequest(base + 'v1/ticker/24hr', input, function (error, data) {
-                if (callback) return callback.call(this, error, data, symbol);
-            });
+            if (!callback) {
+              return new Promise((resolve, reject) => {
+                callback = (error, response) => {
+                  if (error) {
+                    reject(error);
+                  } else {
+                    resolve(response);
+                  }
+                }
+                publicRequest(base + 'v1/ticker/24hr', input, function (error, data) {
+                    return callback.call(this, error, data, symbol);
+                });
+              })
+            } else {
+              publicRequest(base + 'v1/ticker/24hr', input, function (error, data) {
+                  return callback.call(this, error, data, symbol);
+              });
+            }
         },
 
         /**
         * Gets the the exchange info
         * @param {function} callback - the callback function
-        * @return {undefined}
+        * @return {promise or undefined} - omitting the callback returns a promise
         */
         exchangeInfo: function (callback) {
+          if (!callback) {
+            return new Promise((resolve, reject) => {
+              callback = (error, response) => {
+                if (error) {
+                  reject(error);
+                } else {
+                  resolve(response);
+                }
+              }
+              publicRequest(base + 'v1/exchangeInfo', {}, callback);
+            })
+          } else {
             publicRequest(base + 'v1/exchangeInfo', {}, callback);
+          }
         },
+
         /**
         * Gets the dust log for user
         * @param {function} callback - the callback function
-        * @return {undefined}
+        * @return {promise or undefined} - omitting the callback returns a promise
         */
         dustLog: function (callback) {
+          if (!callback) {
+            return new Promise((resolve, reject) => {
+              callback = (error, response) => {
+                if (error) {
+                  reject(error);
+                } else {
+                  resolve(response);
+                }
+              }
+              signedRequest(wapi + '/v3/userAssetDribbletLog.html', {}, callback);
+            })
+          } else {
             signedRequest(wapi + '/v3/userAssetDribbletLog.html', {}, callback);
+          }
         },
+
         /**
         * Gets the the system status
         * @param {function} callback - the callback function
-        * @return {undefined}
+        * @return {promise or undefined} - omitting the callback returns a promise
         */
         systemStatus: function (callback) {
+          if (!callback) {
+            return new Promise((resolve, reject) => {
+              callback = (error, response) => {
+                if (error) {
+                  reject(error);
+                } else {
+                  resolve(response);
+                }
+              }
+              publicRequest(wapi + 'v3/systemStatus.html', {}, callback);
+            })
+          } else {
             publicRequest(wapi + 'v3/systemStatus.html', {}, callback);
+          }
         },
 
         /**
@@ -1467,94 +1701,212 @@ let api = function Binance() {
         * @param {string} addressTag - and addtional address tag
         * @param {function} callback - the callback function
         * @param {string} name - the name to save the address as. Set falsy to prevent Binance saving to address book
-        * @return {undefined}
+        * @return {promise or undefined} - omitting the callback returns a promise
         */
         withdraw: function (asset, address, amount, addressTag = false, callback = false, name = 'API Withdraw') {
             let params = { asset, address, amount };
             if (addressTag) params.addressTag = addressTag;
-            if (name) params.name = name
-            signedRequest(wapi + 'v3/withdraw.html', params, callback, 'POST', true);
+            if (!callback) {
+              return new Promise((resolve, reject) => {
+                callback = (error, response) => {
+                  if (error) {
+                    reject(error);
+                  } else {
+                    resolve(response);
+                  }
+                }
+                signedRequest(wapi + 'v3/withdraw.html', params, callback, 'POST');
+              })
+            } else {
+              signedRequest(wapi + 'v3/withdraw.html', params, callback, 'POST');
+            }
         },
 
         /**
         * Get the Withdraws history for a given asset
         * @param {function} callback - the callback function
         * @param {object} params - supports limit and fromId parameters
-        * @return {undefined}
+        * @return {promise or undefined} - omitting the callback returns a promise
         */
         withdrawHistory: function (callback, params = {}) {
             if (typeof params === 'string') params = { asset: params };
-            signedRequest(wapi + 'v3/withdrawHistory.html', params, callback);
+            if (!callback) {
+              return new Promise((resolve, reject) => {
+                callback = (error, response) => {
+                  if (error) {
+                    reject(error);
+                  } else {
+                    resolve(response);
+                  }
+                }
+                signedRequest(wapi + 'v3/withdrawHistory.html', params, callback);
+              })
+            } else {
+              signedRequest(wapi + 'v3/withdrawHistory.html', params, callback);
+            }
         },
 
         /**
         * Get the deposit history
         * @param {function} callback - the callback function
         * @param {object} params - additional params
-        * @return {undefined}
+        * @return {promise or undefined} - omitting the callback returns a promise
         */
         depositHistory: function (callback, params = {}) {
             if (typeof params === 'string') params = { asset: params }; // Support 'asset' (string) or optional parameters (object)
-            signedRequest(wapi + 'v3/depositHistory.html', params, callback);
+            if (!callback) {
+              return new Promise((resolve, reject) => {
+                callback = (error, response) => {
+                  if (error) {
+                    reject(error);
+                  } else {
+                    resolve(response);
+                  }
+                }
+                signedRequest(wapi + 'v3/depositHistory.html', params, callback);
+              })
+            } else {
+              signedRequest(wapi + 'v3/depositHistory.html', params, callback);
+            }
         },
 
         /**
         * Get the deposit history for given asset
         * @param {string} asset - the asset
         * @param {function} callback - the callback function
-        * @return {undefined}
+        * @return {promise or undefined} - omitting the callback returns a promise
         */
         depositAddress: function (asset, callback) {
+          if (!callback) {
+            return new Promise((resolve, reject) => {
+              callback = (error, response) => {
+                if (error) {
+                  reject(error);
+                } else {
+                  resolve(response);
+                }
+              }
+              signedRequest(wapi + 'v3/depositAddress.html', { asset: asset }, callback);
+            })
+          } else {
             signedRequest(wapi + 'v3/depositAddress.html', { asset: asset }, callback);
+          }
         },
 
         /**
         * Get the account status
         * @param {function} callback - the callback function
-        * @return {undefined}
+        * @return {promise or undefined} - omitting the callback returns a promise
         */
         accountStatus: function (callback) {
+          if (!callback) {
+            return new Promise((resolve, reject) => {
+              callback = (error, response) => {
+                if (error) {
+                  reject(error);
+                } else {
+                  resolve(response);
+                }
+              }
+              signedRequest(wapi + 'v3/accountStatus.html', {}, callback);
+            })
+          } else {
             signedRequest(wapi + 'v3/accountStatus.html', {}, callback);
+          }
         },
 
         /**
         * Get the trade fee
         * @param {function} callback - the callback function
         * @param {string} symbol (optional)
-        * @return {undefined}
+        * @return {promise or undefined} - omitting the callback returns a promise
         */
         tradeFee: function (callback, symbol = false) {
             let params = symbol ? { symbol: symbol } : {};
-            signedRequest(wapi + 'v3/tradeFee.html', params, callback);
+            if (!callback) {
+              return new Promise((resolve, reject) => {
+                callback = (error, response) => {
+                  if (error) {
+                    reject(error);
+                  } else {
+                    resolve(response);
+                  }
+                }
+                signedRequest(wapi + 'v3/tradeFee.html', params, callback);
+              })
+            } else {
+              signedRequest(wapi + 'v3/tradeFee.html', params, callback);
+            }
         },
 
         /**
         * Fetch asset detail (minWithdrawAmount, depositStatus, withdrawFee, withdrawStatus, depositTip)
         * @param {function} callback - the callback function
-        * @return {undefined}
+        * @return {promise or undefined} - omitting the callback returns a promise
         */
         assetDetail: function (callback) {
+          if (!callback) {
+            return new Promise((resolve, reject) => {
+              callback = (error, response) => {
+                if (error) {
+                  reject(error);
+                } else {
+                  resolve(response);
+                }
+              }
+              signedRequest(wapi + 'v3/assetDetail.html', {}, callback);
+            })
+          } else {
             signedRequest(wapi + 'v3/assetDetail.html', {}, callback);
+          }
         },
 
         /**
         * Get the account
         * @param {function} callback - the callback function
-        * @return {undefined}
+        * @return {promise or undefined} - omitting the callback returns a promise
         */
         account: function (callback) {
+          if (!callback) {
+            return new Promise((resolve, reject) => {
+              callback = (error, response) => {
+                if (error) {
+                  reject(error);
+                } else {
+                  resolve(response);
+                }
+              }
+              signedRequest(base + 'v3/account', {}, callback);
+            })
+          } else {
             signedRequest(base + 'v3/account', {}, callback);
+          }
         },
 
         /**
         * Get the balance data
         * @param {function} callback - the callback function
-        * @return {undefined}
+        * @return {promise or undefined} - omitting the callback returns a promise
         */
         balance: function (callback) {
+          if (!callback) {
+            return new Promise((resolve, reject) => {
+              callback = (error, response) => {
+                if (error) {
+                  reject(error);
+                } else {
+                  resolve(response);
+                }
+              }
+              signedRequest(base + 'v3/account', {}, function (error, data) {
+                  callback(error, balanceData(data));
+              });
+            })
+          } else {
             signedRequest(base + 'v3/account', {}, function (error, data) {
-                if (callback) callback(error, balanceData(data));
+                callback(error, balanceData(data));
             });
+          }
         },
 
         /**
@@ -1562,35 +1914,80 @@ let api = function Binance() {
         * @param {string} symbol - the symbol
         * @param {function} callback - the callback function
         * @param {object} options - additional options
-        * @return {undefined}
+        * @return {promise or undefined} - omitting the callback returns a promise
         */
         trades: function (symbol, callback, options = {}) {
             let parameters = Object.assign({ symbol: symbol }, options);
-            signedRequest(base + 'v3/myTrades', parameters, function (error, data) {
-                if (callback) return callback.call(this, error, data, symbol);
-            });
+            if (!callback) {
+              return new Promise((resolve, reject) => {
+                callback = (error, response) => {
+                  if (error) {
+                    reject(error);
+                  } else {
+                    resolve(response);
+                  }
+                }
+                signedRequest(base + 'v3/myTrades', parameters, function (error, data) {
+                    return callback.call(this, error, data, symbol);
+                });
+              })
+            } else {
+              signedRequest(base + 'v3/myTrades', parameters, function (error, data) {
+                  return callback.call(this, error, data, symbol);
+              });
+            }
         },
 
         /**
         * Tell api to use the server time to offset time indexes
         * @param {function} callback - the callback function
-        * @return {undefined}
+        * @return {promise or undefined} - omitting the callback returns a promise
         */
         useServerTime: function (callback = false) {
+          if (!callback) {
+            return new Promise((resolve, reject) => {
+              callback = (error, response) => {
+                if (error) {
+                  reject(error);
+                } else {
+                  resolve(response);
+                }
+              }
+              apiRequest(base + 'v1/time', {}, function (error, response) {
+                  Binance.info.timeOffset = response.serverTime - new Date().getTime();
+                  //Binance.options.log("server time set: ", response.serverTime, Binance.info.timeOffset);
+                  callback(error, response);
+              });
+            })
+          } else {
             apiRequest(base + 'v1/time', {}, function (error, response) {
                 Binance.info.timeOffset = response.serverTime - new Date().getTime();
                 //Binance.options.log("server time set: ", response.serverTime, Binance.info.timeOffset);
-                if (callback) callback();
+                callback(error, response);
             });
+          }
         },
 
         /**
         * Gets the time
         * @param {function} callback - the callback function
-        * @return {undefined}
+        * @return {promise or undefined} - omitting the callback returns a promise
         */
         time: function (callback) {
+          if (!callback) {
+            return new Promise((resolve, reject) => {
+              callback = (error, response) => {
+                if (error) {
+                  reject(error);
+                } else {
+                  resolve(response);
+                }
+              }
+              apiRequest(base + 'v1/time', {}, callback);
+            })
+          } else {
             apiRequest(base + 'v1/time', {}, callback);
+          }
         },
 
         /**
@@ -1598,11 +1995,24 @@ let api = function Binance() {
         * @param {string} symbol - the symbol
         * @param {object} options - addtional optoins
         * @param {function} callback - the callback function
-        * @return {undefined}
+        * @return {promise or undefined} - omitting the callback returns a promise
         */
         aggTrades: function (symbol, options = {}, callback = false) { //fromId startTime endTime limit
             let parameters = Object.assign({ symbol }, options);
-            marketRequest(base + 'v1/aggTrades', parameters, callback);
+            if (!callback) {
+              return new Promise((resolve, reject) => {
+                callback = (error, response) => {
+                  if (error) {
+                    reject(error);
+                  } else {
+                    resolve(response);
+                  }
+                }
+                marketRequest(base + 'v1/aggTrades', parameters, callback);
+              })
+            } else {
+              marketRequest(base + 'v1/aggTrades', parameters, callback);
+            }
         },
 
         /**
@@ -1610,10 +2020,23 @@ let api = function Binance() {
         * @param {string} symbol - the symbol
         * @param {function} callback - the callback function
         * @param {int} limit - limit the number of items returned
-        * @return {undefined}
+        * @return {promise or undefined} - omitting the callback returns a promise
         */
         recentTrades: function (symbol, callback, limit = 500) {
+          if (!callback) {
+            return new Promise((resolve, reject) => {
+              callback = (error, response) => {
+                if (error) {
+                  reject(error);
+                } else {
+                  resolve(response);
+                }
+              }
+              marketRequest(base + 'v1/trades', { symbol: symbol, limit: limit }, callback);
+            })
+          } else {
             marketRequest(base + 'v1/trades', { symbol: symbol, limit: limit }, callback);
+          }
         },
 
         /**
@@ -1622,12 +2045,25 @@ let api = function Binance() {
         * @param {function} callback - the callback function
         * @param {int} limit - limit the number of items returned
         * @param {int} fromId - from this id
-        * @return {undefined}
+        * @return {promise or undefined} - omitting the callback returns a promise
         */
         historicalTrades: function (symbol, callback, limit = 500, fromId = false) {
             let parameters = { symbol: symbol, limit: limit };
             if (fromId) parameters.fromId = fromId;
-            marketRequest(base + 'v1/historicalTrades', parameters, callback);
+            if (!callback) {
+              return new Promise((resolve, reject) => {
+                callback = (error, response) => {
+                  if (error) {
+                    reject(error);
+                  } else {
+                    resolve(response);
+                  }
+                }
+                marketRequest(base + 'v1/historicalTrades', parameters, callback);
+              })
+            } else {
+              marketRequest(base + 'v1/historicalTrades', parameters, callback);
+            }
         },
 
         /**
@@ -1678,14 +2114,28 @@ let api = function Binance() {
         * @param {function} interval - the callback function
         * @param {function} callback - the callback function
         * @param {object} options - additional options
-        * @return {undefined}
+        * @return {promise or undefined} - omitting the callback returns a promise
         */
         candlesticks: function (symbol, interval = '5m', callback = false, options = { limit: 500 }) {
-            if (!callback) return;
             let params = Object.assign({ symbol: symbol, interval: interval }, options);
-            publicRequest(base + 'v1/klines', params, function (error, data) {
-                return callback.call(this, error, data, symbol);
-            });
+            if (!callback) {
+              return new Promise((resolve, reject) => {
+                callback = (error, response) => {
+                  if (error) {
+                    reject(error);
+                  } else {
+                    resolve(response);
+                  }
+                }
+                publicRequest(base + 'v1/klines', params, function (error, data) {
+                    return callback.call(this, error, data, symbol);
+                });
+              })
+            } else {
+              publicRequest(base + 'v1/klines', params, function (error, data) {
+                  return callback.call(this, error, data, symbol);
+              });
+            }
         },
 
         /**
@@ -1694,10 +2144,23 @@ let api = function Binance() {
         * @param {object} data - the data to send
         * @param {function} callback - the callback function
         * @param {string} method - the http method
-        * @return {undefined}
+        * @return {promise or undefined} - omitting the callback returns a promise
         */
         publicRequest: function (url, data, callback, method = 'GET') {
-            publicRequest(url, data, callback, method)
+          if (!callback) {
+            return new Promise((resolve, reject) => {
+              callback = (error, response) => {
+                if (error) {
+                  reject(error);
+                } else {
+                  resolve(response);
+                }
+              }
+              publicRequest(url, data, callback, method);
+            })
+          } else {
+            publicRequest(url, data, callback, method);
+          }
         },
 
         /**
@@ -1707,10 +2170,23 @@ let api = function Binance() {
         * @param {function} callback - the callback function
         * @param {string} method - the http method
         * @param {boolean} noDataInSignature - Prevents data from being added to signature
-        * @return {undefined}
+        * @return {promise or undefined} - omitting the callback returns a promise
         */
-        signedRequest: function (url, data, callback, method = 'GET', noDataInSignature) {
+        signedRequest: function (url, data, callback, method = 'GET', noDataInSignature = false) {
+          if (!callback) {
+            return new Promise((resolve, reject) => {
+              callback = (error, response) => {
+                if (error) {
+                  reject(error);
+                } else {
+                  resolve(response);
+                }
+              }
+              signedRequest(url, data, callback, method, noDataInSignature);
+            })
+          } else {
             signedRequest(url, data, callback, method, noDataInSignature);
+          }
         },
 
         /**
@@ -1723,8 +2199,14 @@ let api = function Binance() {
             if (substring === 'BTC') return 'BTC';
             else if (substring === 'ETH') return 'ETH';
             else if (substring === 'BNB') return 'BNB';
+            else if (substring === 'XRP') return 'XRP';
+            else if (substring === 'PAX') return 'PAX';
             else if (symbol.substr(-4) === 'USDT') return 'USDT';
+            else if (symbol.substr(-4) === 'USDC') return 'USDC';
+            else if (symbol.substr(-4) === 'USDS') return 'USDS';
+            else if (symbol.substr(-4) === 'TUSD') return 'TUSD';
         },
+
         //** Margin actions */
         /**
         * Creates an order
@@ -1919,7 +2401,6 @@ let api = function Binance() {
                 if (callback) return callback(error, data);
             }, 'POST');
         },
-
 
         websockets: {
             /**
