@@ -1734,7 +1734,7 @@ binance.useServerTime(function() {
 });
 ```
 
-Thank you to all contributors: dbvcode, bmino, dmzoneill, dmitriz, keith1024, pavlovdog, usama33, yanislk, learnathoner, vaielab, nickreese, Tuitio, grandmore, itnok, CollinEstes, sethyx, mstijak, MadDeveloper, balthazar, bitoiu, matthewwoop, robaleman, hems and others!
+Thank you to all contributors: Eluvade, dbvcode, bmino, dmzoneill, dmitriz, keith1024, pavlovdog, usama33, yanislk, learnathoner, vaielab, nickreese, Tuitio, grandmore, itnok, CollinEstes, sethyx, mstijak, MadDeveloper, balthazar, bitoiu, matthewwoop, robaleman, hems and others!
 
 > # ⚠️ Binance no longer offers support for API projects.
 > ## No support is offered. No questions will be answered. Pull requests are still welcome.
