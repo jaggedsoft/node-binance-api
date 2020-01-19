@@ -26,6 +26,7 @@ let api = function Binance() {
     const async = require('async');
     const base = 'https://api.binance.com/api/';
     const wapi = 'https://api.binance.com/wapi/';
+    const sapi = 'https://api.binance.com/sapi/';
     const stream = 'wss://stream.binance.com:9443/ws/';
     const combineStream = 'wss://stream.binance.com:9443/stream?streams=';
     const userAgent = 'Mozilla/4.0 (compatible; Node Binance API)';
@@ -87,13 +88,13 @@ let api = function Binance() {
     const addProxy = opt => {
         let proxy = Binance.options.proxy
             ? `http://${
-                Binance.options.proxy.auth
-                    ? Binance.options.proxy.auth.username +
-                    ':' +
-                    Binance.options.proxy.auth.password +
-                    '@'
-                    : ''
-                }${Binance.options.proxy.host}:${Binance.options.proxy.port}`
+            Binance.options.proxy.auth
+                ? Binance.options.proxy.auth.username +
+                ':' +
+                Binance.options.proxy.auth.password +
+                '@'
+                : ''
+            }${Binance.options.proxy.host}:${Binance.options.proxy.port}`
             : '';
         if (proxy) {
             opt.proxy = proxy;
@@ -197,14 +198,15 @@ let api = function Binance() {
      * @param {object} data - The data to send
      * @param {function} callback - The callback method to call
      * @param {string} method - the http method
+     * @param {boolean} noDataInSignature - Prevents data from being added to signature
      * @return {undefined}
      */
-    const signedRequest = function (url, data = {}, callback, method = 'GET') {
+    const signedRequest = function (url, data = {}, callback, method = 'GET', noDataInSignature = false) {
         if (!Binance.options.APIKEY) throw Error('apiRequest: Invalid API Key');
         if (!Binance.options.APISECRET) throw Error('signedRequest: Invalid API Secret');
         data.timestamp = new Date().getTime() + Binance.info.timeOffset;
         if (typeof data.recvWindow === 'undefined') data.recvWindow = Binance.options.recvWindow;
-        let query = method === 'POST' && data.name === 'API Withdraw' ? '' : Object.keys(data).reduce(function (a, k) {
+        let query = method === 'POST' && noDataInSignature ? '' : Object.keys(data).reduce(function (a, k) {
             a.push(k + '=' + encodeURIComponent(data[k]));
             return a;
         }, []).join('&');
@@ -239,7 +241,7 @@ let api = function Binance() {
      * @return {undefined}
      */
     const order = function (side, symbol, quantity, price, flags = {}, callback = false) {
-        let endpoint = 'v3/order';
+        let endpoint = flags.type === 'OCO' ? 'v3/order/oco' : 'v3/order';
         if (Binance.options.test) endpoint += '/test';
         let opt = {
             symbol: symbol,
@@ -250,7 +252,15 @@ let api = function Binance() {
         if (typeof flags.type !== 'undefined') opt.type = flags.type;
         if (opt.type.includes('LIMIT')) {
             opt.price = price;
-            opt.timeInForce = 'GTC';
+            if (opt.type !== 'LIMIT_MAKER') {
+                opt.timeInForce = 'GTC';
+            }
+        }
+        if (opt.type === 'OCO') {
+            opt.price = price;
+            opt.stopLimitPrice = flags.stopLimitPrice;
+            opt.stopLimitTimeInForce = 'GTC';
+            delete opt.type;
         }
         if (typeof flags.timeInForce !== 'undefined') opt.timeInForce = flags.timeInForce;
         if (typeof flags.newOrderRespType !== 'undefined') opt.newOrderRespType = flags.newOrderRespType;
@@ -269,6 +279,62 @@ let api = function Binance() {
             if (opt.type === 'LIMIT') throw Error('stopPrice: Must set "type" to one of the following: STOP_LOSS, STOP_LOSS_LIMIT, TAKE_PROFIT, TAKE_PROFIT_LIMIT');
         }
         signedRequest(base + endpoint, opt, function (error, response) {
+            if (!response) {
+                if (callback) callback(error, response);
+                else Binance.options.log('Order() error:', error);
+                return;
+            }
+            if (typeof response.msg !== 'undefined' && response.msg === 'Filter failure: MIN_NOTIONAL') {
+                Binance.options.log('Order quantity too small. See exchangeInfo() for minimum amounts');
+            }
+            if (callback) callback(error, response);
+            else Binance.options.log(side + '(' + symbol + ',' + quantity + ',' + price + ') ', response);
+        }, 'POST');
+    };
+
+    /**
+     * Create a signed http request to the signed API
+     * @param {string} side - BUY or SELL
+     * @param {string} symbol - The symbol to buy or sell
+     * @param {string} quantity - The quantity to buy or sell
+     * @param {string} price - The price per unit to transact each unit at
+     * @param {object} flags - additional order settings
+     * @param {function} callback - the callback function
+     * @return {undefined}
+     */
+    const marginOrder = function (side, symbol, quantity, price, flags = {}, callback = false) {
+        let endpoint = 'v1/margin/order';
+        if (Binance.options.test) endpoint += '/test';
+        let opt = {
+            symbol: symbol,
+            side: side,
+            type: 'LIMIT',
+            quantity: quantity
+        };
+        if (typeof flags.type !== 'undefined') opt.type = flags.type;
+        if (opt.type.includes('LIMIT')) {
+            opt.price = price;
+            if (opt.type !== 'LIMIT_MAKER') {
+                opt.timeInForce = 'GTC';
+            }
+        }
+
+        if (typeof flags.timeInForce !== 'undefined') opt.timeInForce = flags.timeInForce;
+        if (typeof flags.newOrderRespType !== 'undefined') opt.newOrderRespType = flags.newOrderRespType;
+        if (typeof flags.newClientOrderId !== 'undefined') opt.newClientOrderId = flags.newClientOrderId;
+
+        /*
+         * STOP_LOSS
+         * STOP_LOSS_LIMIT
+         * TAKE_PROFIT
+         * TAKE_PROFIT_LIMIT
+         */
+        if (typeof flags.icebergQty !== 'undefined') opt.icebergQty = flags.icebergQty;
+        if (typeof flags.stopPrice !== 'undefined') {
+            opt.stopPrice = flags.stopPrice;
+            if (opt.type === 'LIMIT') throw Error('stopPrice: Must set "type" to one of the following: STOP_LOSS, STOP_LOSS_LIMIT, TAKE_PROFIT, TAKE_PROFIT_LIMIT');
+        }
+        signedRequest(sapi + endpoint, opt, function (error, response) {
             if (!response) {
                 if (callback) callback(error, response);
                 else Binance.options.log('Order() error:', error);
@@ -499,8 +565,32 @@ let api = function Binance() {
             Binance.options.balance_callback(data);
         } else if (type === 'executionReport') {
             if (Binance.options.execution_callback) Binance.options.execution_callback(data);
+        } else if (type === 'listStatus') {
+            if (Binance.options.list_status_callback) Binance.options.list_status_callback(data);
+        } else if (type === 'outboundAccountPosition') {
+            // TODO: Does this mean something?
         } else {
             Binance.options.log('Unexpected userData: ' + type);
+        }
+    };
+
+    /**
+    * Used as part of the user data websockets callback
+    * @param {object} data - user data callback data type
+    * @return {undefined}
+    */
+    const userMarginDataHandler = function (data) {
+        let type = data.e;
+        if (type === 'outboundAccountInfo') {
+            Binance.options.margin_balance_callback(data);
+        } else if (type === 'executionReport') {
+            if (Binance.options.margin_execution_callback) Binance.options.margin_execution_callback(data);
+        } else if (type === 'listStatus') {
+            if (Binance.options.margin_list_status_callback) Binance.options.margin_list_status_callback(data);
+        } else if (type === 'outboundAccountPosition') {
+            // TODO: Does this mean something?
+        } else {
+            Binance.options.log('Unexpected userMarginData: ' + type);
         }
     };
 
@@ -509,8 +599,8 @@ let api = function Binance() {
      * @param {object} data - user data callback data type
      * @return {object} - user friendly data type
      */
-    const prevDayConvertData = function(data) {
-        let convertData = function(data) {
+    const prevDayConvertData = function (data) {
+        let convertData = function (data) {
             let {
                 e: eventType,
                 E: eventTime,
@@ -569,6 +659,7 @@ let api = function Binance() {
                 result.push(converted);
             }
             return result;
+            // eslint-disable-next-line no-else-return
         } else {
             return convertData(data);
         }
@@ -853,7 +944,7 @@ let api = function Binance() {
         * @return {int} - number of place
         */
         getPrecision: function (float) {
-            if ( !float || Number.isInteger( float ) ) return 0;
+            if (!float || Number.isInteger(float)) return 0;
             return float.toString().split('.')[1].length || 0;
         },
 
@@ -1609,11 +1700,11 @@ let api = function Binance() {
         * @param {number} amount - the amount to transfer
         * @param {string} addressTag - and addtional address tag
         * @param {function} callback - the callback function
+        * @param {string} name - the name to save the address as. Set falsy to prevent Binance saving to address book
         * @return {promise or undefined} - omitting the callback returns a promise
         */
-        withdraw: function (asset, address, amount, addressTag = false, callback = false) {
+        withdraw: function (asset, address, amount, addressTag = false, callback = false, name = 'API Withdraw') {
             let params = { asset, address, amount };
-            params.name = 'API Withdraw';
             if (addressTag) params.addressTag = addressTag;
             if (!callback) {
               return new Promise((resolve, reject) => {
@@ -2078,9 +2169,10 @@ let api = function Binance() {
         * @param {object} data - the data to send
         * @param {function} callback - the callback function
         * @param {string} method - the http method
+        * @param {boolean} noDataInSignature - Prevents data from being added to signature
         * @return {promise or undefined} - omitting the callback returns a promise
         */
-        signedRequest: function (url, data, callback, method = 'GET') {
+        signedRequest: function (url, data, callback, method = 'GET', noDataInSignature = false) {
           if (!callback) {
             return new Promise((resolve, reject) => {
               callback = (error, response) => {
@@ -2090,10 +2182,10 @@ let api = function Binance() {
                   resolve(response);
                 }
               }
-              signedRequest(url, data, callback, method);
+              signedRequest(url, data, callback, method, noDataInSignature);
             })
           } else {
-            signedRequest(url, data, callback, method);
+            signedRequest(url, data, callback, method, noDataInSignature);
           }
         },
 
@@ -2115,15 +2207,211 @@ let api = function Binance() {
             else if (symbol.substr(-4) === 'TUSD') return 'TUSD';
         },
 
+        //** Margin actions */
+        /**
+        * Creates an order
+        * @param {string} side - BUY or SELL
+        * @param {string} symbol - the symbol to buy
+        * @param {numeric} quantity - the quantity required
+        * @param {numeric} price - the price to pay for each unit
+        * @param {object} flags - aadditionalbuy order flags
+        * @param {function} callback - the callback function
+        * @return {undefined}
+        */
+        mgOrder: function (side, symbol, quantity, price, flags = {}, callback = false) {
+            marginOrder(side, symbol, quantity, price, flags, callback);
+        },
+
+        /**
+        * Creates a buy order
+        * @param {string} symbol - the symbol to buy
+        * @param {numeric} quantity - the quantity required
+        * @param {numeric} price - the price to pay for each unit
+        * @param {object} flags - additional buy order flags
+        * @param {function} callback - the callback function
+        * @return {undefined}
+        */
+        mgBuy: function (symbol, quantity, price, flags = {}, callback = false) {
+            marginOrder('BUY', symbol, quantity, price, flags, callback);
+        },
+
+        /**
+        * Creates a sell order
+        * @param {string} symbol - the symbol to sell
+        * @param {numeric} quantity - the quantity required
+        * @param {numeric} price - the price to sell each unit for
+        * @param {object} flags - additional order flags
+        * @param {function} callback - the callback function
+        * @return {undefined}
+        */
+        mgSell: function (symbol, quantity, price, flags = {}, callback = false) {
+            marginOrder('SELL', symbol, quantity, price, flags, callback);
+        },
+
+        /**
+        * Creates a market buy order
+        * @param {string} symbol - the symbol to buy
+        * @param {numeric} quantity - the quantity required
+        * @param {object} flags - additional buy order flags
+        * @param {function} callback - the callback function
+        * @return {undefined}
+        */
+
+        mgMarketBuy: function (symbol, quantity, flags = { type: 'MARKET' }, callback = false) {
+            if (typeof flags === 'function') { // Accept callback as third parameter
+                callback = flags;
+                flags = { type: 'MARKET' };
+            }
+            if (typeof flags.type === 'undefined') flags.type = 'MARKET';
+            marginOrder('BUY', symbol, quantity, 0, flags, callback);
+        },
+
+        /**
+        * Creates a market sell order
+        * @param {string} symbol - the symbol to sell
+        * @param {numeric} quantity - the quantity required
+        * @param {object} flags - additional sell order flags
+        * @param {function} callback - the callback function
+        * @return {undefined}
+        */
+        mgMarketSell: function (symbol, quantity, flags = { type: 'MARKET' }, callback = false) {
+            if (typeof flags === 'function') { // Accept callback as third parameter
+                callback = flags;
+                flags = { type: 'MARKET' };
+            }
+            if (typeof flags.type === 'undefined') flags.type = 'MARKET';
+            marginOrder('SELL', symbol, quantity, 0, flags, callback);
+        },
+
+        /**
+        * Cancels an order
+        * @param {string} symbol - the symbol to cancel
+        * @param {string} orderid - the orderid to cancel
+        * @param {function} callback - the callback function
+        * @return {undefined}
+        */
+        mgCancel: function (symbol, orderid, callback = false) {
+            signedRequest(sapi + 'v1/margin/order', { symbol: symbol, orderId: orderid }, function (error, data) {
+                if (callback) return callback.call(this, error, data, symbol);
+            }, 'DELETE');
+        },
+
+        /**
+        * Gets the status of an order
+        * @param {string} symbol - the symbol to check
+        * @param {string} orderid - the orderid to check
+        * @param {function} callback - the callback function
+        * @param {object} flags - any additional flags
+        * @return {undefined}
+        */
+        mgOrderStatus: function (symbol, orderid, callback, flags = {}) {
+            let parameters = Object.assign({ symbol: symbol, orderId: orderid }, flags);
+            signedRequest(sapi + 'v1/margin/order', parameters, function (error, data) {
+                if (callback) return callback.call(this, error, data, symbol);
+            });
+        },
+
+        /**
+        * Gets open orders
+        * @param {string} symbol - the symbol to get
+        * @param {function} callback - the callback function
+        * @return {undefined}
+        */
+        mgOpenOrders: function (symbol, callback) {
+            let parameters = symbol ? { symbol: symbol } : {};
+            signedRequest(sapi + 'v1/margin/openOrders', parameters, function (error, data) {
+                return callback.call(this, error, data, symbol);
+            });
+        },
+
+        /**
+        * Cancels all order of a given symbol
+        * @param {string} symbol - the symbol to cancel all orders for
+        * @param {function} callback - the callback function
+        * @return {undefined}
+        */
+        mgCancelOrders: function (symbol, callback = false) {
+            signedRequest(sapi + 'v1/margin/openOrders', { symbol: symbol }, function (error, json) {
+                if (json.length === 0) {
+                    if (callback) return callback.call(this, 'No orders present for this symbol', {}, symbol);
+                }
+                for (let obj of json) {
+                    let quantity = obj.origQty - obj.executedQty;
+                    Binance.options.log('cancel order: ' + obj.side + ' ' + symbol + ' ' + quantity + ' @ ' + obj.price + ' #' + obj.orderId);
+                    signedRequest(sapi + 'v1/margin/order', { symbol: symbol, orderId: obj.orderId }, function (error, data) {
+                        if (callback) return callback.call(this, error, data, symbol);
+                    }, 'DELETE');
+                }
+            });
+        },
+
+        /**
+        * Transfer from main account to margin account
+        * @param {string} asset - the asset
+        * @param {number} amount - the asset
+        * @param {function} callback - the callback function
+        * @param {object} options - additional options
+        * @return {undefined}
+        */
+        mgTransferMainToMargin: function (asset, amount, callback) {
+            let parameters = Object.assign({ asset: asset, amount: amount, type: 1 });
+            signedRequest(sapi + 'v1/margin/transfer', parameters, function (error, data) {
+                if (callback) return callback(error, data);
+            }, 'POST');
+        },
+
+        /**
+        * Transfer from margin account to main account
+        * @param {string} asset - the asset
+        * @param {number} amount - the asset
+        * @param {function} callback - the callback function
+        * @return {undefined}
+        */
+        mgTransferMarginToMain: function (asset, amount, callback) {
+            let parameters = Object.assign({ asset: asset, amount: amount, type: 2 });
+            signedRequest(sapi + 'v1/margin/transfer', parameters, function (error, data) {
+                if (callback) return callback(error, data);
+            }, 'POST');
+        },
+
+        /**
+        * Margin account borrow/loan
+        * @param {string} asset - the asset
+        * @param {number} amount - the asset
+        * @param {function} callback - the callback function
+        * @return {undefined}
+        */
+        mgBorrow: function (asset, amount, callback) {
+            let parameters = Object.assign({ asset: asset, amount: amount });
+            signedRequest(sapi + 'v1/margin/loan', parameters, function (error, data) {
+                if (callback) return callback(error, data);
+            }, 'POST');
+        },
+
+        /**
+        * Margin account repay
+        * @param {string} asset - the asset
+        * @param {number} amount - the asset
+        * @param {function} callback - the callback function
+        * @return {undefined}
+        */
+        mgRepay: function (asset, amount, callback) {
+            let parameters = Object.assign({ asset: asset, amount: amount });
+            signedRequest(sapi + 'v1/margin/repay', parameters, function (error, data) {
+                if (callback) return callback(error, data);
+            }, 'POST');
+        },
+
         websockets: {
             /**
             * Userdata websockets function
             * @param {function} callback - the callback function
             * @param {function} execution_callback - optional execution callback
             * @param {function} subscribed_callback - subscription callback
+            * @param {function} list_status_callback - status callback
             * @return {undefined}
             */
-            userData: function userData(callback, execution_callback = false, subscribed_callback = false) {
+            userData: function userData(callback, execution_callback = false, subscribed_callback = false, list_status_callback = false) {
                 let reconnect = function () {
                     if (Binance.options.reconnect) userData(callback, execution_callback, subscribed_callback);
                 };
@@ -2141,7 +2429,40 @@ let api = function Binance() {
                     }, 60 * 30 * 1000); // 30 minute keepalive
                     Binance.options.balance_callback = callback;
                     Binance.options.execution_callback = execution_callback;
+                    Binance.options.list_status_callback = list_status_callback;
                     const subscription = subscribe(Binance.options.listenKey, userDataHandler, reconnect);
+                    if (subscribed_callback) subscribed_callback(subscription.endpoint);
+                }, 'POST');
+            },
+
+            /**
+            * Margin Userdata websockets function
+            * @param {function} callback - the callback function
+            * @param {function} execution_callback - optional execution callback
+            * @param {function} subscribed_callback - subscription callback
+            * @param {function} list_status_callback - status callback
+            * @return {undefined}
+            */
+            userMarginData: function userMarginData(callback, execution_callback = false, subscribed_callback = false, list_status_callback = false) {
+                let reconnect = function () {
+                    if (Binance.options.reconnect) userMarginData(callback, execution_callback, subscribed_callback);
+                };
+                apiRequest(sapi + 'v1/userDataStream', {}, function (error, response) {
+                    Binance.options.listenMarginKey = response.listenKey;
+                    setTimeout(function userDataKeepAlive() { // keepalive
+                        try {
+                            apiRequest(sapi + 'v1/userDataStream?listenKey=' + Binance.options.listenMarginKey, {}, function (err) {
+                                if (err) setTimeout(userDataKeepAlive, 60000); // retry in 1 minute
+                                else setTimeout(userDataKeepAlive, 60 * 30 * 1000); // 30 minute keepalive
+                            }, 'PUT');
+                        } catch (error) {
+                            setTimeout(userDataKeepAlive, 60000); // retry in 1 minute
+                        }
+                    }, 60 * 30 * 1000); // 30 minute keepalive
+                    Binance.options.margin_balance_callback = callback;
+                    Binance.options.margin_execution_callback = execution_callback;
+                    Binance.options.margin_list_status_callback = list_status_callback;
+                    const subscription = subscribe(Binance.options.listenMarginKey, userMarginDataHandler, reconnect);
                     if (subscribed_callback) subscribed_callback(subscription.endpoint);
                 }, 'POST');
             },
@@ -2327,10 +2648,11 @@ let api = function Binance() {
             /**
              * Clear websocket depthcache
              * @param {String|Array} symbols   - a single symbol, or an array of symbols, to clear the cache of
+             * @returns {void}
              */
             clearDepthCache(symbols) {
                 const symbolsArr = Array.isArray(symbols) ? symbols : [symbols];
-                symbolsArr.forEach((thisSymbol) => {
+                symbolsArr.forEach(thisSymbol => {
                     delete Binance.depthCache[thisSymbol];
                 });
             },

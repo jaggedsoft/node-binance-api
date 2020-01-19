@@ -1,16 +1,16 @@
 {
   "name": "node-binance-api",
-  "version": "0.9.5",
+  "version": "0.9.9",
   "description": "Binance API for node https://github.com/jaggedsoft/node-binance-api",
   "main": "node-binance-api.js",
   "dependencies": {
-    "async": "^2.6.1",
-    "https-proxy-agent": "^2.2.1",
-    "request": "^2.85.0",
-    "socks-proxy-agent": "^4.0.1",
+    "async": "^3.1.0",
+    "https-proxy-agent": "^3.0.1",
+    "request": "^2.88.0",
+    "socks-proxy-agent": "^4.0.2",
     "string-hash": "^1.1.3",
     "url": "^0.11.0",
-    "ws": "^4.1.0"
+    "ws": "^7.2.0"
   },
   "scripts": {
     "test": "mocha",
@@ -36,16 +36,16 @@
   },
   "homepage": "https://github.com/jaggedsoft/node-binance-api#readme",
   "devDependencies": {
-    "chai": "^4.1.2",
+    "chai": "^4.2.0",
     "chai-counter": "^1.0.0",
-    "codacy-coverage": "^2.1.1",
-    "codecov": "^3.0.4",
-    "coveralls": "^3.0.2",
-    "eslint": "^4.19.1",
+    "codacy-coverage": "^3.4.0",
+    "codecov": "^3.6.1",
+    "coveralls": "^3.0.7",
+    "eslint": "^6.6.0",
     "istanbul": "^0.4.5",
-    "jsdoc": "^3.5.5",
-    "mocha": "^5.2.0",
+    "jsdoc": "^3.6.3",
+    "mocha": "^6.2.2",
     "mocha-lcov-reporter": "^1.3.0",
-    "nyc": "^13.0.0"
+    "nyc": "^14.1.1"
   }
 }

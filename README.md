@@ -1,3 +1,4 @@
+
 [![Latest Version](https://img.shields.io/github/release/jaggedsoft/node-binance-api.svg?style=flat-square)](https://github.com/jaggedsoft/node-binance-api/releases)
 [![GitHub last commit](https://img.shields.io/github/last-commit/jaggedsoft/node-binance-api.svg?maxAge=2400)](#)
 [![npm downloads](https://img.shields.io/npm/dt/node-binance-api.svg?maxAge=7200)](https://www.npmjs.com/package/node-binance-api)
@@ -1575,6 +1576,90 @@ binance.withdraw("ETH", "0x1d2034348c851ea29c7d03731c7968a5bcc91564", 1, false, 
 binance.withdraw("BTC", "1C5gqLRs96Xq4V2ZZAR1347yUCpHie7sa", 0.2);
 ```
 
+#### Withdraw with custom name
+```js
+// let name = false // Falsy value won't save address to address book
+let name = 'My Withdrawal Address'
+binance.withdraw("BTC", "1C5gqLRs96Xq4V2ZZAR1347yUCpHie7sa", 0.2, undefined, name)
+```
+# Margin
+Margin is newly implemented and a work in progress. 
+For now:
+
+#### Transfer from Main account to Margin account
+```js
+binance.mgTransferMainToMargin(asset, amount, (error, response) => {
+    if (error) {
+      // error from Binance endpoint
+    } else {
+      // should get a tranId
+    }
+});
+
+```
+#### Transfer from Margin account to Main account
+```js
+binance.mgTransferMarginToMain(asset, amount, (error, response) => {
+    if (error) {
+      // error from Binance endpoint
+    } else {
+      // should get a tranId
+    }
+});
+```
+
+#### Borrow from margin account
+```js
+binance.mgBorrow(asset, amount, (error, response) => {
+    if (error) {
+      // error from Binance endpoint
+    } else {
+      // should get a tranId
+    }
+});
+```
+
+#### Repay margin account
+```js
+binance.mgRepay(asset, amount, (error, response) => {
+    if (error) {
+      // error from Binance endpoint
+    } else {
+      // should get a tranId
+    }
+});
+```
+
+#### Margin BUY and SELL orders
+Instead of `binance.buy()` use `binance.mgBuy()` and instead of `binance.sell()` use `binance.mgSell()`.
+
+For market orders use `binance.mgMarketBuy()` and `binance.mgMarketSell()`.
+
+Usage and callbacks are the same as the 'regular account' counterparts.
+
+#### Cancel a margin order
+```javascript
+binance.mgCancel("ETHBTC", orderid, (error, response, symbol) => {
+  console.log(symbol+" cancel response:", response);
+});
+```
+
+#### Cancel all open margin orders
+```js
+binance.mgCancelOrders("XMRBTC", (error, response, symbol) => {
+  console.log(symbol+" cancel response:", response);
+});
+```
+
+#### Check a margin order's status
+```javascript
+let orderid = "7610385";
+binance.mgOrderStatus("ETHBTC", orderid, (error, orderStatus, symbol) => {
+  console.log(symbol+" order status:", orderStatus);
+});
+```
+
+
 #### [Advanced Examples](https://github.com/jaggedsoft/node-binance-api/blob/master/examples/advanced.md)
 > [exchangeInfo: Pull minimum order size, quantity, etc](https://github.com/jaggedsoft/node-binance-api/blob/master/examples/advanced.md#exchangeinfo-pull-minimum-order-size-quantity-etc)\
 [Clamp order quantities to required amounts via minQty, minNotional, stepSize when placing orders](https://github.com/jaggedsoft/node-binance-api/blob/master/examples/advanced.md#clamp-order-quantities-to-required-amounts-via-minqty-minnotional-stepsize-when-placing-orders)\
@@ -1584,7 +1669,8 @@ binance.withdraw("BTC", "1C5gqLRs96Xq4V2ZZAR1347yUCpHie7sa", 0.2);
 [newOrderRespType example](https://github.com/jaggedsoft/node-binance-api/blob/master/examples/advanced.md#neworderresptype-example-when-placing-orders)\
 [Recent Trades (historicalTrades, recentTrades, aggTrades functions)](https://github.com/jaggedsoft/node-binance-api/blob/master/examples/advanced.md#recent-trades-historicaltrades-recenttrades-aggtrades-functions)\
 [Terminate WebSocket connections](https://github.com/jaggedsoft/node-binance-api/blob/master/examples/advanced.md#terminate-websocket-connections)\
-[User Data: Account Balance Updates, Trade Updates, New Orders, Filled Orders, Cancelled Orders via WebSocket](https://github.com/jaggedsoft/node-binance-api/blob/master/examples/advanced.md#user-data-account-balance-updates-trade-updates-new-orders-filled-orders-cancelled-orders-via-websocket)\
+[User Data: Account Balance Updates, Trade Updates, New Orders, Filled Orders, Cancelled Orders via WebSocket](https://github.com/jaggedsoft/node-binance-api/blob/master/examples/advanced.md#user-data-account-balance-updates-trade-updates-new-orders-filled-orders-cancelled-orders-via-websocket)
+[Margin User Data: Account Balance Updates, Trade Updates, New Orders, Filled Orders, Cancelled Orders via WebSocket](https://github.com/jaggedsoft/node-binance-api/blob/master/examples/advanced.md#margin-user-data-account-balance-updates-trade-updates-new-orders-filled-orders-cancelled-orders-via-websocket)
 [Asynchronous Syntax Options](https://github.com/jaggedsoft/node-binance-api/blob/master/examples/advanced.md#asynchronous-syntax-options)
 
 
@@ -1648,7 +1734,7 @@ binance.useServerTime(function() {
 });
 ```
 
-Thank you to all contributors: bmino, dmzoneill, dmitriz, keith1024, pavlovdog, usama33, yanislk, learnathoner, vaielab, nickreese, Tuitio, grandmore, itnok, CollinEstes, sethyx, mstijak, MadDeveloper, balthazar, bitoiu, matthewwoop, robaleman, hems and others!
+Thank you to all contributors: dbvcode, bmino, dmzoneill, dmitriz, keith1024, pavlovdog, usama33, yanislk, learnathoner, vaielab, nickreese, Tuitio, grandmore, itnok, CollinEstes, sethyx, mstijak, MadDeveloper, balthazar, bitoiu, matthewwoop, robaleman, hems and others!
 
 > # ⚠️ Binance no longer offers support for API projects.
 > ## No support is offered. No questions will be answered. Pull requests are still welcome.
@@ -1660,4 +1746,3 @@ Thank you to all contributors: bmino, dmzoneill, dmitriz, keith1024, pavlovdog, 
 
 [![Views](http://hits.dwyl.io/jaggedsoft/node-binance-api.svg)](http://hits.dwyl.io/jaggedsoft/node-binance-api)
 [![jaggedsoft on Twitter](https://img.shields.io/twitter/follow/jaggedsoft.svg?style=social)](https://twitter.com/jaggedsoft)
-[![Chartaholic on Twitter](https://img.shields.io/twitter/follow/Chartaholic.svg?style=social)](https://twitter.com/Chartaholic)
