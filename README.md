@@ -29,18 +29,23 @@ const binance = require('node-binance-api')().options({
 });
 ```
 
+Note: You can use promises or callbacks, whatever you're the most comfortable with.
+
+#### Getting latest price of all symbols
+```javascript
+let ticker = await binance.prices();
+console.log(`Price of BNB: ${ticker.BNBUSDT}`);
+
+binance.prices((error, ticker) => {
+  console.log("prices()", ticker);
+  console.log("Price of BTC: ", ticker.BTCUSDT);
+});
+```
+
 #### Getting latest price of a symbol
 ```js
 binance.prices('BNBBTC', (error, ticker) => {
   console.log("Price of BNB: ", ticker.BNBBTC);
-});
-```
-
-#### Getting latest price of all symbols
-```javascript
-binance.prices((error, ticker) => {
-  console.log("prices()", ticker);
-  console.log("Price of BTC: ", ticker.BTCUSDT);
 });
 ```
 <details>
