@@ -1,18 +1,12 @@
-[![Latest Version](https://img.shields.io/github/release/jaggedsoft/node-binance-api.svg?style=flat-square)](https://github.com/jaggedsoft/node-binance-api/releases)
-[![GitHub last commit](https://img.shields.io/github/last-commit/jaggedsoft/node-binance-api.svg?maxAge=2400)](#)
-[![npm downloads](https://img.shields.io/npm/dt/node-binance-api.svg?maxAge=7200)](https://www.npmjs.com/package/node-binance-api)
-[![jaggedsoft on Twitter](https://img.shields.io/twitter/follow/jaggedsoft.svg?style=social)](https://twitter.com/jaggedsoft)
+[![Latest Version](https://img.shields.io/github/release/jaggedsoft/node-binance-api.svg?style=flat-square)](https://github.com/jaggedsoft/node-binance-api/releases) [![GitHub last commit](https://img.shields.io/github/last-commit/jaggedsoft/node-binance-api.svg?maxAge=2400)](#) <!-- [![npm downloads](https://img.shields.io/npm/dt/node-binance-api.svg?maxAge=7200)](https://www.npmjs.com/package/node-binance-api) --> [![jaggedsoft on Twitter](https://img.shields.io/twitter/follow/jaggedsoft.svg?style=social)](https://twitter.com/jaggedsoft)
 
 [![NPM](https://nodei.co/npm/node-binance-api.png?compact=true)](https://npmjs.org/package/node-binance-api)
 
-[![Build Status](https://travis-ci.org/jaggedsoft/node-binance-api.svg?branch=master&style=flat-square)](https://travis-ci.org/jaggedsoft/node-binance-api)
-[![Coverage Status](https://coveralls.io/repos/github/jaggedsoft/node-binance-api/badge.svg?branch=master&style=flat-square)](https://coveralls.io/github/jaggedsoft/node-binance-api)
-[![CodeCov](https://codecov.io/gh/jaggedsoft/node-binance-api/branch/master/graph/badge.svg?style=flat-square)](https://codecov.io/github/jaggedsoft/node-binance-api/)
-[![Codacy Badge](https://api.codacy.com/project/badge/Coverage/996757cec66542c0a64fca2b4cf8a936)](https://www.codacy.com/app/dmzoneill/node-binance-api?utm_source=github.com&utm_medium=referral&utm_content=jaggedsoft/node-binance-api&utm_campaign=Badge_Coverage)
-[![Codacy Badge](https://api.codacy.com/project/badge/Grade/996757cec66542c0a64fca2b4cf8a936)](https://www.codacy.com/app/dmzoneill/node-binance-api?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=jaggedsoft/node-binance-api&amp;utm_campaign=Badge_Grade)
+[![Build Status](https://travis-ci.org/jaggedsoft/node-binance-api.svg?branch=master&style=flat-square)](https://travis-ci.org/jaggedsoft/node-binance-api) [![Coverage Status](https://coveralls.io/repos/github/jaggedsoft/node-binance-api/badge.svg?branch=master&style=flat-square)](https://coveralls.io/github/jaggedsoft/node-binance-api) [![CodeCov](https://codecov.io/gh/jaggedsoft/node-binance-api/branch/master/graph/badge.svg?style=flat-square)](https://codecov.io/github/jaggedsoft/node-binance-api/) <!-- [![Codacy Badge](https://api.codacy.com/project/badge/Coverage/996757cec66542c0a64fca2b4cf8a936)](https://www.codacy.com/app/jaggedsoft/node-binance-api?utm_source=github.com&utm_medium=referral&utm_content=jaggedsoft/node-binance-api&utm_campaign=Badge_Coverage) --> [![Codacy Grade](https://api.codacy.com/project/badge/Grade/996757cec66542c0a64fca2b4cf8a936)](https://www.codacy.com/app/jaggedsoft/node-binance-api)
 
 # Node Binance API
 This project is designed to help you make your own projects that interact with the [Binance API](https://github.com/binance-exchange/binance-official-api-docs). You can stream candlestick chart data, market depth, or use other advanced features such as setting stop losses and iceberg orders. This project seeks to have complete API coverage including WebSockets.
+**Now supporting Promises, Margin, Futures and OCO**
 
 #### Installation
 ```
@@ -21,25 +15,58 @@ npm install node-binance-api --save
 
 #### Getting started
 ```javascript
-const binance = require('node-binance-api')().options({
+const Binance = require('node-binance-api');
+const binance = new Binance().options({
   APIKEY: '<key>',
-  APISECRET: '<secret>',
-  useServerTime: true // If you get timestamp errors, synchronize to server time at startup
+  APISECRET: '<secret>'
 });
+```
+
+# Binance Futures API
+> **Work in progress, including documentation. Promises only**
+```js
+console.info( await binance.futuresPrices() );
+console.info( await binance.futuresTime() );
+console.info( await binance.futuresExchangeInfo() );
+console.info( await binance.futuresCandles( "TRXUSDT", "1m" ) );
+console.info( await binance.futuresDepth( "ADAUSDT" ) );
+console.info( await binance.futuresQuote() );
+console.info( await binance.futuresQuote( "BCHUSDT" ) );
+console.info( await binance.futuresDaily() );
+console.info( await binance.futuresOpenInterest( "BTCUSDT" ) );
+console.info( await binance.futuresMarkPrice() );
+console.info( await binance.futuresMarkPrice( "ETHUSDT" ) );
+console.info( await binance.futuresTrades( "LTCUSDT" ) );
+console.info( await binance.futuresAggTrades( "XTZUSDT" ) );
+console.info( await binance.futuresLiquidationOrders() );
+console.info( await binance.futuresFundingRate() );
+console.info( await binance.futuresHistoricalTrades( "XMRUSDT" ) );
+console.info( await binance.futuresLeverageBracket( "LINKUSDT" ) );
+
+/* Currently in development:
+futuresMarketBuy
+futuresMarketSell
+futuresOrderStatus
+futuresOrder: private 'v1/order'
+futuresCancelOrder: private 'v1/order' 'DELETE'
+futuresOpenOrders: private 'v1/openOrders'
+futuresPositionRisk: private 'v1/positionRisk'
+futuresGetDataStream: private 'v1/listenKey' 'POST'
+futuresKeepDataStream: private 'v1/listenKey' 'PUT'
+futuresCloseDataStream: private 'v1/listenKey' 'DELETE'
+Futures WebSockets */
+```
+
+#### Getting latest price of all symbols
+```javascript
+let ticker = await binance.prices();
+console.log(`Price of BNB: ${ticker.BNBUSDT}`);
 ```
 
 #### Getting latest price of a symbol
 ```js
 binance.prices('BNBBTC', (error, ticker) => {
   console.log("Price of BNB: ", ticker.BNBBTC);
-});
-```
-
-#### Getting latest price of all symbols
-```javascript
-binance.prices((error, ticker) => {
-  console.log("prices()", ticker);
-  console.log("Price of BTC: ", ticker.BTCUSDT);
 });
 ```
 <details>
@@ -1563,23 +1590,72 @@ let amount = 0.1;
 binance.withdraw("XMR", address, amount, addressTag);
 ```
 
-#### Withdraw with Callback
-```js
-binance.withdraw("ETH", "0x1d2034348c851ea29c7d03731c7968a5bcc91564", 1, false, (error, response) => {
-  console.log(response);
-});
-```
-
 #### Withdraw
 ```js
 binance.withdraw("BTC", "1C5gqLRs96Xq4V2ZZAR1347yUCpHie7sa", 0.2);
 ```
 
-#### Withdraw with custom name
+# Binance Margin API
+
+#### Transfer from Main account to Margin account
 ```js
-// let name = false // Falsy value won't save address to address book
-let name = 'My Withdrawal Address'
-binance.withdraw("BTC", "1C5gqLRs96Xq4V2ZZAR1347yUCpHie7sa", 0.2, undefined, name)
+binance.mgTransferMainToMargin(asset, amount, (error, response) => {
+    if ( error ) return console.warn(error);
+    // Success! Transaction ID: response.tranId
+});
+
+```
+#### Transfer from Margin account to Main account
+```js
+binance.mgTransferMarginToMain(asset, amount, (error, response) => {
+    if ( error ) return console.warn(error);
+    // Success! Transaction ID: response.tranId
+});
+```
+
+#### Borrow from margin account
+```js
+binance.mgBorrow(asset, amount, (error, response) => {
+    if ( error ) return console.warn(error);
+    // Success! Transaction ID: response.tranId
+});
+```
+
+#### Repay margin account
+```js
+binance.mgRepay(asset, amount, (error, response) => {
+    if ( error ) return console.warn(error);
+    // Success! Transaction ID: response.tranId
+});
+```
+
+#### Margin BUY and SELL orders
+Instead of `binance.buy()` use `binance.mgBuy()` and instead of `binance.sell()` use `binance.mgSell()`.
+
+For market orders use `binance.mgMarketBuy()` and `binance.mgMarketSell()`.
+
+Usage and callbacks are the same as the 'regular account' counterparts.
+
+#### Cancel a margin order
+```javascript
+binance.mgCancel("ETHBTC", orderid, (error, response, symbol) => {
+  console.log(symbol+" cancel response:", response);
+});
+```
+
+#### Cancel all open margin orders
+```js
+binance.mgCancelOrders("XMRBTC", (error, response, symbol) => {
+  console.log(symbol+" cancel response:", response);
+});
+```
+
+#### Check a margin order's status
+```javascript
+let orderid = "7610385";
+binance.mgOrderStatus("ETHBTC", orderid, (error, orderStatus, symbol) => {
+  console.log(symbol+" order status:", orderStatus);
+});
 ```
 
 #### [Advanced Examples](https://github.com/jaggedsoft/node-binance-api/blob/master/examples/advanced.md)
@@ -1592,39 +1668,8 @@ binance.withdraw("BTC", "1C5gqLRs96Xq4V2ZZAR1347yUCpHie7sa", 0.2, undefined, nam
 [Recent Trades (historicalTrades, recentTrades, aggTrades functions)](https://github.com/jaggedsoft/node-binance-api/blob/master/examples/advanced.md#recent-trades-historicaltrades-recenttrades-aggtrades-functions)\
 [Terminate WebSocket connections](https://github.com/jaggedsoft/node-binance-api/blob/master/examples/advanced.md#terminate-websocket-connections)\
 [User Data: Account Balance Updates, Trade Updates, New Orders, Filled Orders, Cancelled Orders via WebSocket](https://github.com/jaggedsoft/node-binance-api/blob/master/examples/advanced.md#user-data-account-balance-updates-trade-updates-new-orders-filled-orders-cancelled-orders-via-websocket)
-
-
-### Proxy Support
-For the standard REST API the https_proxy or socks_proxy variable is honoured
-*NOTE* proxy package has no dns name support, please use proxy IP address
-
-**Linux**
-```bash
-export https_proxy=http://ip:port
-#export socks_proxy=socks://ip:port
-# run your app
-```
-
-**Windows**
-```bash
-set https_proxy=http://ip:port
-#set socks_proxy=socks://ip:port
-# run your app
-```
-
-For web sockets currently only the socks method is functional at this time
-
-**linux**
-```bash
-export socks_proxy=socks://ip:port
-# run your app
-```
-
-**windows**
-```bash
-set socks_proxy=socks://ip:port
-# run your app
-```
+[Margin User Data: Account Balance Updates, Trade Updates, New Orders, Filled Orders, Cancelled Orders via WebSocket](https://github.com/jaggedsoft/node-binance-api/blob/master/examples/advanced.md#margin-user-data-account-balance-updates-trade-updates-new-orders-filled-orders-cancelled-orders-via-websocket)
+[Asynchronous Syntax Options](https://github.com/jaggedsoft/node-binance-api/blob/master/examples/advanced.md#asynchronous-syntax-options)
 
 ### Troubleshooting
 Verify that your system time is correct. If you have any suggestions don't hesitate to file an issue.
@@ -1645,7 +1690,7 @@ binance.options({
 
 Problems getting your balance? Wrap the entry point of your application in useServerTime:
 ```js
-binance.useServerTime(function() {
+binance.useServerTime(() => {
 	binance.balance((error, balances) => {
 		if ( error ) return console.error(error);
 		console.log("balances()", balances);
@@ -1654,16 +1699,12 @@ binance.useServerTime(function() {
 });
 ```
 
-Thank you to all contributors: bmino, dmzoneill, dmitriz, keith1024, pavlovdog, usama33, yanislk, learnathoner, vaielab, nickreese, Tuitio, grandmore, itnok, CollinEstes, sethyx, mstijak, MadDeveloper, balthazar, bitoiu, matthewwoop, robaleman, hems and others!
+> ### For support go to [Telegram](https://t.me/binance_api_english)
 
-> # ⚠️ Binance no longer offers support for API projects.
-> ## No support is offered. No questions will be answered. Pull requests are still welcome.
+***Thank you to all contributors:*** Eluvade, dbvcode, bmino, dmzoneill, dmitriz, keith1024, pavlovdog, usama33, yanislk, learnathoner, vaielab, nickreese, Tuitio, grandmore, itnok, CollinEstes, sethyx, mstijak, MadDeveloper, balthazar, bitoiu, matthewwoop, robaleman, hems and others!
 
-
-## Stargazers over time
-
+![Downloads](https://img.shields.io/npm/dt/node-binance-api.svg?style=for-the-badge&maxAge=86400) ![Stars](https://img.shields.io/github/stars/jaggedsoft/node-binance-api.svg?style=for-the-badge&label=Stars) ![Contributors](https://img.shields.io/github/contributors/jaggedsoft/node-binance-api.svg?style=for-the-badge&maxAge=86400)
 [![Stargazers over time](https://starcharts.herokuapp.com/jaggedsoft/node-binance-api.svg)](https://starcharts.herokuapp.com/jaggedsoft/node-binance-api)
 
 [![Views](http://hits.dwyl.io/jaggedsoft/node-binance-api.svg)](http://hits.dwyl.io/jaggedsoft/node-binance-api)
 [![jaggedsoft on Twitter](https://img.shields.io/twitter/follow/jaggedsoft.svg?style=social)](https://twitter.com/jaggedsoft)
-[![Chartaholic on Twitter](https://img.shields.io/twitter/follow/Chartaholic.svg?style=social)](https://twitter.com/Chartaholic)
