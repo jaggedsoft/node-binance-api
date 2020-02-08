@@ -80,18 +80,9 @@ let api = function Binance() {
     }
 
     const addProxy = opt => {
-        let proxy = Binance.options.proxy
-            ? `http://${
-                Binance.options.proxy.auth
-                    ? Binance.options.proxy.auth.username +
-              ':' +
-              Binance.options.proxy.auth.password +
-              '@'
-                    : ''
-            }${Binance.options.proxy.host}:${Binance.options.proxy.port}`
-            : '';
-        if ( proxy ) {
-            opt.proxy = proxy;
+        if ( Binance.options.proxy ) {
+            const proxyauth = Binance.options.proxy.auth ? `${Binance.options.proxy.auth.username}:${Binance.options.proxy.auth.password}@` : '';
+            opt.proxy = `http://${proxyauth}${Binance.options.proxy.host}:${Binance.options.proxy.port}`;
         }
         return opt;
     }
