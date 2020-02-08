@@ -2243,8 +2243,10 @@ let api = function Binance() {
             return data.reduce( ( out, i ) => ( ( out[i.symbol] =  i.price ), out ) );
         },
 
-        futuresDaily: async ( params = {} ) => {
-            return promiseRequest( 'v1/ticker/24hr', params, {base:fapi} );
+        futuresDaily: async ( symbol = false, params = {} ) => {
+            if ( symbol ) params.symbol = symbol;
+            let data = await promiseRequest( 'v1/ticker/24hr', params, {base:fapi} );
+            return symbol ? data : data.reduce( ( out, i ) => ( ( out[i.symbol] = i ), out ), {} );
         },
 
         futuresOpenInterest: async ( symbol ) => {
