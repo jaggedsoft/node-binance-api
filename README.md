@@ -42,19 +42,23 @@ console.info( await binance.futuresLiquidationOrders() );
 console.info( await binance.futuresFundingRate() );
 console.info( await binance.futuresHistoricalTrades( "XMRUSDT" ) );
 console.info( await binance.futuresLeverageBracket( "LINKUSDT" ) );
-
-/* Currently in development:
-futuresMarketBuy
-futuresMarketSell
-futuresOrderStatus
-futuresOrder: private 'v1/order'
-futuresCancelOrder: private 'v1/order' 'DELETE'
-futuresOpenOrders: private 'v1/openOrders'
-futuresPositionRisk: private 'v1/positionRisk'
-futuresGetDataStream: private 'v1/listenKey' 'POST'
-futuresKeepDataStream: private 'v1/listenKey' 'PUT'
-futuresCloseDataStream: private 'v1/listenKey' 'DELETE'
-Futures WebSockets */
+console.info( await binance.futuresIncome() );
+console.info( await binance.futuresPositionRisk() );
+console.info( await binance.futuresCancelAll( "BTCUSDT" ) );
+console.info( await binance.futuresCancel( "BTCUSDT", {orderId: "1025137386"} ) );
+console.info( await binance.futuresOrderStatus( "BTCUSDT", {orderId: "1025137386"} ) );
+console.info( await binance.futuresOpenOrders() );
+console.info( await binance.futuresOpenOrders( "BTCUSDT" ) );
+console.info( await binance.futuresAllOrders() );
+console.info( await binance.futuresAllOrders( "BTCUSDT" ) );
+console.info( await binance.futuresUserTrades( "BTCUSDT" ) );
+console.info( await binance.futuresGetDataStream() );
+/* Still in development:
+futuresOrder
+futuresBuy, futuresSell
+futuresMarketBuy, futuresMarketSell
+futuresSubscribe
+Cancel multiple orders */
 ```
 
 #### Getting latest price of all symbols

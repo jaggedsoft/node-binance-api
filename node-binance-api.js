@@ -80,18 +80,9 @@ let api = function Binance() {
     }
 
     const addProxy = opt => {
-        let proxy = Binance.options.proxy
-            ? `http://${
-                Binance.options.proxy.auth
-                    ? Binance.options.proxy.auth.username +
-              ':' +
-              Binance.options.proxy.auth.password +
-              '@'
-                    : ''
-            }${Binance.options.proxy.host}:${Binance.options.proxy.port}`
-            : '';
-        if ( proxy ) {
-            opt.proxy = proxy;
+        if ( Binance.options.proxy ) {
+            const proxyauth = Binance.options.proxy.auth ? `${Binance.options.proxy.auth.username}:${Binance.options.proxy.auth.password}@` : '';
+            opt.proxy = `http://${proxyauth}${Binance.options.proxy.host}:${Binance.options.proxy.port}`;
         }
         return opt;
     }
@@ -352,7 +343,8 @@ let api = function Binance() {
                 headers,
                 url: baseURL + url,
                 method: flags.method,
-                timeout: Binance.options.recvWindow
+                timeout: Binance.options.recvWindow,
+                followAllRedirects: true
             };
             if ( flags.type === 'SIGNED' ) {
                 if ( !Binance.options.APISECRET ) return reject( 'Invalid API Secret' );
@@ -2243,8 +2235,10 @@ let api = function Binance() {
             return data.reduce( ( out, i ) => ( ( out[i.symbol] =  i.price ), out ) );
         },
 
-        futuresDaily: async ( params = {} ) => {
-            return promiseRequest( 'v1/ticker/24hr', params, {base:fapi} );
+        futuresDaily: async ( symbol = false, params = {} ) => {
+            if ( symbol ) params.symbol = symbol;
+            let data = await promiseRequest( 'v1/ticker/24hr', params, {base:fapi} );
+            return symbol ? data : data.reduce( ( out, i ) => ( ( out[i.symbol] = i ), out ), {} );
         },
 
         futuresOpenInterest: async ( symbol ) => {
@@ -2275,11 +2269,32 @@ let api = function Binance() {
             params.symbol = symbol;
             return promiseRequest( 'v1/aggTrades', params, {base:fapi} );
         },
+        
+        futuresUserTrades: async ( symbol, params = {} ) => {
+            params.symbol = symbol;
+            return promiseRequest( 'v1/userTrades', params, {base:fapi, type:'SIGNED'} );
+        },
+        
+        futuresGetDataStream: async ( params = {} ) => {
+            //A User Data Stream listenKey is valid for 60 minutes after creation. setInterval
+            return promiseRequest( 'v1/listenKey', params, {base:fapi, type:'SIGNED', method:'POST'} );
+        },
 
-        //Get all Liquidation Orders
+        futuresKeepDataStream: async ( params = {} ) => {
+            return promiseRequest( 'v1/listenKey', params, {base:fapi, type:'SIGNED', method:'PUT'} );
+        },
+
+        futuresCloseDataStream: async ( params = {} ) => {
+            return promiseRequest( 'v1/listenKey', params, {base:fapi, type:'SIGNED', method:'DELETE'} );
+        },
+
         futuresLiquidationOrders: async ( symbol = false, params = {} ) => {
             if ( symbol ) params.symbol = symbol;
             return promiseRequest( 'v1/allForceOrders', params, {base:fapi} );
+        },
+        
+        futuresPositionRisk: async ( params = {} ) => {
+            return promiseRequest( 'v1/positionRisk', params, {base:fapi, type:'SIGNED'} ).then( r=>r.reduce( ( out, i ) => ( ( out[i.symbol] = i ), out ), {} ) );
         },
 
         futuresFundingRate: async ( symbol, params = {} ) => {
@@ -2290,6 +2305,10 @@ let api = function Binance() {
         futuresLeverageBracket: async ( symbol = false, params = {} ) => {
             if ( symbol ) params.symbol = symbol;
             return promiseRequest( 'v1/leverageBracket', params, {base:fapi, type:'MARKET_DATA'} );
+        },
+        
+        futuresIncome: async ( params = {} ) => {
+            return promiseRequest( 'v1/income', params, {base:fapi, type:'SIGNED'} );
         },
 
         futuresBalance: async ( params = {} ) => {
@@ -2312,27 +2331,57 @@ let api = function Binance() {
             let data = await promiseRequest( 'v1/ticker/bookTicker', params, {base:fapi} );
             return symbol ? data : data.reduce( ( out, i ) => ( ( out[i.symbol] = i ), out ), {} );
         },
-
-        /* Coming soon:
-        futuresMarketBuy
-        futuresMarketSell
-        futuresOrderStatus
-        futuresOrder: private 'v1/order'
-        futuresCancelOrder: private 'v1/order' 'DELETE'
-        futuresOpenOrders: private 'v1/openOrders'
-        futuresPositionRisk: private 'v1/positionRisk'
-        futuresGetDataStream: private 'v1/listenKey' 'POST'
-        futuresKeepDataStream: private 'v1/listenKey' 'PUT'
-        futuresCloseDataStream: private 'v1/listenKey' 'DELETE'
-        Futures WebSockets
-
-        futuresOrderStatus: async ( symbol, params = {} ) => {
+        
+        futuresOrder: async ( side, symbol, quantity, price = false, params = {} ) => { // Either orderId or origClientOrderId must be sent
             params.symbol = symbol;
-            return signedRequest( `${fapi}v1/order`, params, (error, data) => {
-                if (callback) return callback.call(this, error, data, symbol);
-            });
+            params.side = side;
+            params.quantity = quantity;
+            //type timeInForce reduceOnly
+            if ( price ) params.price = price;
+            return promiseRequest( 'v1/order', params, {base:fapi, type:'SIGNED'} );
+        },
+        
+        futuresOrderStatus: async ( symbol, params = {} ) => { // Either orderId or origClientOrderId must be sent
+            params.symbol = symbol;
+            return promiseRequest( 'v1/order', params, {base:fapi, type:'SIGNED'} );
         },
 
+        futuresCancel: async ( symbol, params = {} ) => { // Either orderId or origClientOrderId must be sent
+            params.symbol = symbol;
+            return promiseRequest( 'v1/order', params, {base:fapi, type:'SIGNED', method:'DELETE'} );
+        },
+
+        futuresCancelAll: async ( symbol, params = {} ) => {
+            params.symbol = symbol;
+            return promiseRequest( 'v1/allOpenOrders', params, {base:fapi, type:'SIGNED', method:'DELETE'} );
+        },
+
+        futuresOpenOrders: async ( symbol = false, params = {} ) => {
+            if ( symbol ) params.symbol = symbol;
+            return promiseRequest( 'v1/openOrders', params, {base:fapi, type:'SIGNED'} );
+        },
+
+        futuresAllOrders: async ( symbol = false, params = {} ) => { // Get all account orders; active, canceled, or filled.
+            if ( symbol ) params.symbol = symbol;
+            return promiseRequest( 'v1/allOrders', params, {base:fapi, type:'SIGNED'} );
+        },
+
+        /* Coming soon:
+        futuresOrder
+        futuresBuy
+        futuresSell
+        futuresMarketBuy
+        futuresMarketSell
+        futuresSubscribe
+        Cancel multiple orders DELETE /fapi/v1/batchOrders
+        wss://fstream.binance.com/ws/<listenKey>
+        New Future Account Transfer POST https://api.binance.com/sapi/v1/futures/transfer (HMAC SHA
+        Change Initial Leverage (TRADE)
+        Change Margin Type (TRADE)
+        Modify Isolated Position Margin (TRADE)
+        Get Postion Margin Change History (TRADE) */
+
+        /*
         const futuresOrder = (side, symbol, quantity, price = 0, flags = {}, callback = false) => {
             let opt = {
                 symbol: symbol,
