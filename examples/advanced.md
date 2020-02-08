@@ -208,6 +208,52 @@ binance.historicalTrades("BNBBTC", (error, response)=>{
 });
 ```
 
+#### Withdraw with custom name
+```js
+// let name = false // Falsy value won't save address to address book
+let name = 'My Withdrawal Address'
+binance.withdraw("BTC", "1C5gqLRs96Xq4V2ZZAR1347yUCpHie7sa", 0.2, undefined, name)
+```
+
+#### Withdraw with Callback
+```js
+binance.withdraw("ETH", "0x1d2034348c851ea29c7d03731c7968a5bcc91564", 1, false, (error, response) => {
+  console.log(response);
+});
+```
+
+### Proxy Support
+For the standard REST API the https_proxy or socks_proxy variable is honoured
+*NOTE* proxy package has no dns name support, please use proxy IP address
+
+**Linux**
+```bash
+export https_proxy=http://ip:port
+#export socks_proxy=socks://ip:port
+# run your app
+```
+
+**Windows**
+```bash
+set https_proxy=http://ip:port
+#set socks_proxy=socks://ip:port
+# run your app
+```
+
+For web sockets currently only the socks method is functional at this time
+
+**linux**
+```bash
+export socks_proxy=socks://ip:port
+# run your app
+```
+
+**windows**
+```bash
+set socks_proxy=socks://ip:port
+# run your app
+```
+
 #### Asynchronous Syntax Options
 > The examples below show three most common syntaxes for asynchronous API calls and their respective methods of error handling. If you do not pass a callback function as an argument, the API call returns a promise instead.
 
