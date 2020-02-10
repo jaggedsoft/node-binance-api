@@ -9,9 +9,10 @@
 /**
  * Node Binance API
  * @module jaggedsoft/node-binance-api
+ * @param {options} options param
  * @return {object} instance to class object
  */
-let api = function Binance() {
+let api = function Binance(options) {
     let Binance = this; // eslint-disable-line consistent-this
     'use strict'; // eslint-disable-line no-unused-expressions
 
@@ -26,10 +27,10 @@ let api = function Binance() {
     const SocksProxyAgent = require('socks-proxy-agent');
     const stringHash = require('string-hash');
     const async = require('async');
-    const base = 'https://api.binance.com/api/';
-    const wapi = 'https://api.binance.com/wapi/';
-    const stream = 'wss://stream.binance.com:9443/ws/';
-    const combineStream = 'wss://stream.binance.com:9443/stream?streams=';
+    const base = options && options.url && options.url.base ? options.url.base : 'https://api.binance.com/api/';
+    const wapi = options && options.url && options.url.wapi ? options.url.wapi : 'https://api.binance.com/wapi/';
+    const stream = options && options.url && options.url.stream ? options.url.stream : 'wss://stream.binance.com:9443/ws/';
+    const combineStream = options && options.url && options.url.combineStream ? options.url.combineStream : 'wss://stream.binance.com:9443/stream?streams=';
     const userAgent = 'Mozilla/4.0 (compatible; Node Binance API)';
     const contentType = 'application/x-www-form-urlencoded';
     Binance.subscriptions = {};
