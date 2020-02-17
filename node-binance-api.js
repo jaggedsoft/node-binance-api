@@ -325,6 +325,22 @@ let api = function Binance() {
         }, 'POST' );
     };
 
+    // Futures internal functions
+    const futuresOrder = async ( side, symbol, quantity, price = false, params = {} ) => {
+        params.symbol = symbol;
+        params.side = side;
+        params.quantity = quantity;
+        // LIMIT STOP MARKET STOP_MARKET TAKE_PROFIT TAKE_PROFIT_MARKET
+        // reduceOnly stopPrice
+        if ( price ) {
+            params.price = price;
+            if ( typeof params.type === 'undefined' ) params.type = 'LIMIT';
+        } else {
+            if ( typeof params.type === 'undefined' ) params.type = 'MARKET';
+        }
+        if ( params.type.includes( 'LIMIT' ) || params.type === 'STOP' || params.type === 'TAKE_PROFIT' ) params.timeInForce = 'GTC';
+        return promiseRequest( 'v1/order', params, {base:fapi, type:'TRADE', method:'POST'} );
+    };
     const promiseRequest = async ( url, data = {}, flags = {} ) => {
         return new Promise( ( resolve, reject ) => {
             let query = '', headers = {
@@ -346,18 +362,19 @@ let api = function Binance() {
                 timeout: Binance.options.recvWindow,
                 followAllRedirects: true
             };
-            if ( flags.type === 'SIGNED' ) {
+            if ( flags.type === 'SIGNED' || flags.type === 'TRADE' || flags.type === 'USER_DATA' ) {
                 if ( !Binance.options.APISECRET ) return reject( 'Invalid API Secret' );
                 data.timestamp = new Date().getTime() + Binance.info.timeOffset;
                 query = makeQueryString( data );
                 data.signature = crypto.createHmac( 'sha256', Binance.options.APISECRET ).update( query ).digest( 'hex' ); // HMAC hash header
                 opt.url = `${baseURL}${url}?${query}&signature=${data.signature}`;
             }
-            if ( flags.method === 'POST' ) {
+            opt.qs = data;
+            /*if ( flags.method === 'POST' ) {
                 opt.form = data;
             } else {
                 opt.qs = data;
-            }
+            }*/
             request( addProxy( opt ), ( error, response, body ) => {
                 if ( error ) return reject( error );
                 if ( !error && response.statusCode == 200 ) return resolve( JSON.parse( body ) );
@@ -439,7 +456,7 @@ let api = function Binance() {
      * @param {object} error - error object message
      * @return {undefined}
      */
-    const handleSocketError = function ( error ) => {
+    const handleSocketError = function ( error ) {
         /* Errors ultimately result in a `close` event.
          see: https://github.com/websockets/ws/blob/828194044bf247af852b31c49e2800d557fedeff/lib/websocket.js#L126 */
         Binance.options.log( 'WebSocket error: ' + this.endpoint +
@@ -2331,15 +2348,24 @@ let api = function Binance() {
             let data = await promiseRequest( 'v1/ticker/bookTicker', params, {base:fapi} );
             return symbol ? data : data.reduce( ( out, i ) => ( ( out[i.symbol] = i ), out ), {} );
         },
-        
-        futuresOrder: async ( side, symbol, quantity, price = false, params = {} ) => { // Either orderId or origClientOrderId must be sent
-            params.symbol = symbol;
-            params.side = side;
-            params.quantity = quantity;
-            //type timeInForce reduceOnly
-            if ( price ) params.price = price;
-            return promiseRequest( 'v1/order', params, {base:fapi, type:'SIGNED'} );
+
+        futuresBuy: async ( symbol, quantity, price, params = {} ) => {
+            return futuresOrder( 'BUY', symbol, quantity, price, params );
         },
+
+        futuresSell: async ( symbol, quantity, price, params = {} ) => {
+            return futuresOrder( 'SELL', symbol, quantity, price, params );
+        },
+
+        futuresMarketBuy: async ( symbol, quantity, params = {} ) => {
+            return futuresOrder( 'BUY', symbol, quantity, false, params );
+        },
+
+        futuresMarketSell: async ( symbol, quantity, params = {} ) => {
+            return futuresOrder( 'SELL', symbol, quantity, false, params );
+        },
+        
+        futuresOrder, // side symbol quantity [price] [params]
         
         futuresOrderStatus: async ( symbol, params = {} ) => { // Either orderId or origClientOrderId must be sent
             params.symbol = symbol;
@@ -2367,19 +2393,32 @@ let api = function Binance() {
         },
 
         /* Coming soon:
-        futuresOrder
-        futuresBuy
-        futuresSell
-        futuresMarketBuy
-        futuresMarketSell
         futuresSubscribe
         Cancel multiple orders DELETE /fapi/v1/batchOrders
-        wss://fstream.binance.com/ws/<listenKey>
         New Future Account Transfer POST https://api.binance.com/sapi/v1/futures/transfer (HMAC SHA
         Change Initial Leverage (TRADE)
         Change Margin Type (TRADE)
         Modify Isolated Position Margin (TRADE)
-        Get Postion Margin Change History (TRADE) */
+        Get Postion Margin Change History (TRADE)
+
+        wss://fstream.binance.com/ws/<listenKey>
+        Diff. Book Depth Streams (250ms, 100ms, or realtime): <symbol>@depth OR <symbol>@depth@100ms OR <symbol>@depth@0ms
+        Partial Book Depth Streams (5, 10, 20): <symbol>@depth<levels> OR <symbol>@depth<levels>@100ms
+        All Market Liquidation Order Streams: !forceOrder@arr
+        All Book Tickers Stream: !bookTicker
+        Individual Symbol Book Ticker Streams: <symbol>@bookTicker
+        All Market Tickers Streams (24h, updates 3 seconds): <symbol>!ticker@arr
+        Individual Symbol Ticker Streams (24h, 3 sec): <symbol>@ticker
+        Liquidation Order Streams for specific symbol: <symbol>@forceOrder
+        All Market Mini Tickers Stream (24h, 3 sec): <symbol>!miniTicker@arr
+        Individual Symbol Mini Ticker Stream (24h, 3 sec): <symbol>@miniTicker
+        Chart data (250ms): <symbol>@kline_<interval>
+        Mark price (3 sec): <symbol>@markPrice
+        Aggregate Trade Streams (100ms): <symbol>@aggTrade
+        Raw streams are accessed at /ws/<streamName>
+        Combined streams are accessed at /stream?streams=<streamName1>/<streamName2>/<streamName3>
+        SUBSCRIBE, UNSUBSCRIBE, LIST_SUBSCRIPTIONS, SET_PROPERTY, GET_PROPERTY
+        */
 
         /*
         const futuresOrder = (side, symbol, quantity, price = 0, flags = {}, callback = false) => {
