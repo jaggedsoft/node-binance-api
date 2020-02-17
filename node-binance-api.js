@@ -399,7 +399,7 @@ let api = function Binance() {
      * @param {function} opened_callback - a callback function
      * @return {undefined}
      */
-    const handleSocketOpen = ( opened_callback ) => {
+    const handleSocketOpen = function ( opened_callback ) {
         this.isAlive = true;
         if ( Object.keys( Binance.subscriptions ).length === 0 ) {
             Binance.socketHeartbeatInterval = setInterval( socketHeartbeat, 30000 );
@@ -415,7 +415,7 @@ let api = function Binance() {
      * @param {string} reason - string with the response
      * @return {undefined}
      */
-    const handleSocketClose = ( reconnect, code, reason ) => {
+    const handleSocketClose = function ( reconnect, code, reason ) {
         delete Binance.subscriptions[this.endpoint];
         if ( Binance.subscriptions && Object.keys( Binance.subscriptions ).length === 0 ) {
             clearInterval( Binance.socketHeartbeatInterval );
@@ -439,7 +439,7 @@ let api = function Binance() {
      * @param {object} error - error object message
      * @return {undefined}
      */
-    const handleSocketError = error => {
+    const handleSocketError = function ( error ) => {
         /* Errors ultimately result in a `close` event.
          see: https://github.com/websockets/ws/blob/828194044bf247af852b31c49e2800d557fedeff/lib/websocket.js#L126 */
         Binance.options.log( 'WebSocket error: ' + this.endpoint +
@@ -451,7 +451,7 @@ let api = function Binance() {
      * Called on each socket heartbeat
      * @return {undefined}
      */
-    const handleSocketHeartbeat = () => {
+    const handleSocketHeartbeat = function () {
         this.isAlive = true;
     };
 
@@ -463,7 +463,7 @@ let api = function Binance() {
      * @param {object} opened_callback - the function to call when opened
      * @return {WebSocket} - websocket reference
      */
-    const subscribe = ( endpoint, callback, reconnect = false, opened_callback = false ) => {
+    const subscribe = function ( endpoint, callback, reconnect = false, opened_callback = false ) {
         let httpsproxy = process.env.https_proxy || false;
         let socksproxy = process.env.socks_proxy || false;
         let ws = false;
@@ -512,7 +512,7 @@ let api = function Binance() {
      * @param {object} opened_callback - the function to call when opened
      * @return {WebSocket} - websocket reference
      */
-    const subscribeCombined = ( streams, callback, reconnect = false, opened_callback = false ) => {
+    const subscribeCombined = function ( streams, callback, reconnect = false, opened_callback = false ) {
         let httpsproxy = process.env.https_proxy || false;
         let socksproxy = process.env.socks_proxy || false;
         const queryParams = streams.join( '/' );
@@ -561,7 +561,7 @@ let api = function Binance() {
      * @param {boolean} reconnect - auto reconnect after termination
      * @return {undefined}
      */
-    const terminate = ( endpoint, reconnect = false ) => {
+    const terminate = function ( endpoint, reconnect = false ) {
         let ws = Binance.subscriptions[endpoint];
         if ( !ws ) return;
         ws.removeAllListeners( 'message' );
