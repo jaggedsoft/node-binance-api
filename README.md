@@ -1,4 +1,4 @@
-[![Latest Version](https://img.shields.io/github/release/jaggedsoft/node-binance-api.svg?style=flat-square)](https://github.com/jaggedsoft/node-binance-api/releases) [![GitHub last commit](https://img.shields.io/github/last-commit/jaggedsoft/node-binance-api.svg?maxAge=2400)](#) <!-- [![npm downloads](https://img.shields.io/npm/dt/node-binance-api.svg?maxAge=7200)](https://www.npmjs.com/package/node-binance-api) --> [![jaggedsoft on Twitter](https://img.shields.io/twitter/follow/jaggedsoft.svg?style=social)](https://twitter.com/jaggedsoft)
+[![Latest Version](https://img.shields.io/github/release/jaggedsoft/node-binance-api.svg?style=flat-square)](https://github.com/jaggedsoft/node-binance-api/releases) [![GitHub last commit](https://img.shields.io/github/last-commit/jaggedsoft/node-binance-api.svg?maxAge=2400)](#) [![Downloads](https://img.shields.io/npm/dm/node-binance-api.svg?labelColor=blueviolet)](https://npm-stat.com/charts.html?package=node-binance-api&from=2017-07-01&to=2020-04-01)<!-- [![npm downloads](https://img.shields.io/npm/dt/node-binance-api.svg?maxAge=7200)](https://www.npmjs.com/package/node-binance-api) --> [![jaggedsoft on Twitter](https://img.shields.io/twitter/follow/jaggedsoft.svg?style=social)](https://twitter.com/jaggedsoft)
 
 [![NPM](https://nodei.co/npm/node-binance-api.png?compact=true)](https://npmjs.org/package/node-binance-api)
 
@@ -25,6 +25,24 @@ const binance = new Binance().options({
 # Binance Futures API
 > **Work in progress, including documentation. Promises only**
 ```js
+// Current futures positions
+console.info( await binance.futuresAccount() );
+
+// Futures balances
+console.info( await binance.futuresBalance() );
+
+// Market Buy
+console.info( await binance.futuresMarketBuy( 'BNBUSDT', 5 ) );
+
+// Market Sell
+console.info( await binance.futuresMarketSell( 'TRXUSDT', 1 ) );
+
+// Limit Buy
+console.info( await binance.futuresBuy( 'BTCUSDT', 0.1, 8222 ) );
+
+// Limit Sell
+console.info( await binance.futuresSell( 'BTCUSDT', 0.5, 11111 ) );
+
 console.info( await binance.futuresPrices() );
 console.info( await binance.futuresTime() );
 console.info( await binance.futuresExchangeInfo() );
@@ -53,12 +71,7 @@ console.info( await binance.futuresAllOrders() );
 console.info( await binance.futuresAllOrders( "BTCUSDT" ) );
 console.info( await binance.futuresUserTrades( "BTCUSDT" ) );
 console.info( await binance.futuresGetDataStream() );
-/* Still in development:
-futuresOrder
-futuresBuy, futuresSell
-futuresMarketBuy, futuresMarketSell
-futuresSubscribe
-Cancel multiple orders */
+// Still in development: WebSockets, Documentation & Batch orders
 ```
 
 #### Getting latest price of all symbols
