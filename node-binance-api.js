@@ -131,7 +131,12 @@ let api = function Binance() {
         proxyRequest( opt, callback );
     };
 
-    const makeQueryString = q => Object.keys( q ).reduce( ( a,k )=>{a.push( k+'='+encodeURIComponent( q[k] ) );return a},[] ).join( '&' );
+    const makeQueryString = q => Object.keys( q ).reduce( ( a,k )=>{
+      if (q[k] !== undefined) {
+        a.push( k+'='+encodeURIComponent( q[k] ) )
+      }
+      return a
+    }, []).join( '&' );
 
     /**
      * Create a http request to the public API
