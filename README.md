@@ -26,6 +26,9 @@ const binance = new Binance().options({
 > **Work in progress, including documentation. Promises only**
 ```js
 // Current futures positions
+console.info( await binance.futuresPositionRisk() );
+
+// Futures account balances and positions
 console.info( await binance.futuresAccount() );
 
 // Futures balances
@@ -42,6 +45,12 @@ console.info( await binance.futuresBuy( 'BTCUSDT', 0.1, 8222 ) );
 
 // Limit Sell
 console.info( await binance.futuresSell( 'BTCUSDT', 0.5, 11111 ) );
+
+// Adjust Leverage (1-125x)
+console.info( await binance.futuresLeverage( 'ETHUSDT', 50 ) );
+
+// Adjust Margin Type (ISOLATED, CROSSED)
+console.info( await binance.futuresMarginType( 'BTCUSDT', 'ISOLATED' ) );
 
 console.info( await binance.futuresPrices() );
 console.info( await binance.futuresTime() );
@@ -61,7 +70,6 @@ console.info( await binance.futuresFundingRate() );
 console.info( await binance.futuresHistoricalTrades( "XMRUSDT" ) );
 console.info( await binance.futuresLeverageBracket( "LINKUSDT" ) );
 console.info( await binance.futuresIncome() );
-console.info( await binance.futuresPositionRisk() );
 console.info( await binance.futuresCancelAll( "BTCUSDT" ) );
 console.info( await binance.futuresCancel( "BTCUSDT", {orderId: "1025137386"} ) );
 console.info( await binance.futuresOrderStatus( "BTCUSDT", {orderId: "1025137386"} ) );
@@ -71,6 +79,9 @@ console.info( await binance.futuresAllOrders() );
 console.info( await binance.futuresAllOrders( "BTCUSDT" ) );
 console.info( await binance.futuresUserTrades( "BTCUSDT" ) );
 console.info( await binance.futuresGetDataStream() );
+console.info( await binance.futuresPositionMargin( "TRXUSDT", amount, type ) );  // Type: 1: Add postion margin，2: Reduce postion margin
+console.info( await binance.futuresPositionMarginHistory( "TRXUSDT" ) );
+
 // Still in development: WebSockets, Documentation & Batch orders
 ```
 
