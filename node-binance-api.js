@@ -131,12 +131,7 @@ let api = function Binance() {
         proxyRequest( opt, callback );
     };
 
-    const makeQueryString = q => Object.keys( q ).reduce( ( a,k )=>{
-      if (q[k] !== undefined) {
-        a.push( k+'='+encodeURIComponent( q[k] ) )
-      }
-      return a
-    }, []).join( '&' );
+    const makeQueryString = q => Object.keys( q ).reduce( ( a,k )=>{ if ( q[k] !== undefined ) { a.push( k+'='+encodeURIComponent( q[k] ) ) } return a }, [] ).join( '&' );
 
     /**
      * Create a http request to the public API
@@ -380,12 +375,22 @@ let api = function Binance() {
             } else {
                 opt.qs = data;
             }*/
-            request( addProxy( opt ), ( error, response, body ) => {
-                if ( error ) return reject( error );
-                if ( !error && response.statusCode == 200 ) return resolve( JSON.parse( body ) );
-                if ( typeof response.body !== 'undefined' ) return resolve( JSON.parse( response.body ) );
-                return reject( response );
-            } );
+            try {
+                request( addProxy( opt ), ( error, response, body ) => {
+                    if ( error ) return reject( error );
+                    try {
+                        if ( !error && response.statusCode == 200 ) return resolve( JSON.parse( body ) );
+                        if ( typeof response.body !== 'undefined' ) {
+                            return resolve( JSON.parse( response.body ) );
+                        }
+                        return reject( response );
+                    } catch ( err ) {
+                        return reject( `promiseRequest error #${response.statusCode}` );
+                    }
+                } );
+            } catch ( err ) {
+                return reject( err );
+            }
         } );
     };
 
@@ -2328,6 +2333,32 @@ let api = function Binance() {
             if ( symbol ) params.symbol = symbol;
             return promiseRequest( 'v1/leverageBracket', params, {base:fapi, type:'MARKET_DATA'} );
         },
+
+        // leverage 1 to 125
+        futuresLeverage: async ( symbol, leverage, params = {} ) => {
+            params.symbol = symbol;
+            params.leverage = leverage;
+            return promiseRequest( 'v1/leverage', params, {base:fapi, method:'POST', type:'SIGNED'} );
+        },
+
+        // ISOLATED, CROSSED
+        futuresMarginType: async ( symbol, marginType, params = {} ) => {
+            params.symbol = symbol;
+            params.marginType = marginType;
+            return promiseRequest( 'v1/marginType', params, {base:fapi, method:'POST', type:'SIGNED'} );
+        },
+
+        // type: 1: Add postion margin，2: Reduce postion margin
+        futuresPositionMargin: async ( symbol, amount, type = 1, params = {} ) => {
+            params.symbol = symbol;
+            params.marginType = marginType;
+            return promiseRequest( 'v1/positionMargin', params, {base:fapi, method:'POST', type:'SIGNED'} );
+        },
+
+        futuresPositionMarginHistory: async ( symbol, params = {} ) => {
+            params.symbol = symbol;
+            return promiseRequest( 'v1/positionMargin/history', params, {base:fapi, type:'SIGNED'} );
+        },
         
         futuresIncome: async ( params = {} ) => {
             return promiseRequest( 'v1/income', params, {base:fapi, type:'SIGNED'} );
@@ -2401,9 +2432,6 @@ let api = function Binance() {
         futuresSubscribe
         Cancel multiple orders DELETE /fapi/v1/batchOrders
         New Future Account Transfer POST https://api.binance.com/sapi/v1/futures/transfer (HMAC SHA
-        Change Initial Leverage (TRADE)
-        Change Margin Type (TRADE)
-        Modify Isolated Position Margin (TRADE)
         Get Postion Margin Change History (TRADE)
 
         wss://fstream.binance.com/ws/<listenKey>
