@@ -7,9 +7,9 @@
  * ============================================================
  * @module jaggedsoft/node-binance-api
  * @return {object} instance to class object */
-let api = function Binance() {
+let api = function Binance( options = {} ) {
+    //'use strict'; // eslint-disable-line no-unused-expressions
     let Binance = this; // eslint-disable-line consistent-this
-    'use strict'; // eslint-disable-line no-unused-expressions
     
     const WebSocket = require( 'ws' );
     const request = require( 'request' );
@@ -47,6 +47,27 @@ let api = function Binance() {
     Binance.options = default_options;
     Binance.info = { timeOffset: 0 };
     Binance.socketHeartbeatInterval = null;
+    if ( options ) setOptions( options );
+
+    function setOptions( opt = {}, callback = false ) {
+        if ( typeof opt === 'string' ) { // Pass json config filename
+            Binance.options = JSON.parse( file.readFileSync( opt ) );
+        } else Binance.options = opt;
+        if ( typeof Binance.options.recvWindow === 'undefined' ) Binance.options.recvWindow = default_options.recvWindow;
+        if ( typeof Binance.options.useServerTime === 'undefined' ) Binance.options.useServerTime = default_options.useServerTime;
+        if ( typeof Binance.options.reconnect === 'undefined' ) Binance.options.reconnect = default_options.reconnect;
+        if ( typeof Binance.options.test === 'undefined' ) Binance.options.test = default_options.test;
+        if ( typeof Binance.options.log === 'undefined' ) Binance.options.log = default_options.log;
+        if ( typeof Binance.options.verbose === 'undefined' ) Binance.options.verbose = default_options.verbose;
+        if ( Binance.options.useServerTime ) {
+            apiRequest( base + 'v1/time', {}, function ( error, response ) {
+                Binance.info.timeOffset = response.serverTime - new Date().getTime();
+                //Binance.options.log("server time set: ", response.serverTime, Binance.info.timeOffset);
+                if ( callback ) callback();
+            } );
+        } else if ( callback ) callback();
+        return this;
+    }
 
     /**
      * Replaces socks connection uri hostname with IP address
@@ -1197,25 +1218,7 @@ let api = function Binance() {
         * @param {function} callback - the callback function
         * @return {undefined}
         */
-        options: function ( opt, callback = false ) {
-            if ( typeof opt === 'string' ) { // Pass json config filename
-                Binance.options = JSON.parse( file.readFileSync( opt ) );
-            } else Binance.options = opt;
-            if ( typeof Binance.options.recvWindow === 'undefined' ) Binance.options.recvWindow = default_options.recvWindow;
-            if ( typeof Binance.options.useServerTime === 'undefined' ) Binance.options.useServerTime = default_options.useServerTime;
-            if ( typeof Binance.options.reconnect === 'undefined' ) Binance.options.reconnect = default_options.reconnect;
-            if ( typeof Binance.options.test === 'undefined' ) Binance.options.test = default_options.test;
-            if ( typeof Binance.options.log === 'undefined' ) Binance.options.log = default_options.log;
-            if ( typeof Binance.options.verbose === 'undefined' ) Binance.options.verbose = default_options.verbose;
-            if ( Binance.options.useServerTime ) {
-                apiRequest( base + 'v1/time', {}, function ( error, response ) {
-                    Binance.info.timeOffset = response.serverTime - new Date().getTime();
-                    //Binance.options.log("server time set: ", response.serverTime, Binance.info.timeOffset);
-                    if ( callback ) callback();
-                } );
-            } else if ( callback ) callback();
-            return this;
-        },
+        options: setOptions,
 
         /**
         * Creates an order
@@ -3161,5 +3164,9 @@ let api = function Binance() {
         }
     };
 }
-module.exports = api;
+function instanceWrapper( options = {} ) {
+    if ( new.target ) return api( options );
+    return new api( options );
+}
+module.exports = instanceWrapper;
 //https://github.com/binance-exchange/binance-official-api-docs
