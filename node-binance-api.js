@@ -2673,6 +2673,16 @@ let api = function Binance( options = {} ) {
                 if ( callback ) return callback( error, data );
             }, 'POST' );
         },
+        /**
+         * Margin account details
+         * @param {function} callback - the callback function
+         * @return {undefined}
+         */
+        mgAccount: function( callback ) {
+            signedRequest( sapi + 'v1/margin/account', {}, function( error, data ) {
+                if( callback ) return callback( error, data )
+            })
+        },
 
         websockets: {
             /**

@@ -1727,6 +1727,38 @@ binance.mgOrderStatus("ETHBTC", orderid, (error, orderStatus, symbol) => {
 });
 ```
 
+#### Margin account details
+```javascript
+binance.mgAccount((error, response) => {
+   if ( error ) return console.warn(error);
+   console.info("Account details response:", response)
+})
+```
+<details>
+  <summary>View response</summary>
+  ```
+    data {
+      borrowEnabled: true,
+      marginLevel: '999.00000000',
+      totalAssetOfBtc: '0.00000003',
+      totalLiabilityOfBtc: '0.00000000',
+      totalNetAssetOfBtc: '0.00000003',
+      tradeEnabled: true,
+      transferEnabled: true,
+      userAssets: [
+        {
+          asset: 'MATIC',
+          borrowed: '0.00000000',
+          free: '0.00000000',
+          interest: '0.00000000',
+          locked: '0.00000000',
+          netAsset: '0.00000000'
+        }
+      ]
+    }
+  ```
+</details>
+
 #### [Advanced Examples](https://github.com/jaggedsoft/node-binance-api/blob/master/examples/advanced.md)
 > [exchangeInfo: Pull minimum order size, quantity, etc](https://github.com/jaggedsoft/node-binance-api/blob/master/examples/advanced.md#exchangeinfo-pull-minimum-order-size-quantity-etc)\
 [Clamp order quantities to required amounts via minQty, minNotional, stepSize when placing orders](https://github.com/jaggedsoft/node-binance-api/blob/master/examples/advanced.md#clamp-order-quantities-to-required-amounts-via-minqty-minnotional-stepsize-when-placing-orders)\
