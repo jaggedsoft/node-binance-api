@@ -1727,6 +1727,38 @@ binance.mgOrderStatus("ETHBTC", orderid, (error, orderStatus, symbol) => {
 });
 ```
 
+#### Margin account details
+```javascript
+binance.mgAccount((error, response) => {
+   if ( error ) return console.warn(error);
+   console.info("Account details response:", response)
+})
+```
+<details>
+  <summary>View response</summary>
+  ```
+    data {
+      borrowEnabled: true,
+      marginLevel: '999.00000000',
+      totalAssetOfBtc: '0.00000003',
+      totalLiabilityOfBtc: '0.00000000',
+      totalNetAssetOfBtc: '0.00000003',
+      tradeEnabled: true,
+      transferEnabled: true,
+      userAssets: [
+        {
+          asset: 'MATIC',
+          borrowed: '0.00000000',
+          free: '0.00000000',
+          interest: '0.00000000',
+          locked: '0.00000000',
+          netAsset: '0.00000000'
+        }
+      ]
+    }
+  ```
+</details>
+
 #### [Advanced Examples](https://github.com/jaggedsoft/node-binance-api/blob/master/examples/advanced.md)
 > [exchangeInfo: Pull minimum order size, quantity, etc](https://github.com/jaggedsoft/node-binance-api/blob/master/examples/advanced.md#exchangeinfo-pull-minimum-order-size-quantity-etc)\
 [Clamp order quantities to required amounts via minQty, minNotional, stepSize when placing orders](https://github.com/jaggedsoft/node-binance-api/blob/master/examples/advanced.md#clamp-order-quantities-to-required-amounts-via-minqty-minnotional-stepsize-when-placing-orders)\
@@ -1770,7 +1802,7 @@ binance.useServerTime(() => {
 
 > ### For support go to [Telegram](https://t.me/binance_api_english)
 
-***Thank you to all contributors:*** Eluvade, dbvcode, bmino, dmzoneill, dmitriz, keith1024, pavlovdog, usama33, yanislk, learnathoner, vaielab, nickreese, Tuitio, grandmore, itnok, CollinEstes, sethyx, mstijak, MadDeveloper, balthazar, bitoiu, matthewwoop, robaleman, hems and others!
+***Thank you to all contributors:*** jmacioszek, DoobieD, Eluvade, dbvcode, bmino, dmzoneill, dmitriz, keith1024, pavlovdog, usama33, yanislk, learnathoner, vaielab, nickreese, Tuitio, grandmore, itnok, CollinEstes, sethyx, mstijak, MadDeveloper, balthazar, bitoiu, matthewwoop, robaleman, hems and others!
 
 ![Downloads](https://img.shields.io/npm/dt/node-binance-api.svg?style=for-the-badge&maxAge=86400) ![Stars](https://img.shields.io/github/stars/jaggedsoft/node-binance-api.svg?style=for-the-badge&label=Stars) ![Contributors](https://img.shields.io/github/contributors/jaggedsoft/node-binance-api.svg?style=for-the-badge&maxAge=86400)
 [![Stargazers over time](https://starcharts.herokuapp.com/jaggedsoft/node-binance-api.svg)](https://starcharts.herokuapp.com/jaggedsoft/node-binance-api)
