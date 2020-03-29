@@ -2647,6 +2647,18 @@ let api = function Binance( options = {} ) {
         },
 
         /**
+         * Get maximum transfer-out amount of an asset
+         * @param {string} asset - the asset
+         * @param {function} callback - the callback function
+         * @return {undefined}
+         */
+        maxTransferable: function ( asset, callback ) {
+            signedRequest( sapi + 'v1/margin/maxTransferable', { asset: asset }, function( error, data ) {
+                if( callback ) return callback( error, data );
+            });
+        },
+
+        /**
          * Margin account borrow/loan
          * @param {string} asset - the asset
          * @param {number} amount - the asset

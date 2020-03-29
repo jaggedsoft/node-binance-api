@@ -1692,6 +1692,14 @@ binance.mgTransferMarginToMain(asset, amount, (error, response) => {
 });
 ```
 
+#### Get maximum transfer-out amount from Margin account to Main account
+```js
+binance.maxTransferable(asset, (error, response) => {
+    if ( error ) return console.warn(error);
+    console.info(`Maximum transfer-out amount: ${response.amount}`);
+});
+```
+
 #### Get maximum borrow amount
 ```js
 binance.maxBorrowable(asset, (error, response) => {
