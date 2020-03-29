@@ -2680,8 +2680,19 @@ let api = function Binance( options = {} ) {
          */
         mgAccount: function( callback ) {
             signedRequest( sapi + 'v1/margin/account', {}, function( error, data ) {
-                if( callback ) return callback( error, data )
-            })
+                if( callback ) return callback( error, data );
+            });
+        },
+        /**
+         * Get maximum borrow amount of an asset
+         * @param {string} asset - the asset
+         * @param {function} callback - the callback function
+         * @return {undefined}
+         */
+        maxBorrowable: function ( asset, callback ) {
+            signedRequest( sapi + 'v1/margin/maxBorrowable', { asset: asset }, function( error, data ) {
+                if( callback ) return callback( error, data );
+            });
         },
 
         websockets: {
