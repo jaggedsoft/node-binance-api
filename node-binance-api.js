@@ -2569,6 +2569,35 @@ let api = function Binance( options = {} ) {
         },
 
         /**
+        * Gets all order of a given symbol
+        * @param {string} symbol - the symbol
+        * @param {function} callback - the callback function
+        * @param {object} options - additional options
+        * @return {promise or undefined} - omitting the callback returns a promise
+        */
+        mgAllOrders: function ( symbol, callback, options = {} ) {
+            let parameters = Object.assign( { symbol: symbol }, options );
+            if ( !callback ) {
+                return new Promise( ( resolve, reject ) => {
+                    callback = ( error, response ) => {
+                        if ( error ) {
+                            reject( error );
+                        } else {
+                            resolve( response );
+                        }
+                    }
+                    signedRequest( sapi + 'v1/margin/allOrders', parameters, function ( error, data ) {
+                        return callback.call( this, error, data, symbol );
+                    } );
+                } )
+            } else {
+                signedRequest( sapi + 'v1/margin/allOrders', parameters, function ( error, data ) {
+                    return callback.call( this, error, data, symbol );
+                } );
+            }
+        },      
+
+        /**
          * Gets the status of an order
          * @param {string} symbol - the symbol to check
          * @param {string} orderid - the orderid to check
