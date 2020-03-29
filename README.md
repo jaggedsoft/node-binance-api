@@ -1692,6 +1692,14 @@ binance.mgTransferMarginToMain(asset, amount, (error, response) => {
 });
 ```
 
+#### Get maximum transfer-out amount from Margin account to Main account
+```js
+binance.maxTransferable(asset, (error, response) => {
+    if ( error ) return console.warn(error);
+    console.info(`Maximum transfer-out amount: ${response.amount}`);
+});
+```
+
 #### Get maximum borrow amount
 ```js
 binance.maxBorrowable(asset, (error, response) => {
@@ -1721,29 +1729,9 @@ Instead of `binance.buy()` use `binance.mgBuy()` and instead of `binance.sell()`
 
 For market orders use `binance.mgMarketBuy()` and `binance.mgMarketSell()`.
 
+For order operations, use `binance.mgCancel()`, `binance.mgCancelOrders()`, `binance.mgAllOrders()`, `binance.openOrders()`, `binance.mgOrderStatus()`.
+
 Usage and callbacks are the same as the 'regular account' counterparts.
-
-#### Cancel a margin order
-```javascript
-binance.mgCancel("ETHBTC", orderid, (error, response, symbol) => {
-  console.info(symbol+" cancel response:", response);
-});
-```
-
-#### Cancel all open margin orders
-```js
-binance.mgCancelOrders("XMRBTC", (error, response, symbol) => {
-  console.info(symbol+" cancel response:", response);
-});
-```
-
-#### Check a margin order's status
-```javascript
-let orderid = "7610385";
-binance.mgOrderStatus("ETHBTC", orderid, (error, orderStatus, symbol) => {
-  console.info(symbol+" order status:", orderStatus);
-});
-```
 
 #### Margin account details
 ```javascript
