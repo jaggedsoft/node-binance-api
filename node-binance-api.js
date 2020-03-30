@@ -20,12 +20,12 @@ let api = function Binance( options = {} ) {
     const SocksProxyAgent = require( 'socks-proxy-agent' );
     const stringHash = require( 'string-hash' );
     const async = require( 'async' );
-    const base = 'https://api.binance.com/api/';
-    const wapi = 'https://api.binance.com/wapi/';
-    const sapi = 'https://api.binance.com/sapi/';
-    const fapi = 'https://fapi.binance.com/fapi/';
-    const stream = 'wss://stream.binance.com:9443/ws/';
-    const combineStream = 'wss://stream.binance.com:9443/stream?streams=';
+    let base = 'https://api.binance.com/api/';
+    let wapi = 'https://api.binance.com/wapi/';
+    let sapi = 'https://api.binance.com/sapi/';
+    let fapi = 'https://fapi.binance.com/fapi/';
+    let stream = 'wss://stream.binance.com:9443/ws/';
+    let combineStream = 'wss://stream.binance.com:9443/stream?streams=';
     const userAgent = 'Mozilla/4.0 (compatible; Node Binance API)';
     const contentType = 'application/x-www-form-urlencoded';
     Binance.subscriptions = {};
@@ -59,6 +59,15 @@ let api = function Binance( options = {} ) {
         if ( typeof Binance.options.test === 'undefined' ) Binance.options.test = default_options.test;
         if ( typeof Binance.options.log === 'undefined' ) Binance.options.log = default_options.log;
         if ( typeof Binance.options.verbose === 'undefined' ) Binance.options.verbose = default_options.verbose;
+        if ( typeof Binance.options.urls !== 'undefined' ) {
+            const { urls } = Binance.options;
+            if( typeof urls.base === 'string' ) base = urls.base;
+            if( typeof urls.wapi === 'string' ) wapi = urls.wapi;
+            if( typeof urls.sapi === 'string' ) sapi = urls.sapi;
+            if( typeof urls.fapi === 'string' ) fapi = urls.fapi;
+            if( typeof urls.stream === 'string' ) stream = urls.stream;
+            if( typeof urls.combineStream === 'string' ) combineStream = urls.combineStream;
+        }
         if ( Binance.options.useServerTime ) {
             apiRequest( base + 'v1/time', {}, function ( error, response ) {
                 Binance.info.timeOffset = response.serverTime - new Date().getTime();
