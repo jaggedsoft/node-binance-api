@@ -2256,6 +2256,15 @@ let api = function Binance( options = {} ) {
             else if ( symbol.endsWith( 'TUSD' ) ) return 'TUSD';
         },
 
+        /**
+        * Get the account binance lending information
+        * @param {function} callback - the callback function
+        * @return {promise or undefined} - omitting the callback returns a promise
+        */
+       lending: async ( params = {} ) => {
+        return promiseRequest( 'v1/lending/union/account', params, {base:sapi, type:'SIGNED'});
+       },
+
         //** Futures methods */
         futuresPing: async ( params = {} ) => {
             return promiseRequest( 'v1/ping', params, {base:fapi} );
