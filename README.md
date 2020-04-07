@@ -11,6 +11,7 @@ This project is designed to help you make your own projects that interact with t
   <a href="#binance-api-spot-trading">Spot Trading API</a> •
   <a href="#websockets-implementation">WebSockets</a> •
   <a href="#binance-margin-api">Margin API</a> •
+  <a href="#binance-lending-api">Lending API</a><br/>
   <a href="#troubleshooting">Troubleshooting</a> •
   <a href="https://github.com/jaggedsoft/node-binance-api/tree/master/examples">Examples</a> •
   <a href="https://github.com/jaggedsoft/node-binance-api/releases">Changelog</a> •
