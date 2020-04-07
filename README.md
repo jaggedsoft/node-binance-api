@@ -1742,8 +1742,9 @@ binance.mgAccount((error, response) => {
 ```
 <details>
   <summary>View response</summary>
-  ```
-    data {
+
+  ```javascript
+    {
       borrowEnabled: true,
       marginLevel: '999.00000000',
       totalAssetOfBtc: '0.00000003',
@@ -1761,6 +1762,54 @@ binance.mgAccount((error, response) => {
           netAsset: '0.00000000'
         }
       ]
+    }
+  ```
+</details>
+
+# Binance Lending API
+
+#### Lending Account Details
+```javascript
+let lendingData = await binance.lending();
+```
+
+<details>
+  <summary>View response</summary>
+  
+  ```javascript
+    lendingData {
+      positionAmountVos: [
+        {
+          amount: '952983.20208997',
+          amountInBTC: '129.54853649',
+          amountInUSDT: '952983.20208997',
+          asset: 'USDT'
+        }
+      ],
+      totalAmountInBTC: '129.54853649',
+      totalAmountInUSDT: '952983.20208997',
+      totalFixedAmountInBTC: '13.59400000',
+      totalFixedAmountInUSDT: '100000.00000000',
+      totalFlexibleInBTC: '115.95453649',
+      totalFlexibleInUSDT: '852983.20208997'
+    }
+    {
+      positionAmountVos: [],
+      totalAmountInBTC: '0.00000000',
+      totalAmountInUSDT: '0.00000000',
+      totalFixedAmountInBTC: '0.00000000',
+      totalFixedAmountInUSDT: '0.00000000',
+      totalFlexibleInBTC: '0.00000000',
+      totalFlexibleInUSDT: '0.00000000'
+    }
+    {
+      positionAmountVos: [],
+      totalAmountInBTC: '0.00000000',
+      totalAmountInUSDT: '0.00000000',
+      totalFixedAmountInBTC: '0.00000000',
+      totalFixedAmountInUSDT: '0.00000000',
+      totalFlexibleInBTC: '0.00000000',
+      totalFlexibleInUSDT: '0.00000000'
     }
   ```
 </details>
