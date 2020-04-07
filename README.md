@@ -1774,7 +1774,7 @@ let lendingData = await binance.lending();
 
 <details>
   <summary>View response</summary>
-  ```
+  ```javascript
     lendingData {
       positionAmountVos: [
         {
