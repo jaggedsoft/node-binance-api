@@ -1742,8 +1742,9 @@ binance.mgAccount((error, response) => {
 ```
 <details>
   <summary>View response</summary>
+
   ```javascript
-    data {
+    {
       borrowEnabled: true,
       marginLevel: '999.00000000',
       totalAssetOfBtc: '0.00000003',
@@ -1774,6 +1775,7 @@ let lendingData = await binance.lending();
 
 <details>
   <summary>View response</summary>
+  
   ```javascript
     lendingData {
       positionAmountVos: [
