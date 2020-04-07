@@ -1765,6 +1765,7 @@ binance.mgAccount((error, response) => {
   ```
 </details>
 
+# Binance Lending API
 
 #### Lending Account Details
 ```javascript
