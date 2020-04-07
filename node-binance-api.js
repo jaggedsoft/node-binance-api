@@ -20,12 +20,12 @@ let api = function Binance( options = {} ) {
     const SocksProxyAgent = require( 'socks-proxy-agent' );
     const stringHash = require( 'string-hash' );
     const async = require( 'async' );
-    const base = 'https://api.binance.com/api/';
-    const wapi = 'https://api.binance.com/wapi/';
-    const sapi = 'https://api.binance.com/sapi/';
-    const fapi = 'https://fapi.binance.com/fapi/';
-    const stream = 'wss://stream.binance.com:9443/ws/';
-    const combineStream = 'wss://stream.binance.com:9443/stream?streams=';
+    let base = 'https://api.binance.com/api/';
+    let wapi = 'https://api.binance.com/wapi/';
+    let sapi = 'https://api.binance.com/sapi/';
+    let fapi = 'https://fapi.binance.com/fapi/';
+    let stream = 'wss://stream.binance.com:9443/ws/';
+    let combineStream = 'wss://stream.binance.com:9443/stream?streams=';
     const userAgent = 'Mozilla/4.0 (compatible; Node Binance API)';
     const contentType = 'application/x-www-form-urlencoded';
     Binance.subscriptions = {};
@@ -59,6 +59,15 @@ let api = function Binance( options = {} ) {
         if ( typeof Binance.options.test === 'undefined' ) Binance.options.test = default_options.test;
         if ( typeof Binance.options.log === 'undefined' ) Binance.options.log = default_options.log;
         if ( typeof Binance.options.verbose === 'undefined' ) Binance.options.verbose = default_options.verbose;
+        if ( typeof Binance.options.urls !== 'undefined' ) {
+            const { urls } = Binance.options;
+            if( typeof urls.base === 'string' ) base = urls.base;
+            if( typeof urls.wapi === 'string' ) wapi = urls.wapi;
+            if( typeof urls.sapi === 'string' ) sapi = urls.sapi;
+            if( typeof urls.fapi === 'string' ) fapi = urls.fapi;
+            if( typeof urls.stream === 'string' ) stream = urls.stream;
+            if( typeof urls.combineStream === 'string' ) combineStream = urls.combineStream;
+        }
         if ( Binance.options.useServerTime ) {
             apiRequest( base + 'v1/time', {}, function ( error, response ) {
                 Binance.info.timeOffset = response.serverTime - new Date().getTime();
@@ -2247,6 +2256,15 @@ let api = function Binance( options = {} ) {
             else if ( symbol.endsWith( 'TUSD' ) ) return 'TUSD';
         },
 
+        /**
+        * Get the account binance lending information
+        * @param {function} callback - the callback function
+        * @return {promise or undefined} - omitting the callback returns a promise
+        */
+       lending: async ( params = {} ) => {
+        return promiseRequest( 'v1/lending/union/account', params, {base:sapi, type:'SIGNED'});
+       },
+
         //** Futures methods */
         futuresPing: async ( params = {} ) => {
             return promiseRequest( 'v1/ping', params, {base:fapi} );
@@ -2569,6 +2587,35 @@ let api = function Binance( options = {} ) {
         },
 
         /**
+        * Gets all order of a given symbol
+        * @param {string} symbol - the symbol
+        * @param {function} callback - the callback function
+        * @param {object} options - additional options
+        * @return {promise or undefined} - omitting the callback returns a promise
+        */
+        mgAllOrders: function ( symbol, callback, options = {} ) {
+            let parameters = Object.assign( { symbol: symbol }, options );
+            if ( !callback ) {
+                return new Promise( ( resolve, reject ) => {
+                    callback = ( error, response ) => {
+                        if ( error ) {
+                            reject( error );
+                        } else {
+                            resolve( response );
+                        }
+                    }
+                    signedRequest( sapi + 'v1/margin/allOrders', parameters, function ( error, data ) {
+                        return callback.call( this, error, data, symbol );
+                    } );
+                } )
+            } else {
+                signedRequest( sapi + 'v1/margin/allOrders', parameters, function ( error, data ) {
+                    return callback.call( this, error, data, symbol );
+                } );
+            }
+        },      
+
+        /**
          * Gets the status of an order
          * @param {string} symbol - the symbol to check
          * @param {string} orderid - the orderid to check
@@ -2647,6 +2694,18 @@ let api = function Binance( options = {} ) {
         },
 
         /**
+         * Get maximum transfer-out amount of an asset
+         * @param {string} asset - the asset
+         * @param {function} callback - the callback function
+         * @return {undefined}
+         */
+        maxTransferable: function ( asset, callback ) {
+            signedRequest( sapi + 'v1/margin/maxTransferable', { asset: asset }, function( error, data ) {
+                if( callback ) return callback( error, data );
+            });
+        },
+
+        /**
          * Margin account borrow/loan
          * @param {string} asset - the asset
          * @param {number} amount - the asset
@@ -2680,8 +2739,19 @@ let api = function Binance( options = {} ) {
          */
         mgAccount: function( callback ) {
             signedRequest( sapi + 'v1/margin/account', {}, function( error, data ) {
-                if( callback ) return callback( error, data )
-            })
+                if( callback ) return callback( error, data );
+            });
+        },
+        /**
+         * Get maximum borrow amount of an asset
+         * @param {string} asset - the asset
+         * @param {function} callback - the callback function
+         * @return {undefined}
+         */
+        maxBorrowable: function ( asset, callback ) {
+            signedRequest( sapi + 'v1/margin/maxBorrowable', { asset: asset }, function( error, data ) {
+                if( callback ) return callback( error, data );
+            });
         },
 
         websockets: {
