@@ -1765,6 +1765,52 @@ binance.mgAccount((error, response) => {
   ```
 </details>
 
+
+#### Lending Account Details
+```javascript
+let lendingData = await binance.lending();
+```
+
+<details>
+  <summary>View response</summary>
+  ```
+lendingData {
+  positionAmountVos: [
+    {
+      amount: '952983.20208997',
+      amountInBTC: '129.54853649',
+      amountInUSDT: '952983.20208997',
+      asset: 'USDT'
+    }
+  ],
+  totalAmountInBTC: '129.54853649',
+  totalAmountInUSDT: '952983.20208997',
+  totalFixedAmountInBTC: '13.59400000',
+  totalFixedAmountInUSDT: '100000.00000000',
+  totalFlexibleInBTC: '115.95453649',
+  totalFlexibleInUSDT: '852983.20208997'
+}
+{
+  positionAmountVos: [],
+  totalAmountInBTC: '0.00000000',
+  totalAmountInUSDT: '0.00000000',
+  totalFixedAmountInBTC: '0.00000000',
+  totalFixedAmountInUSDT: '0.00000000',
+  totalFlexibleInBTC: '0.00000000',
+  totalFlexibleInUSDT: '0.00000000'
+}
+{
+  positionAmountVos: [],
+  totalAmountInBTC: '0.00000000',
+  totalAmountInUSDT: '0.00000000',
+  totalFixedAmountInBTC: '0.00000000',
+  totalFixedAmountInUSDT: '0.00000000',
+  totalFlexibleInBTC: '0.00000000',
+  totalFlexibleInUSDT: '0.00000000'
+}
+  ```
+</details>
+
 #### [Advanced Examples](https://github.com/jaggedsoft/node-binance-api/blob/master/examples/advanced.md)
 > [exchangeInfo: Pull minimum order size, quantity, etc](https://github.com/jaggedsoft/node-binance-api/blob/master/examples/advanced.md#exchangeinfo-pull-minimum-order-size-quantity-etc)\
 [Clamp order quantities to required amounts via minQty, minNotional, stepSize when placing orders](https://github.com/jaggedsoft/node-binance-api/blob/master/examples/advanced.md#clamp-order-quantities-to-required-amounts-via-minqty-minnotional-stepsize-when-placing-orders)\
