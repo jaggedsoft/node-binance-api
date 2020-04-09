@@ -24,7 +24,7 @@ let api = function Binance( options = {} ) {
     let wapi = 'https://api.binance.com/wapi/';
     let sapi = 'https://api.binance.com/sapi/';
     let fapi = 'https://fapi.binance.com/fapi/';
-    let fapiTest = 'https://testnet.binancefuture.com/';
+    let fapiTest = 'https://testnet.binancefuture.com/fapi/';
     let stream = 'wss://stream.binance.com:9443/ws/';
     let combineStream = 'wss://stream.binance.com:9443/stream?streams=';
     const userAgent = 'Mozilla/4.0 (compatible; Node Binance API)';
