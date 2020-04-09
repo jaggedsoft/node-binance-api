@@ -24,6 +24,7 @@ let api = function Binance( options = {} ) {
     let wapi = 'https://api.binance.com/wapi/';
     let sapi = 'https://api.binance.com/sapi/';
     let fapi = 'https://fapi.binance.com/fapi/';
+    let fapiTest = 'https://testnet.binancefuture.com/';
     let stream = 'wss://stream.binance.com:9443/ws/';
     let combineStream = 'wss://stream.binance.com:9443/stream?streams=';
     const userAgent = 'Mozilla/4.0 (compatible; Node Binance API)';
@@ -65,6 +66,7 @@ let api = function Binance( options = {} ) {
             if( typeof urls.wapi === 'string' ) wapi = urls.wapi;
             if( typeof urls.sapi === 'string' ) sapi = urls.sapi;
             if( typeof urls.fapi === 'string' ) fapi = urls.fapi;
+            if( typeof urls.fapiTest === 'string' ) fapiTest = urls.fapiTest;
             if( typeof urls.stream === 'string' ) stream = urls.stream;
             if( typeof urls.combineStream === 'string' ) combineStream = urls.combineStream;
         }
@@ -111,8 +113,8 @@ let api = function Binance( options = {} ) {
 
     const addProxy = opt => {
         if ( Binance.options.proxy ) {
-            const proxyauth = Binance.options.proxy.auth ? `${Binance.options.proxy.auth.username}:${Binance.options.proxy.auth.password}@` : '';
-            opt.proxy = `http://${proxyauth}${Binance.options.proxy.host}:${Binance.options.proxy.port}`;
+            const proxyauth = Binance.options.proxy.auth ? `${ Binance.options.proxy.auth.username }:${ Binance.options.proxy.auth.password }@` : '';
+            opt.proxy = `http://${ proxyauth }${ Binance.options.proxy.host }:${ Binance.options.proxy.port }`;
         }
         return opt;
     }
@@ -385,6 +387,7 @@ let api = function Binance( options = {} ) {
                 if ( !Binance.options.APIKEY ) return reject( 'Invalid API Key' );
             }
             let baseURL = typeof flags.base === 'undefined' ? base : flags.base;
+            if ( Binance.options.test && baseURL === fapi ) baseURL = fapiTest;
             let opt = {
                 headers,
                 url: baseURL + url,
@@ -397,7 +400,7 @@ let api = function Binance( options = {} ) {
                 data.timestamp = new Date().getTime() + Binance.info.timeOffset;
                 query = makeQueryString( data );
                 data.signature = crypto.createHmac( 'sha256', Binance.options.APISECRET ).update( query ).digest( 'hex' ); // HMAC hash header
-                opt.url = `${baseURL}${url}?${query}&signature=${data.signature}`;
+                opt.url = `${ baseURL }${ url }?${ query }&signature=${ data.signature }`;
             }
             opt.qs = data;
             /*if ( flags.method === 'POST' ) {
@@ -415,7 +418,7 @@ let api = function Binance( options = {} ) {
                         }
                         return reject( response );
                     } catch ( err ) {
-                        return reject( `promiseRequest error #${response.statusCode}` );
+                        return reject( `promiseRequest error #${ response.statusCode }` );
                     }
                 } );
             } catch ( err ) {
@@ -2261,9 +2264,9 @@ let api = function Binance( options = {} ) {
         * @param {function} callback - the callback function
         * @return {promise or undefined} - omitting the callback returns a promise
         */
-       lending: async ( params = {} ) => {
-        return promiseRequest( 'v1/lending/union/account', params, {base:sapi, type:'SIGNED'});
-       },
+        lending: async ( params = {} ) => {
+            return promiseRequest( 'v1/lending/union/account', params, {base:sapi, type:'SIGNED'} );
+        },
 
         //** Futures methods */
         futuresPing: async ( params = {} ) => {
@@ -2702,7 +2705,7 @@ let api = function Binance( options = {} ) {
         maxTransferable: function ( asset, callback ) {
             signedRequest( sapi + 'v1/margin/maxTransferable', { asset: asset }, function( error, data ) {
                 if( callback ) return callback( error, data );
-            });
+            } );
         },
 
         /**
@@ -2740,7 +2743,7 @@ let api = function Binance( options = {} ) {
         mgAccount: function( callback ) {
             signedRequest( sapi + 'v1/margin/account', {}, function( error, data ) {
                 if( callback ) return callback( error, data );
-            });
+            } );
         },
         /**
          * Get maximum borrow amount of an asset
@@ -2751,7 +2754,7 @@ let api = function Binance( options = {} ) {
         maxBorrowable: function ( asset, callback ) {
             signedRequest( sapi + 'v1/margin/maxBorrowable', { asset: asset }, function( error, data ) {
                 if( callback ) return callback( error, data );
-            });
+            } );
         },
 
         websockets: {
