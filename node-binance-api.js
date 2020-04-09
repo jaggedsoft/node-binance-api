@@ -23,7 +23,7 @@ let api = function Binance( options = {} ) {
     let base = 'https://api.binance.com/api/';
     let wapi = 'https://api.binance.com/wapi/';
     let sapi = 'https://api.binance.com/sapi/';
-    let fapi = 'https://fapi.binance.com/fapi/';
+    let fapi = 'https://testnet.binancefuture.com/';
     let stream = 'wss://stream.binance.com:9443/ws/';
     let combineStream = 'wss://stream.binance.com:9443/stream?streams=';
     const userAgent = 'Mozilla/4.0 (compatible; Node Binance API)';
@@ -2261,9 +2261,9 @@ let api = function Binance( options = {} ) {
         * @param {function} callback - the callback function
         * @return {promise or undefined} - omitting the callback returns a promise
         */
-       lending: async ( params = {} ) => {
-        return promiseRequest( 'v1/lending/union/account', params, {base:sapi, type:'SIGNED'});
-       },
+        lending: async ( params = {} ) => {
+            return promiseRequest( 'v1/lending/union/account', params, {base:sapi, type:'SIGNED'} );
+        },
 
         //** Futures methods */
         futuresPing: async ( params = {} ) => {
