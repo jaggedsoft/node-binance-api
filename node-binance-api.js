@@ -2375,10 +2375,11 @@ let api = function Binance( options = {} ) {
         // type: 1: Add postion margin，2: Reduce postion margin
         futuresPositionMargin: async ( symbol, amount, type = 1, params = {} ) => {
             params.symbol = symbol;
-            params.marginType = marginType;
+            params.amount = amount;
+            params.type = type;
             return promiseRequest( 'v1/positionMargin', params, {base:fapi, method:'POST', type:'SIGNED'} );
         },
-
+        
         futuresPositionMarginHistory: async ( symbol, params = {} ) => {
             params.symbol = symbol;
             return promiseRequest( 'v1/positionMargin/history', params, {base:fapi, type:'SIGNED'} );
