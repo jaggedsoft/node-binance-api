@@ -27,7 +27,7 @@ npm install node-binance-api --save
 #### Getting started
 ```javascript
 const Binance = require('node-binance-api');
-const binance = new Binance({
+const binance = new Binance.options({
   APIKEY: '<key>',
   APISECRET: '<secret>'
 });
