@@ -1307,7 +1307,7 @@ binance.orderStatus("ETHBTC", orderid, (error, orderStatus, symbol) => {
 });
 ```
 
-#### Trade history
+#### Get your Trade History
 ```javascript
 binance.trades("SNMBTC", (error, trades, symbol) => {
   console.info(symbol+" trade history", trades);
