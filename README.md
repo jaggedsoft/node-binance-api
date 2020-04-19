@@ -83,6 +83,12 @@ console.info( await binance.futuresBuy( 'BTCUSDT', 0.1, 8222 ) );
 console.info( await binance.futuresSell( 'BTCUSDT', 0.5, 11111 ) );
 ```
 
+#### Futures reduceOnly Order Example
+```js
+if ( side == 'LONG' ) order = await binance.futuresMarketSell( obj.symbol, amount, {reduceOnly: true} )
+else order = await binance.futuresMarketBuy( obj.symbol, amount, {reduceOnly: true} )
+```
+
 #### Adjust Leverage (1-125x)
 ```js
 console.info( await binance.futuresLeverage( 'ETHUSDT', 50 ) );
@@ -132,7 +138,7 @@ console.info( await binance.futuresAllOrders( "BTCUSDT" ) );
 console.info( await binance.futuresUserTrades( "BTCUSDT" ) );
 console.info( await binance.futuresGetDataStream() );
 console.info( await binance.futuresPositionMarginHistory( "TRXUSDT" ) );
-// Still in development: Futures WebSockets & Batch orders
+// Futures WebSockets, Batch orders, and more documentation will be finished later
 ```
 
 # Binance API (Spot Trading)
@@ -1847,12 +1853,11 @@ binance.options({
 
 Problems getting your balance? Wrap the entry point of your application in useServerTime:
 ```js
-binance.useServerTime(() => {
-	binance.balance((error, balances) => {
-		if ( error ) return console.error(error);
-		console.info("balances()", balances);
-		console.info("BNB balance: ", balances.BNB.available);
-	});
+await binance.useServerTime();
+binance.balance((error, balances) => {
+    if ( error ) return console.error(error);
+    console.info("balances()", balances);
+    console.info("BNB balance: ", balances.BNB.available);
 });
 ```
 
