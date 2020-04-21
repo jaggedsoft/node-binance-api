@@ -370,7 +370,9 @@ let api = function Binance( options = {} ) {
         } else {
             if ( typeof params.type === 'undefined' ) params.type = 'MARKET';
         }
-        if ( params.type.includes( 'LIMIT' ) || params.type === 'STOP' || params.type === 'TAKE_PROFIT' ) params.timeInForce = 'GTC';
+        if ( !params.timeInForce 
+            && ( params.type.includes( 'LIMIT' ) || params.type === 'STOP' || params.type === 'TAKE_PROFIT' ) ) 
+            params.timeInForce = 'GTC';
         return promiseRequest( 'v1/order', params, {base:fapi, type:'TRADE', method:'POST'} );
     };
     const promiseRequest = async ( url, data = {}, flags = {} ) => {
