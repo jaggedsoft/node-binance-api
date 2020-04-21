@@ -370,7 +370,7 @@ let api = function Binance( options = {} ) {
         } else {
             if ( typeof params.type === 'undefined' ) params.type = 'MARKET';
         }
-        if ( !params.timeInForce && params.type.includes( 'LIMIT' ) || params.type === 'STOP' || params.type === 'TAKE_PROFIT' ) {
+        if ( !params.timeInForce && ( params.type.includes( 'LIMIT' ) || params.type === 'STOP' || params.type === 'TAKE_PROFIT' ) ) {
             params.timeInForce = 'GTX'; // Post only by default. Use GTC for limit orders.
         }
         return promiseRequest( 'v1/order', params, {base:fapi, type:'TRADE', method:'POST'} );
