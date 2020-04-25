@@ -1286,9 +1286,7 @@ binance.cancel("ETHBTC", orderid, (error, response, symbol) => {
 
 #### Cancel all open orders
 ```js
-binance.cancelOrders("XMRBTC", (error, response, symbol) => {
-  console.info(symbol+" cancel response:", response);
-});
+console.info( await binance.cancelAll("XMRBTC") );
 ```
 
 #### Get open orders for a symbol
