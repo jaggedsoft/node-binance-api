@@ -1461,7 +1461,30 @@ let api = function Binance( options = {} ) {
         },
 
         /**
-        * Cancels all order of a given symbol
+        * Cancels all orders of a given symbol
+        * @param {string} symbol - the symbol to cancel all orders for
+        * @param {function} callback - the callback function
+        * @return {promise or undefined} - omitting the callback returns a promise
+        */
+        cancelAll: function ( symbol, callback = false ) {
+            if ( !callback ) {
+                return new Promise( ( resolve, reject ) => {
+                    callback = ( error, response ) => {
+                        if ( error ) {
+                            reject( error );
+                        } else {
+                            resolve( response );
+                        }
+                    }
+                    signedRequest( base + 'v3/openOrders', { symbol }, callback, 'DELETE' );
+                } )
+            } else {
+                signedRequest( base + 'v3/openOrders', { symbol }, callback, 'DELETE' );
+            }
+        },
+
+        /**
+        * Cancels all orders of a given symbol
         * @param {string} symbol - the symbol to cancel all orders for
         * @param {function} callback - the callback function
         * @return {promise or undefined} - omitting the callback returns a promise
@@ -1476,14 +1499,14 @@ let api = function Binance( options = {} ) {
                             resolve( response );
                         }
                     }
-                    signedRequest( base + 'v3/openOrders', { symbol: symbol }, function ( error, json ) {
+                    signedRequest( base + 'v3/openOrders', { symbol }, function ( error, json ) {
                         if ( json.length === 0 ) {
                             return callback.call( this, 'No orders present for this symbol', {}, symbol );
                         }
                         for ( let obj of json ) {
                             let quantity = obj.origQty - obj.executedQty;
                             Binance.options.log( 'cancel order: ' + obj.side + ' ' + symbol + ' ' + quantity + ' @ ' + obj.price + ' #' + obj.orderId );
-                            signedRequest( base + 'v3/order', { symbol: symbol, orderId: obj.orderId }, function ( error, data ) {
+                            signedRequest( base + 'v3/order', { symbol, orderId: obj.orderId }, function ( error, data ) {
                                 return callback.call( this, error, data, symbol );
                             }, 'DELETE' );
                         }
