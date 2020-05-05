@@ -402,7 +402,7 @@ let api = function Binance( options = {} ) {
                 timeout: Binance.options.recvWindow,
                 followAllRedirects: true
             };
-            if ( flags.type === 'SIGNED' || flags.type === 'TRADE' || flags.type === 'USER_DATA' ) {
+            if ( flags.type === 'SIGNED' || flags.type === 'TRADE' || flags.type === 'USER_DATA' || ( Binance.options.test && flags.type === 'MARKET_DATA' ) ) {
                 if ( !Binance.options.APISECRET ) return reject( 'Invalid API Secret' );
                 data.timestamp = new Date().getTime() + Binance.info.timeOffset;
                 query = makeQueryString( data );
