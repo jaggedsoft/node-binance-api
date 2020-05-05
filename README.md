@@ -4,16 +4,17 @@
 
 [![Build Status](https://travis-ci.org/jaggedsoft/node-binance-api.svg?branch=master&style=flat-square)](https://travis-ci.org/jaggedsoft/node-binance-api) [![Coverage Status](https://coveralls.io/repos/github/jaggedsoft/node-binance-api/badge.svg?branch=master&style=flat-square)](https://coveralls.io/github/jaggedsoft/node-binance-api) [![CodeCov](https://codecov.io/gh/jaggedsoft/node-binance-api/branch/master/graph/badge.svg?style=flat-square)](https://codecov.io/github/jaggedsoft/node-binance-api/) <!-- [![Codacy Badge](https://api.codacy.com/project/badge/Coverage/996757cec66542c0a64fca2b4cf8a936)](https://www.codacy.com/app/jaggedsoft/node-binance-api?utm_source=github.com&utm_medium=referral&utm_content=jaggedsoft/node-binance-api&utm_campaign=Badge_Coverage) --> [![Codacy Grade](https://api.codacy.com/project/badge/Grade/996757cec66542c0a64fca2b4cf8a936)](https://www.codacy.com/app/jaggedsoft/node-binance-api)
 # Node Binance API
-This project is designed to help you make your own projects that interact with the [Binance API](https://github.com/binance-exchange/binance-official-api-docs). You can stream candlestick chart data, market depth, or use other advanced features such as setting stop losses and iceberg orders. This project seeks to have complete API coverage including WebSockets. Supporting Promises, Margin, Futures and OCO.
+This project is designed to help you make your own projects that interact with the [Binance API](https://github.com/binance-exchange/binance-official-api-docs). You can stream candlestick chart data, market depth, or use other advanced features such as setting stop losses and iceberg orders. This project seeks to have complete API coverage including WebSockets.
 
 <b><p align="center">
-  <a href="#binance-futures-api">Futures API</a> •
-  <a href="#binance-api-spot-trading">Spot Trading API</a> •
-  <a href="#websockets-implementation">WebSockets</a> •
+  <a href="#binance-futures-api" style="color:#f9c513">Futures API</a> &amp;
+  <a href="#futures-websocket-streams" style="color:#f9c513">Streams</a> •
+  <a href="#binance-api-spot-trading" style="color:#282828">Spot Trading API</a> &amp;
+  <a href="#websockets-implementation" style="color:#282828">Streams</a> •
   <a href="#binance-margin-api">Margin API</a> •
   <a href="#binance-lending-api">Lending API</a><br/>
-  <a href="#troubleshooting">Troubleshooting</a> •
   <a href="https://github.com/jaggedsoft/node-binance-api/tree/master/examples">Examples</a> •
+  <a href="#troubleshooting">Troubleshooting</a> •
   <a href="https://github.com/jaggedsoft/node-binance-api/releases">Changelog</a> •
   <a href="https://t.me/binance_api_english">Support</a>
 </p></b>
@@ -138,7 +139,50 @@ console.info( await binance.futuresAllOrders( "BTCUSDT" ) );
 console.info( await binance.futuresUserTrades( "BTCUSDT" ) );
 console.info( await binance.futuresGetDataStream() );
 console.info( await binance.futuresPositionMarginHistory( "TRXUSDT" ) );
-// Futures WebSockets, Batch orders, and more documentation will be finished later
+// Batch orders, remaining WebSocket streams, and better documentation will be come later
+```
+
+# Futures WebSocket Streams
+
+#### Futures miniTicker stream for all symbols
+```js
+binance.futuresMiniTickerStream( console.log );
+```
+#### Futures miniTicker stream for a symbol
+```js
+binance.futuresMiniTickerStream( 'BTCUSDT', console.log );
+```
+#### Futures prevDay ticker stream for all symbols
+```js
+binance.futuresTickerStream( console.log );
+```
+#### Futures prevDay ticker stream for a symbol
+```js
+binance.futuresTickerStream( 'BTCUSDT', console.log );
+```
+#### Futures mark price stream for all symbols
+```js
+binance.futuresMarkPriceStream( console.log );
+```
+#### Futures mark price stream for a symbol
+```js
+binance.futuresMarkPriceStream( 'BTCUSDT', console.log );
+```
+#### Futures aggregate trade stream for a symbol
+```js
+binance.futuresAggTradeStream( 'BTCUSDT', console.log );
+```
+#### Connect to a custom endpoint. Easier shortcut functions will come later
+```js
+binance.futuresSubscribe( 'btcusdt@kline_4h', console.log );
+```
+#### Terminate an existing socket
+```js
+binance.futuresTerminate( 'btcusdt@kline_4h' );
+```
+#### Return active sockets and subscriptions
+```js
+console.log( binance.futuresSubscriptions() );
 ```
 
 # Binance API (Spot Trading)
@@ -1627,6 +1671,15 @@ bids { '0.00025203': 0.201624,
 //last updated: Thu Apr 18 2019 00:52:49 GMT-0400 (Eastern Daylight Time)
 ```
 </details>
+
+#### bookTickers stream includes the bid/ask price & amount, for all symbols
+```js
+binance.websockets.bookTickers( console.log );
+```
+#### bookTickers stream includes the bid/ask price & amount, for a symbol
+```js
+binance.websockets.bookTickers( 'BTCUSDT', console.log );
+```
 
 ### Deposit & Withdraw
 
