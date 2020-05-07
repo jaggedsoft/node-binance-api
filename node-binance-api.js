@@ -8,6 +8,10 @@
  * @module jaggedsoft/node-binance-api
  * @return {object} instance to class object */
 let api = function Binance( options = {} ) {
+    if ( !new.target ) { // Legacy support for calling the constructor without 'new'
+        return new api( options );
+    }
+
     //'use strict'; // eslint-disable-line no-unused-expressions
     let Binance = this; // eslint-disable-line consistent-this
     
@@ -3830,9 +3834,5 @@ let api = function Binance( options = {} ) {
         }
     };
 }
-function instanceWrapper( options = {} ) {
-    if ( new.target ) return api( options );
-    return new api( options );
-}
-module.exports = instanceWrapper;
+module.exports = api;
 //https://github.com/binance-exchange/binance-official-api-docs
