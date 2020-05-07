@@ -402,7 +402,7 @@ let api = function Binance( options = {} ) {
                 timeout: Binance.options.recvWindow,
                 followAllRedirects: true
             };
-            if ( flags.type === 'SIGNED' || flags.type === 'TRADE' || flags.type === 'USER_DATA' || ( Binance.options.test && flags.type === 'MARKET_DATA' ) ) {
+            if ( flags.type === 'SIGNED' || flags.type === 'TRADE' || flags.type === 'USER_DATA' ) {
                 if ( !Binance.options.APISECRET ) return reject( 'Invalid API Secret' );
                 data.timestamp = new Date().getTime() + Binance.info.timeOffset;
                 query = makeQueryString( data );
@@ -2774,7 +2774,7 @@ let api = function Binance( options = {} ) {
         },
         
         futuresPositionRisk: async ( params = {} ) => {
-            return promiseRequest( 'v1/positionRisk', params, {base:fapi, type:'SIGNED'} ).then( r=>r.reduce( ( out, i ) => ( ( out[i.symbol] = i ), out ), {} ) );
+            return promiseRequest( 'v1/positionRisk', params, {base:fapi, type:'SIGNED'} );
         },
 
         futuresFundingRate: async ( symbol, params = {} ) => {
@@ -2784,7 +2784,7 @@ let api = function Binance( options = {} ) {
 
         futuresLeverageBracket: async ( symbol = false, params = {} ) => {
             if ( symbol ) params.symbol = symbol;
-            return promiseRequest( 'v1/leverageBracket', params, {base:fapi, type:'MARKET_DATA'} );
+            return promiseRequest( 'v1/leverageBracket', params, {base:fapi, type:'USER_DATA'} );
         },
 
         // leverage 1 to 125
