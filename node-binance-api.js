@@ -37,11 +37,17 @@ let api = function Binance( options = {} ) {
     const contentType = 'application/x-www-form-urlencoded';
     Binance.subscriptions = {};
     Binance.futuresSubscriptions = {};
+    Binance.futuresInfo = {};
+    Binance.futuresMeta = {};
+    Binance.futuresTicks = {};
+    Binance.futuresRealtime = {};
+    Binance.futuresKlineQueue = {};
     Binance.depthCache = {};
     Binance.depthCacheContext = {};
     Binance.ohlcLatest = {};
     Binance.klineQueue = {};
     Binance.ohlc = {};
+
     const default_options = {
         recvWindow: 5000,
         useServerTime: false,
@@ -841,6 +847,51 @@ let api = function Binance( options = {} ) {
     }
 
     /**
+     * Combines all futures OHLC data with the latest update
+     * @param {string} symbol - the symbol
+     * @param {string} interval - time interval
+     * @return {array} - interval data for given symbol
+     */
+    const futuresKlineConcat = ( symbol, interval ) => {
+        let output = Binance.futuresTicks[symbol][interval];
+        if ( typeof Binance.futuresRealtime[symbol][interval].time === 'undefined' ) return output;
+        const time = Binance.futuresRealtime[symbol][interval].time;
+        const last_updated = Object.keys( Binance.futuresTicks[symbol][interval] ).pop();
+        if ( time >= last_updated ) {
+            output[time] = Binance.futuresRealtime[symbol][interval];
+            //delete output[time].time;
+            output[last_updated].isFinal = true;
+            output[time].isFinal = false;
+        }
+        return output;
+    };
+
+    /**
+     * Used for websocket futures @kline
+     * @param {string} symbol - the symbol
+     * @param {object} kline - object with kline info
+     * @param {string} firstTime - time filter
+     * @return {undefined}
+     */
+    const futuresKlineHandler = ( symbol, kline, firstTime = 0 ) => {
+        // eslint-disable-next-line no-unused-vars
+        let { e: eventType, E: eventTime, k: ticks } = kline;
+        // eslint-disable-next-line no-unused-vars
+        let { o: open, h: high, l: low, c: close, v: volume, i: interval, x: isFinal, q: quoteVolume, V: takerBuyBaseVolume, Q: takerBuyQuoteVolume, n: trades, t: time, T:closeTime } = ticks;
+        if ( time <= firstTime ) return;
+        if ( !isFinal ) {
+            // if ( typeof Binance.futuresRealtime[symbol][interval].time !== 'undefined' ) {
+            //     if ( Binance.futuresRealtime[symbol][interval].time > time ) return;
+            // }
+            Binance.futuresRealtime[symbol][interval] = { time, closeTime, open, high, low, close, volume, quoteVolume, takerBuyBaseVolume, takerBuyQuoteVolume, trades, isFinal };
+            return;
+        }
+        const first_updated = Object.keys( Binance.futuresTicks[symbol][interval] ).shift();
+        if ( first_updated ) delete Binance.futuresTicks[symbol][interval][first_updated];
+        Binance.futuresTicks[symbol][interval][time] = { time, closeTime, open, high, low, close, volume, quoteVolume, takerBuyBaseVolume, takerBuyQuoteVolume, trades, isFinal:false };
+    };
+
+    /**
      * Converts the futures ticker stream data into a friendly object
      * @param {object} data - user data callback data type
      * @return {object} - user friendly data type
@@ -1279,6 +1330,27 @@ let api = function Binance( options = {} ) {
         const first_updated = Object.keys( Binance.ohlc[symbol][interval] ).shift();
         if ( first_updated ) delete Binance.ohlc[symbol][interval][first_updated];
         Binance.ohlc[symbol][interval][time] = { open: open, high: high, low: low, close: close, volume: volume };
+    };
+
+
+    /**
+     * Used by futures websockets chart cache
+     * @param {string} symbol - symbol to get candlestick info
+     * @param {string} interval - time interval, 1m, 3m, 5m ....
+     * @param {array} ticks - tick array
+     * @return {undefined}
+     */
+    const futuresKlineData = ( symbol, interval, ticks ) => {
+        let last_time = 0;
+        if ( isIterable( ticks ) ) {
+            for ( let tick of ticks ) {
+                // eslint-disable-next-line no-unused-vars
+                let [time, open, high, low, close, volume, closeTime, quoteVolume, trades, takerBuyBaseVolume, takerBuyQuoteVolume, ignored] = tick;
+                Binance.futuresTicks[symbol][interval][time] = { time, closeTime, open, high, low, close, volume, quoteVolume, takerBuyBaseVolume, takerBuyQuoteVolume, trades };
+                last_time = time;
+            }
+            Binance.futuresMeta[symbol][interval].timestamp = last_time;
+        }
     };
 
     /**
@@ -2650,6 +2722,16 @@ let api = function Binance( options = {} ) {
         },
 
         /**
+         * Queries the futures API by default
+         * @param {string} url - the signed api endpoint
+         * @param {object} data - the data to send
+         * @param {object} flags - type of request, authentication method and endpoint url
+         */
+        promiseRequest: function ( url, data = {}, flags = {} ) {
+            return promiseRequest( url, data, flags );
+        },
+
+        /**
         * Queries the signed api
         * @param {string} url - the signed api endpoint
         * @param {object} data - the data to send
@@ -3185,6 +3267,18 @@ let api = function Binance( options = {} ) {
             } );
         },
 
+        // Futures WebSocket Functions:
+        /**
+         * Subscribe to a single futures websocket
+         * @param {string} url - the futures websocket endpoint
+         * @param {function} callback - optional execution callback
+         * @param {object} params - Optional reconnect {boolean} (whether to reconnect on disconnect), openCallback {function}, id {string}
+         * @return {WebSocket} the websocket reference
+         */
+        futuresSubscribeSingle: function ( url, callback, params = {} ) {
+            return futuresSubscribeSingle( url, callback, params );
+        },
+
         /**
          * Subscribe to a combined futures websocket
          * @param {string} streams - the list of websocket endpoints to connect to
@@ -3194,17 +3288,6 @@ let api = function Binance( options = {} ) {
          */
         futuresSubscribe: function ( streams, callback, params = {} ) {
             return futuresSubscribe( streams, callback, params );
-        },
-
-        /**
-         * Subscribe to a combined futures websocket
-         * @param {string} url - the futures websocket endpoint
-         * @param {function} callback - optional execution callback
-         * @param {object} params - Optional reconnect {boolean} (whether to reconnect on disconnect), openCallback {function}, id {string}
-         * @return {WebSocket} the websocket reference
-         */
-        futuresSubscribe: function ( url, callback, params = {} ) {
-            return futuresSubscribe( url, callback, params );
         },
 
         /**
@@ -3321,6 +3404,94 @@ let api = function Binance( options = {} ) {
             };
             const endpoint = symbol ? `${ symbol.toLowerCase() }@bookTicker` : '!bookTicker'
             let subscription = futuresSubscribeSingle( endpoint, data => callback( fBookTickerConvertData( data ) ), { reconnect } );
+            return subscription.endpoint;
+        },
+
+        /**
+         * Websocket futures klines
+         * @param {array/string} symbols - an array or string of symbols to query
+         * @param {string} interval - the time interval
+         * @param {function} callback - callback function
+         * @param {int} limit - maximum results, no more than 1000
+         * @return {string} the websocket endpoint
+         */
+        futuresChart: async function futuresChart( symbols, interval, callback, limit = 500 ) {
+            let reconnect = () => {
+                if ( Binance.options.reconnect ) futuresChart( symbols, interval, callback, limit );
+            };
+
+            let futuresChartInit = symbol => {
+                if ( typeof Binance.futuresMeta[symbol] === 'undefined' ) Binance.futuresMeta[symbol] = {};
+                if ( typeof Binance.futuresMeta[symbol][interval] === 'undefined' ) Binance.futuresMeta[symbol][interval] = {};
+                if ( typeof Binance.futuresTicks[symbol] === 'undefined' ) Binance.futuresTicks[symbol] = {};
+                if ( typeof Binance.futuresTicks[symbol][interval] === 'undefined' ) Binance.futuresTicks[symbol][interval] = {};
+                if ( typeof Binance.futuresRealtime[symbol] === 'undefined' ) Binance.futuresRealtime[symbol] = {};
+                if ( typeof Binance.futuresRealtime[symbol][interval] === 'undefined' ) Binance.futuresRealtime[symbol][interval] = {};
+                if ( typeof Binance.futuresKlineQueue[symbol] === 'undefined' ) Binance.futuresKlineQueue[symbol] = {};
+                if ( typeof Binance.futuresKlineQueue[symbol][interval] === 'undefined' ) Binance.futuresKlineQueue[symbol][interval] = [];
+                Binance.futuresMeta[symbol][interval].timestamp = 0;
+            }
+
+            let handleFuturesKlineStream = kline => {
+                let symbol = kline.s;
+                if ( !Binance.futuresMeta[symbol][interval].timestamp ) {
+                    if ( typeof ( Binance.futuresKlineQueue[symbol][interval] ) !== 'undefined' && kline !== null ) {
+                        Binance.futuresKlineQueue[symbol][interval].push( kline );
+                    }
+                } else {
+                    //Binance.options.log('futures klines at ' + kline.k.t);
+                    futuresKlineHandler( symbol, kline );
+                    if ( callback ) callback( symbol, interval, futuresKlineConcat( symbol, interval ) );
+                }
+            };
+
+            let getFuturesKlineSnapshot = async ( symbol, limit = 500 ) => {
+                let data = await promiseRequest( 'v1/klines', { symbol, interval, limit }, { base:fapi } );
+                futuresKlineData( symbol, interval, data );
+                //Binance.options.log('/futures klines at ' + Binance.futuresMeta[symbol][interval].timestamp);
+                if ( typeof Binance.futuresKlineQueue[symbol][interval] !== 'undefined' ) {
+                    for ( let kline of Binance.futuresKlineQueue[symbol][interval] ) futuresKlineHandler( symbol, kline, Binance.futuresMeta[symbol][interval].timestamp );
+                    delete Binance.futuresKlineQueue[symbol][interval];
+                }
+                if ( callback ) callback( symbol, interval, futuresKlineConcat( symbol, interval ) );
+            };
+
+            let subscription;
+            if ( Array.isArray( symbols ) ) {
+                if ( !isArrayUnique( symbols ) ) throw Error( 'futuresChart: "symbols" array cannot contain duplicate elements.' );
+                symbols.forEach( futuresChartInit );
+                let streams = symbols.map( symbol => `${ symbol.toLowerCase() }@kline_${ interval }` );
+                subscription = futuresSubscribe( streams, handleFuturesKlineStream, reconnect );
+                symbols.forEach( element => getFuturesKlineSnapshot( element, limit ) );
+            } else {
+                let symbol = symbols;
+                futuresChartInit( symbol );
+                subscription = futuresSubscribeSingle( symbol.toLowerCase() + '@kline_' + interval, handleFuturesKlineStream, reconnect );
+                getFuturesKlineSnapshot( symbol, limit );
+            }
+            return subscription.endpoint;
+        },
+
+        /**
+         * Websocket futures candlesticks
+         * @param {array/string} symbols - an array or string of symbols to query
+         * @param {string} interval - the time interval
+         * @param {function} callback - callback function
+         * @return {string} the websocket endpoint
+         */
+        futuresCandlesticks: function futuresCandlesticks( symbols, interval, callback ) {
+            let reconnect = () => {
+                if ( Binance.options.reconnect ) futuresCandlesticks( symbols, interval, callback );
+            };
+            let subscription;
+            if ( Array.isArray( symbols ) ) {
+                if ( !isArrayUnique( symbols ) ) throw Error( 'futuresCandlesticks: "symbols" array cannot contain duplicate elements.' );
+                let streams = symbols.map( symbol => symbol.toLowerCase() + '@kline_' + interval );
+                subscription = futuresSubscribeCombined( streams, callback, {reconnect} );
+            } else {
+                let symbol = symbols.toLowerCase();
+                subscription = futuresSubscribe( symbol + '@kline_' + interval, callback, {reconnect} );
+            }
             return subscription.endpoint;
         },
 
