@@ -961,24 +961,37 @@ describe('Websockets candlesticks', function () {
   });
 });
 
-describe('Websockets depth', function () {
-  let depth;
-  let cnt = 0;
-  /*global beforeEach*/
-  beforeEach(function (done) {
-    this.timeout(TIMEOUT);
-    binance.websockets.depth(['BNBBTC'], e_depth => {
-      cnt++;
-      if (cnt > 1) return;
-      depth = e_depth;
-      stopSockets();
-      done();
+function forEachDepthSpeed (callback) {
+  for (let depthSpeed of ['', '@100ms']) {
+    describe(`depthSpeed=${depthSpeed}`, function () {
+      beforeEach(function () {
+        binance.setOption('depthSpeed', depthSpeed);
+      });
+      callback(depthSpeed);
     });
-  });
+  }
+}
 
-  it('Calls depth websocket', function () {
-    assert(typeof (depth) === 'object', WARN_SHOULD_BE_OBJ);
-    assert(depth !== null, WARN_SHOULD_BE_NOT_NULL);
+describe('Websockets depth', function () {
+  forEachDepthSpeed(function () {
+      let depth;
+      let cnt = 0;
+      /*global beforeEach*/
+      beforeEach(function (done) {
+        this.timeout(TIMEOUT);
+        binance.websockets.depth(['BNBBTC'], e_depth => {
+          cnt++;
+          if (cnt > 1) return;
+          depth = e_depth;
+          stopSockets();
+          done();
+        });
+      });
+
+      it('Calls depth websocket', function () {
+        assert(typeof (depth) === 'object', WARN_SHOULD_BE_OBJ);
+        assert(depth !== null, WARN_SHOULD_BE_NOT_NULL);
+      });
   });
 });
 
@@ -1085,68 +1098,72 @@ describe('Websockets miniticker', function () {
 });
 
 describe('Websockets symbol depthcache', function () {
-  let symbol;
-  let bids;
-  let asks;
-  let cnt = 0;
-  beforeEach(function (done) {
-    this.timeout(TIMEOUT);
-    binance.websockets.depthCache('BNBBTC', (a_symbol, a_depth) => {
-      cnt++;
-      if (cnt > 1) return;
-      stopSockets(true);
-      symbol = a_symbol;
-      bids = a_depth.bids;
-      asks = a_depth.asks;
-      done();
+  forEachDepthSpeed(function () {
+    let symbol;
+    let bids;
+    let asks;
+    let cnt = 0;
+    beforeEach(function (done) {
+      this.timeout(TIMEOUT);
+      binance.websockets.depthCache('BNBBTC', (a_symbol, a_depth) => {
+        cnt++;
+        if (cnt > 1) return;
+        stopSockets(true);
+        symbol = a_symbol;
+        bids = a_depth.bids;
+        asks = a_depth.asks;
+        done();
+      });
     });
-  });
 
-  bids = binance.sortBids(bids);
-  asks = binance.sortAsks(asks);
+    bids = binance.sortBids(bids);
+    asks = binance.sortAsks(asks);
 
-  it('check result of depth cache', function () {
-    assert(typeof (bids) === 'object', WARN_SHOULD_BE_OBJ);
-    assert(typeof (asks) === 'object', WARN_SHOULD_BE_OBJ);
-    assert(typeof (symbol) === 'string', WARN_SHOULD_BE_OBJ);
-    assert(bids !== null, WARN_SHOULD_BE_NOT_NULL);
-    assert(asks !== null, WARN_SHOULD_BE_NOT_NULL);
-    assert(symbol !== null, WARN_SHOULD_BE_NOT_NULL);
-    assert(Object.keys(asks).length !== 0, 'should not be 0');
-    assert(Object.keys(bids).length !== 0, 'should not be 0');
+    it('check result of depth cache', function () {
+      assert(typeof (bids) === 'object', WARN_SHOULD_BE_OBJ);
+      assert(typeof (asks) === 'object', WARN_SHOULD_BE_OBJ);
+      assert(typeof (symbol) === 'string', WARN_SHOULD_BE_OBJ);
+      assert(bids !== null, WARN_SHOULD_BE_NOT_NULL);
+      assert(asks !== null, WARN_SHOULD_BE_NOT_NULL);
+      assert(symbol !== null, WARN_SHOULD_BE_NOT_NULL);
+      assert(Object.keys(asks).length !== 0, 'should not be 0');
+      assert(Object.keys(bids).length !== 0, 'should not be 0');
+    });
   });
 });
 
 describe('Websockets array depthcache', function () {
-  let symbol;
-  let bids;
-  let asks;
-  let cnt = 0;
-  beforeEach(function (done) {
-    this.timeout(TIMEOUT);
-    binance.websockets.depthCache(['BNBBTC', 'TRXBTC'], (a_symbol, a_depth) => {
-      cnt++;
-      if (cnt > 1) return;
-      stopSockets();
-      symbol = a_symbol;
-      bids = a_depth.bids;
-      asks = a_depth.asks;
-      done();
+  forEachDepthSpeed(function () {
+    let symbol;
+    let bids;
+    let asks;
+    let cnt = 0;
+    beforeEach(function (done) {
+      this.timeout(TIMEOUT);
+      binance.websockets.depthCache(['BNBBTC', 'TRXBTC'], (a_symbol, a_depth) => {
+        cnt++;
+        if (cnt > 1) return;
+        stopSockets();
+        symbol = a_symbol;
+        bids = a_depth.bids;
+        asks = a_depth.asks;
+        done();
+      });
     });
-  });
 
-  bids = binance.sortBids(bids);
-  asks = binance.sortAsks(asks);
+    bids = binance.sortBids(bids);
+    asks = binance.sortAsks(asks);
 
-  it('check result of symbols array depth cache', function () {
-    assert(typeof (bids) === 'object', WARN_SHOULD_BE_OBJ);
-    assert(typeof (asks) === 'object', WARN_SHOULD_BE_OBJ);
-    assert(typeof (symbol) === 'string', WARN_SHOULD_BE_OBJ);
-    assert(bids !== null, WARN_SHOULD_BE_NOT_NULL);
-    assert(asks !== null, WARN_SHOULD_BE_NOT_NULL);
-    assert(symbol !== null, WARN_SHOULD_BE_NOT_NULL);
-    assert(Object.keys(asks).length !== 0, 'should not be 0');
-    assert(Object.keys(bids).length !== 0, 'should not be 0');
+    it('check result of symbols array depth cache', function () {
+      assert(typeof (bids) === 'object', WARN_SHOULD_BE_OBJ);
+      assert(typeof (asks) === 'object', WARN_SHOULD_BE_OBJ);
+      assert(typeof (symbol) === 'string', WARN_SHOULD_BE_OBJ);
+      assert(bids !== null, WARN_SHOULD_BE_NOT_NULL);
+      assert(asks !== null, WARN_SHOULD_BE_NOT_NULL);
+      assert(symbol !== null, WARN_SHOULD_BE_NOT_NULL);
+      assert(Object.keys(asks).length !== 0, 'should not be 0');
+      assert(Object.keys(bids).length !== 0, 'should not be 0');
+    });
   });
 });
 

@@ -56,7 +56,8 @@ let api = function Binance( options = {} ) {
         test: false,
         log: function ( ...args ) {
             console.log( Array.prototype.slice.call( args ) );
-        }
+        },
+        depthSpeed: '@100ms'
     };
     Binance.options = default_options;
     Binance.info = { timeOffset: 0 };
@@ -85,6 +86,11 @@ let api = function Binance( options = {} ) {
             if ( typeof urls.fstream === 'string' ) fstream = urls.fstream;
             if ( typeof urls.fstreamSingle === 'string' ) fstreamSingle = urls.fstreamSingle;
         }
+        if ( typeof Binance.options.depthSpeed === 'undefined' ) Binance.options.depthSpeed = default_options.depthSpeed;
+        if ( !['', '@100ms'].includes( Binance.options.depthSpeed ) ) {
+            console.warn( `depthSpeed=${Binance.options.depthSpeed} may not be supported. You can use '' for 1s or '@100ms' instead.` );
+        }
+
         if ( Binance.options.useServerTime ) {
             apiRequest( base + 'v1/time', {}, function ( error, response ) {
                 Binance.info.timeOffset = response.serverTime - new Date().getTime();
@@ -3610,16 +3616,17 @@ let api = function Binance( options = {} ) {
                 let reconnect = () => {
                     if ( Binance.options.reconnect ) depth( symbols, callback );
                 };
+                let depth = '@depth' + Binance.options.depthSpeed;
                 let subscription;
                 if ( Array.isArray( symbols ) ) {
                     if ( !isArrayUnique( symbols ) ) throw Error( 'depth: "symbols" cannot contain duplicate elements.' );
                     let streams = symbols.map( function ( symbol ) {
-                        return symbol.toLowerCase() + '@depth';
+                        return symbol.toLowerCase() + depth;
                     } );
                     subscription = subscribeCombined( streams, callback, reconnect );
                 } else {
                     let symbol = symbols;
-                    subscription = subscribe( symbol.toLowerCase() + '@depth', callback, reconnect );
+                    subscription = subscribe( symbol.toLowerCase() + depth, callback, reconnect );
                 }
                 return subscription.endpoint;
             },
@@ -3704,12 +3711,13 @@ let api = function Binance( options = {} ) {
                 /* If an array of symbols are sent we use a combined stream connection rather.
                  This is transparent to the developer, and results in a single socket connection.
                  This essentially eliminates "unexpected response" errors when subscribing to a lot of data. */
+                let depth = '@depth' + Binance.options.depthSpeed;
                 let subscription;
                 if ( Array.isArray( symbols ) ) {
                     if ( !isArrayUnique( symbols ) ) throw Error( 'depthCache: "symbols" cannot contain duplicate elements.' );
                     symbols.forEach( symbolDepthInit );
                     let streams = symbols.map( function ( symbol ) {
-                        return symbol.toLowerCase() + '@depth';
+                        return symbol.toLowerCase() + depth;
                     } );
                     subscription = subscribeCombined( streams, handleDepthStreamData, reconnect, function () {
                         async.mapLimit( symbols, 50, getSymbolDepthSnapshot, ( err, results ) => {
@@ -3721,7 +3729,7 @@ let api = function Binance( options = {} ) {
                 } else {
                     let symbol = symbols;
                     symbolDepthInit( symbol );
-                    subscription = subscribe( symbol.toLowerCase() + '@depth', handleDepthStreamData, reconnect, function () {
+                    subscription = subscribe( symbol.toLowerCase() + depth, handleDepthStreamData, reconnect, function () {
                         async.mapLimit( [symbol], 1, getSymbolDepthSnapshot, ( err, results ) => {
                             if ( err ) throw err;
                             results.forEach( updateSymbolDepthCache );
