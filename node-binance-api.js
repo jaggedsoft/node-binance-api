@@ -29,7 +29,7 @@ let api = function Binance( options = {} ) {
     let sapi = 'https://api.binance.com/sapi/';
     let fapi = 'https://fapi.binance.com/fapi/';
     let fapiTest = 'https://testnet.binancefuture.com/fapi/';
-    let fstream = 'wss://fstream.binance.com/ws/stream?streams=';
+    let fstream = 'wss://fstream.binance.com/stream?streams=';
     let fstreamSingle = 'wss://fstream.binance.com/ws/';
     let stream = 'wss://stream.binance.com:9443/ws/';
     let combineStream = 'wss://stream.binance.com:9443/stream?streams=';
@@ -3185,16 +3185,15 @@ let api = function Binance( options = {} ) {
             } );
         },
 
-        // Futures WebSocket Functions:
         /**
-         * Subscribe to a single futures websocket
-         * @param {string} url - the futures websocket endpoint
+         * Subscribe to a combined futures websocket
+         * @param {string} streams - the list of websocket endpoints to connect to
          * @param {function} callback - optional execution callback
          * @param {object} params - Optional reconnect {boolean} (whether to reconnect on disconnect), openCallback {function}, id {string}
          * @return {WebSocket} the websocket reference
          */
-        futuresSubscribeSingle: function ( url, callback, params = {} ) {
-            return futuresSubscribeSingle( url, callback, params );
+        futuresSubscribe: function ( streams, callback, params = {} ) {
+            return futuresSubscribe( streams, callback, params );
         },
 
         /**
