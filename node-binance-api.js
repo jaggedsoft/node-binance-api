@@ -3487,10 +3487,10 @@ let api = function Binance( options = {} ) {
             if ( Array.isArray( symbols ) ) {
                 if ( !isArrayUnique( symbols ) ) throw Error( 'futuresCandlesticks: "symbols" array cannot contain duplicate elements.' );
                 let streams = symbols.map( symbol => symbol.toLowerCase() + '@kline_' + interval );
-                subscription = futuresSubscribeCombined( streams, callback, {reconnect} );
+                subscription = futuresSubscribe( streams, callback, {reconnect} );
             } else {
                 let symbol = symbols.toLowerCase();
-                subscription = futuresSubscribe( symbol + '@kline_' + interval, callback, {reconnect} );
+                subscription = futuresSubscribeSingle( symbol + '@kline_' + interval, callback, {reconnect} );
             }
             return subscription.endpoint;
         },
