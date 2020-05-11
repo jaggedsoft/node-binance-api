@@ -18,7 +18,7 @@ This project is designed to help you make your own projects that interact with t
 </p></b>
 
 
-#### Installation: **`npm install node-binance-api`**
+#### Installation: **`npm install -s node-binance-api`**
 [![npm install node-binance-api](https://nodei.co/npm/node-binance-api.png?mini=true)](https://npmjs.org/package/node-binance-api)
 
 #### Getting started
@@ -1943,7 +1943,9 @@ binance.setOption( 'verbose', true );
 - Fork and Clone! Awesome
 - Select existing [issues](https://github.com/jaggedsoft/node-binance-api/issues) or create a [new issue](https://github.com/jaggedsoft/node-binance-api/issues/new) and give us a PR with your bugfix or improvement after. We love it ❤️
 
-***Thank you to all contributors:*** joelrich, Xodetaetl, PaulMuller, JasonMcz, kirosc, abou7mied, jmacioszek, DoobieD, Eluvade, dbvcode, bmino, dmzoneill, dmitriz, keith1024, pavlovdog, usama33, yanislk, learnathoner, vaielab, nickreese, Tuitio, grandmore, itnok, CollinEstes, sethyx, mstijak, MadDeveloper, balthazar, bitoiu, matthewwoop, robaleman, hems and others!
+***Special thanks to our most frequent or significant contributors:*** bmino, dmzoneill, dmitriz, keith1024
+
+***Thank you to all contributors:*** joelrich, Xodetaetl, PaulMuller, JasonMcz, kirosc, abou7mied, jmacioszek, DoobieD, Eluvade, dbvcode, pavlovdog, usama33, yanislk, learnathoner, vaielab, nickreese, Tuitio, grandmore, itnok, CollinEstes, sethyx, mstijak, MadDeveloper, balthazar, bitoiu, matthewwoop, robaleman, hems and others!
 
 ![Downloads](https://img.shields.io/npm/dt/node-binance-api.svg?style=for-the-badge&maxAge=86400) ![Stars](https://img.shields.io/github/stars/jaggedsoft/node-binance-api.svg?style=for-the-badge&label=Stars) ![Contributors](https://img.shields.io/github/contributors/jaggedsoft/node-binance-api.svg?style=for-the-badge&maxAge=86400)
 [![Stargazers over time](https://starcharts.herokuapp.com/jaggedsoft/node-binance-api.svg)](https://starcharts.herokuapp.com/jaggedsoft/node-binance-api)
