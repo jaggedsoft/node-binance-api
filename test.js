@@ -643,7 +643,7 @@ describe('Exchange Info', function () {
     assert(async_data !== null, 'data should not be null');
     assert(Object.prototype.hasOwnProperty.call(async_data, 'symbols'), 'data should have property \'symbols\'');
 
-    let symbolMembers = ['status', 'orderTypes', 'icebergAllowed', 'baseAsset', 'baseAssetPrecision', 'quoteAsset', 'quotePrecision'];
+    let symbolMembers = ['status', 'orderTypes', 'icebergAllowed', 'baseAsset', 'baseAssetPrecision', 'quoteAsset', 'quotePrecision', 'quoteAssetPrecision'];
     async_data.symbols.forEach(function (symbol) {
       symbolMembers.forEach(function (member) {
         assert(Object.prototype.hasOwnProperty.call(symbol, member), WARN_SHOULD_HAVE_KEY + member);
