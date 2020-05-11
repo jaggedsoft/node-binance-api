@@ -3508,11 +3508,11 @@ let api = function Binance( options = {} ) {
                 let reconnect = () => {
                     if ( Binance.options.reconnect ) userData( callback, execution_callback, subscribed_callback );
                 };
-                apiRequest( base + 'v1/userDataStream', {}, function ( error, response ) {
+                apiRequest( base + 'v3/userDataStream', {}, function ( error, response ) {
                     Binance.options.listenKey = response.listenKey;
                     setTimeout( function userDataKeepAlive() { // keepalive
                         try {
-                            apiRequest( base + 'v1/userDataStream?listenKey=' + Binance.options.listenKey, {}, function ( err ) {
+                            apiRequest( base + 'v3/userDataStream?listenKey=' + Binance.options.listenKey, {}, function ( err ) {
                                 if ( err ) setTimeout( userDataKeepAlive, 60000 ); // retry in 1 minute
                                 else setTimeout( userDataKeepAlive, 60 * 30 * 1000 ); // 30 minute keepalive
                             }, 'PUT' );
@@ -3668,7 +3668,7 @@ let api = function Binance( options = {} ) {
                 };
 
                 let getSymbolDepthSnapshot = ( symbol, cb ) => {
-                    publicRequest( base + 'v1/depth', { symbol: symbol, limit: limit }, function ( error, json ) {
+                    publicRequest( base + 'v3/depth', { symbol: symbol, limit: limit }, function ( error, json ) {
                         if ( error ) {
                             return cb( error, null );
                         }
@@ -3855,7 +3855,7 @@ let api = function Binance( options = {} ) {
                 };
 
                 let getSymbolKlineSnapshot = ( symbol, limit = 500 ) => {
-                    publicRequest( base + 'v1/klines', { symbol: symbol, interval: interval, limit: limit }, function ( error, data ) {
+                    publicRequest( base + 'v3/klines', { symbol: symbol, interval: interval, limit: limit }, function ( error, data ) {
                         klineData( symbol, interval, data );
                         //Binance.options.log('/klines at ' + Binance.info[symbol][interval].timestamp);
                         if ( typeof Binance.klineQueue[symbol][interval] !== 'undefined' ) {
