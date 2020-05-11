@@ -71,6 +71,34 @@ describe('Construct', function () {
     assert(typeof (binance) === 'object', 'Binance is not an object');
     done();
   }).timeout(TIMEOUT);
+
+  it('Construct the binance object in various ways', function () {
+
+    let keyOffset = 1000;
+    let key = keyOffset;
+    let secret = "secret";
+
+    // Every variant is listed twice to make sure that the options are not shared (which happened in the past)
+    let objs = [
+      new Binance().options({APIKEY: key++, APISECRET: secret}),
+      new Binance().options({APIKEY: key++, APISECRET: secret}),
+      Binance().options({APIKEY: key++, APISECRET: secret}),
+      Binance().options({APIKEY: key++, APISECRET: secret}),
+      new Binance({APIKEY: key++, APISECRET: secret}),
+      new Binance({APIKEY: key++, APISECRET: secret}),
+      Binance({APIKEY: key++, APISECRET: secret}),
+      Binance({APIKEY: key++, APISECRET: secret}),
+    ];
+
+    // Make sure that all objects have their own options
+    for (let i = 0; i < objs.length; i++) {
+      let expectedKey = keyOffset + i;
+      let actualKey = objs[i].getOption("APIKEY");
+      assert(expectedKey === actualKey, `APIKEY: ${expectedKey} != ${actualKey}`);
+    }
+
+  });
+
 });
 
 
@@ -615,7 +643,7 @@ describe('Exchange Info', function () {
     assert(async_data !== null, 'data should not be null');
     assert(Object.prototype.hasOwnProperty.call(async_data, 'symbols'), 'data should have property \'symbols\'');
 
-    let symbolMembers = ['status', 'orderTypes', 'icebergAllowed', 'baseAsset', 'baseAssetPrecision', 'quoteAsset', 'quotePrecision'];
+    let symbolMembers = ['status', 'orderTypes', 'icebergAllowed', 'baseAsset', 'baseAssetPrecision', 'quoteAsset', 'quotePrecision', 'quoteAssetPrecision'];
     async_data.symbols.forEach(function (symbol) {
       symbolMembers.forEach(function (member) {
         assert(Object.prototype.hasOwnProperty.call(symbol, member), WARN_SHOULD_HAVE_KEY + member);

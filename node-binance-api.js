@@ -8,6 +8,10 @@
  * @module jaggedsoft/node-binance-api
  * @return {object} instance to class object */
 let api = function Binance( options = {} ) {
+    if ( !new.target ) { // Legacy support for calling the constructor without 'new'
+        return new api( options );
+    }
+
     //'use strict'; // eslint-disable-line no-unused-expressions
     let Binance = this; // eslint-disable-line consistent-this
     
@@ -25,7 +29,7 @@ let api = function Binance( options = {} ) {
     let sapi = 'https://api.binance.com/sapi/';
     let fapi = 'https://fapi.binance.com/fapi/';
     let fapiTest = 'https://testnet.binancefuture.com/fapi/';
-    let fstream = 'wss://fstream.binance.com/ws/stream?streams=';
+    let fstream = 'wss://fstream.binance.com/stream?streams=';
     let fstreamSingle = 'wss://fstream.binance.com/ws/';
     let stream = 'wss://stream.binance.com:9443/ws/';
     let combineStream = 'wss://stream.binance.com:9443/stream?streams=';
@@ -33,11 +37,17 @@ let api = function Binance( options = {} ) {
     const contentType = 'application/x-www-form-urlencoded';
     Binance.subscriptions = {};
     Binance.futuresSubscriptions = {};
+    Binance.futuresInfo = {};
+    Binance.futuresMeta = {};
+    Binance.futuresTicks = {};
+    Binance.futuresRealtime = {};
+    Binance.futuresKlineQueue = {};
     Binance.depthCache = {};
     Binance.depthCacheContext = {};
     Binance.ohlcLatest = {};
     Binance.klineQueue = {};
     Binance.ohlc = {};
+
     const default_options = {
         recvWindow: 5000,
         useServerTime: false,
@@ -76,7 +86,7 @@ let api = function Binance( options = {} ) {
             if ( typeof urls.fstreamSingle === 'string' ) fstreamSingle = urls.fstreamSingle;
         }
         if ( Binance.options.useServerTime ) {
-            apiRequest( base + 'v1/time', {}, function ( error, response ) {
+            apiRequest( base + 'v3/time', {}, function ( error, response ) {
                 Binance.info.timeOffset = response.serverTime - new Date().getTime();
                 //Binance.options.log("server time set: ", response.serverTime, Binance.info.timeOffset);
                 if ( callback ) callback();
@@ -837,6 +847,74 @@ let api = function Binance( options = {} ) {
     }
 
     /**
+     * Combines all futures OHLC data with the latest update
+     * @param {string} symbol - the symbol
+     * @param {string} interval - time interval
+     * @return {array} - interval data for given symbol
+     */
+    const futuresKlineConcat = ( symbol, interval ) => {
+        let output = Binance.futuresTicks[symbol][interval];
+        if ( typeof Binance.futuresRealtime[symbol][interval].time === 'undefined' ) return output;
+        const time = Binance.futuresRealtime[symbol][interval].time;
+        const last_updated = Object.keys( Binance.futuresTicks[symbol][interval] ).pop();
+        if ( time >= last_updated ) {
+            output[time] = Binance.futuresRealtime[symbol][interval];
+            //delete output[time].time;
+            output[last_updated].isFinal = true;
+            output[time].isFinal = false;
+        }
+        return output;
+    };
+
+    /**
+     * Used for websocket futures @kline
+     * @param {string} symbol - the symbol
+     * @param {object} kline - object with kline info
+     * @param {string} firstTime - time filter
+     * @return {undefined}
+     */
+    const futuresKlineHandler = ( symbol, kline, firstTime = 0 ) => {
+        // eslint-disable-next-line no-unused-vars
+        let { e: eventType, E: eventTime, k: ticks } = kline;
+        // eslint-disable-next-line no-unused-vars
+        let { o: open, h: high, l: low, c: close, v: volume, i: interval, x: isFinal, q: quoteVolume, V: takerBuyBaseVolume, Q: takerBuyQuoteVolume, n: trades, t: time, T:closeTime } = ticks;
+        if ( time <= firstTime ) return;
+        if ( !isFinal ) {
+            // if ( typeof Binance.futuresRealtime[symbol][interval].time !== 'undefined' ) {
+            //     if ( Binance.futuresRealtime[symbol][interval].time > time ) return;
+            // }
+            Binance.futuresRealtime[symbol][interval] = { time, closeTime, open, high, low, close, volume, quoteVolume, takerBuyBaseVolume, takerBuyQuoteVolume, trades, isFinal };
+            return;
+        }
+        const first_updated = Object.keys( Binance.futuresTicks[symbol][interval] ).shift();
+        if ( first_updated ) delete Binance.futuresTicks[symbol][interval][first_updated];
+        Binance.futuresTicks[symbol][interval][time] = { time, closeTime, open, high, low, close, volume, quoteVolume, takerBuyBaseVolume, takerBuyQuoteVolume, trades, isFinal:false };
+    };
+
+    /**
+     * Converts the futures liquidation stream data into a friendly object
+     * @param {object} data - liquidation data callback data type
+     * @return {object} - user friendly data type
+     */
+    const fLiquidationConvertData = data => {
+        let eventType = data.e, eventTime = data.E;
+        let {
+            s: symbol,
+            S: side,
+            o: orderType,
+            f: timeInForce,
+            q: origAmount,
+            p: price,
+            ap: avgPrice,
+            X: orderStatus,
+            l: lastFilledQty,
+            z: totalFilledQty,
+            T: tradeTime
+        } = data.o;
+        return { symbol, side, orderType, timeInForce, origAmount, price, avgPrice, orderStatus, lastFilledQty, totalFilledQty, eventType, tradeTime, eventTime };
+    };
+    
+    /**
      * Converts the futures ticker stream data into a friendly object
      * @param {object} data - user data callback data type
      * @return {object} - user friendly data type
@@ -1275,6 +1353,27 @@ let api = function Binance( options = {} ) {
         const first_updated = Object.keys( Binance.ohlc[symbol][interval] ).shift();
         if ( first_updated ) delete Binance.ohlc[symbol][interval][first_updated];
         Binance.ohlc[symbol][interval][time] = { open: open, high: high, low: low, close: close, volume: volume };
+    };
+
+
+    /**
+     * Used by futures websockets chart cache
+     * @param {string} symbol - symbol to get candlestick info
+     * @param {string} interval - time interval, 1m, 3m, 5m ....
+     * @param {array} ticks - tick array
+     * @return {undefined}
+     */
+    const futuresKlineData = ( symbol, interval, ticks ) => {
+        let last_time = 0;
+        if ( isIterable( ticks ) ) {
+            for ( let tick of ticks ) {
+                // eslint-disable-next-line no-unused-vars
+                let [time, open, high, low, close, volume, closeTime, quoteVolume, trades, takerBuyBaseVolume, takerBuyQuoteVolume, ignored] = tick;
+                Binance.futuresTicks[symbol][interval][time] = { time, closeTime, open, high, low, close, volume, quoteVolume, takerBuyBaseVolume, takerBuyQuoteVolume, trades };
+                last_time = time;
+            }
+            Binance.futuresMeta[symbol][interval].timestamp = last_time;
+        }
     };
 
     /**
@@ -1978,12 +2077,12 @@ let api = function Binance( options = {} ) {
                             resolve( response );
                         }
                     }
-                    publicRequest( base + 'v1/depth', { symbol: symbol, limit: limit }, function ( error, data ) {
+                    publicRequest( base + 'v3/depth', { symbol: symbol, limit: limit }, function ( error, data ) {
                         return callback.call( this, error, depthData( data ), symbol );
                     } );
                 } )
             } else {
-                publicRequest( base + 'v1/depth', { symbol: symbol, limit: limit }, function ( error, data ) {
+                publicRequest( base + 'v3/depth', { symbol: symbol, limit: limit }, function ( error, data ) {
                     return callback.call( this, error, depthData( data ), symbol );
                 } );
             }
@@ -2098,12 +2197,12 @@ let api = function Binance( options = {} ) {
                             resolve( response );
                         }
                     }
-                    publicRequest( base + 'v1/ticker/24hr', input, ( error, data ) => {
+                    publicRequest( base + 'v3/ticker/24hr', input, ( error, data ) => {
                         return callback.call( this, error, data, symbol );
                     } );
                 } )
             } else {
-                publicRequest( base + 'v1/ticker/24hr', input, ( error, data ) => {
+                publicRequest( base + 'v3/ticker/24hr', input, ( error, data ) => {
                     return callback.call( this, error, data, symbol );
                 } );
             }
@@ -2124,10 +2223,10 @@ let api = function Binance( options = {} ) {
                             resolve( response );
                         }
                     }
-                    publicRequest( base + 'v1/exchangeInfo', {}, callback );
+                    publicRequest( base + 'v3/exchangeInfo', {}, callback );
                 } )
             } else {
-                publicRequest( base + 'v1/exchangeInfo', {}, callback );
+                publicRequest( base + 'v3/exchangeInfo', {}, callback );
             }
         },
 
@@ -2435,14 +2534,14 @@ let api = function Binance( options = {} ) {
                             resolve( response );
                         }
                     }
-                    apiRequest( base + 'v1/time', {}, function ( error, response ) {
+                    apiRequest( base + 'v3/time', {}, function ( error, response ) {
                         Binance.info.timeOffset = response.serverTime - new Date().getTime();
                         //Binance.options.log("server time set: ", response.serverTime, Binance.info.timeOffset);
                         callback( error, response );
                     } );
                 } )
             } else {
-                apiRequest( base + 'v1/time', {}, function ( error, response ) {
+                apiRequest( base + 'v3/time', {}, function ( error, response ) {
                     Binance.info.timeOffset = response.serverTime - new Date().getTime();
                     //Binance.options.log("server time set: ", response.serverTime, Binance.info.timeOffset);
                     callback( error, response );
@@ -2465,10 +2564,10 @@ let api = function Binance( options = {} ) {
                             resolve( response );
                         }
                     }
-                    apiRequest( base + 'v1/time', {}, callback );
+                    apiRequest( base + 'v3/time', {}, callback );
                 } )
             } else {
-                apiRequest( base + 'v1/time', {}, callback );
+                apiRequest( base + 'v3/time', {}, callback );
             }
         },
 
@@ -2490,10 +2589,10 @@ let api = function Binance( options = {} ) {
                             resolve( response );
                         }
                     }
-                    marketRequest( base + 'v1/aggTrades', parameters, callback );
+                    marketRequest( base + 'v3/aggTrades', parameters, callback );
                 } )
             } else {
-                marketRequest( base + 'v1/aggTrades', parameters, callback );
+                marketRequest( base + 'v3/aggTrades', parameters, callback );
             }
         },
 
@@ -2541,10 +2640,10 @@ let api = function Binance( options = {} ) {
                             resolve( response );
                         }
                     }
-                    marketRequest( base + 'v1/historicalTrades', parameters, callback );
+                    marketRequest( base + 'v3/historicalTrades', parameters, callback );
                 } )
             } else {
-                marketRequest( base + 'v1/historicalTrades', parameters, callback );
+                marketRequest( base + 'v3/historicalTrades', parameters, callback );
             }
         },
 
@@ -2609,12 +2708,12 @@ let api = function Binance( options = {} ) {
                             resolve( response );
                         }
                     }
-                    publicRequest( base + 'v1/klines', params, function ( error, data ) {
+                    publicRequest( base + 'v3/klines', params, function ( error, data ) {
                         return callback.call( this, error, data, symbol );
                     } );
                 } )
             } else {
-                publicRequest( base + 'v1/klines', params, function ( error, data ) {
+                publicRequest( base + 'v3/klines', params, function ( error, data ) {
                     return callback.call( this, error, data, symbol );
                 } );
             }
@@ -2643,6 +2742,16 @@ let api = function Binance( options = {} ) {
             } else {
                 publicRequest( url, data, callback, method );
             }
+        },
+
+        /**
+         * Queries the futures API by default
+         * @param {string} url - the signed api endpoint
+         * @param {object} data - the data to send
+         * @param {object} flags - type of request, authentication method and endpoint url
+         */
+        promiseRequest: function ( url, data = {}, flags = {} ) {
+            return promiseRequest( url, data, flags );
         },
 
         /**
@@ -2712,7 +2821,7 @@ let api = function Binance( options = {} ) {
 
         futuresPrices: async ( params = {} ) => {
             let data = await promiseRequest( 'v1/ticker/price', params, {base:fapi} );
-            return data.reduce( ( out, i ) => ( ( out[i.symbol] =  i.price ), out ) );
+            return data.reduce( ( out, i ) => ( ( out[i.symbol] =  i.price ), out ), {} );
         },
 
         futuresDaily: async ( symbol = false, params = {} ) => {
@@ -2774,7 +2883,7 @@ let api = function Binance( options = {} ) {
         },
         
         futuresPositionRisk: async ( params = {} ) => {
-            return promiseRequest( 'v1/positionRisk', params, {base:fapi, type:'SIGNED'} ).then( r=>r.reduce( ( out, i ) => ( ( out[i.symbol] = i ), out ), {} ) );
+            return promiseRequest( 'v1/positionRisk', params, {base:fapi, type:'SIGNED'} );
         },
 
         futuresFundingRate: async ( symbol, params = {} ) => {
@@ -2784,7 +2893,7 @@ let api = function Binance( options = {} ) {
 
         futuresLeverageBracket: async ( symbol = false, params = {} ) => {
             if ( symbol ) params.symbol = symbol;
-            return promiseRequest( 'v1/leverageBracket', params, {base:fapi, type:'MARKET_DATA'} );
+            return promiseRequest( 'v1/leverageBracket', params, {base:fapi, type:'USER_DATA'} );
         },
 
         // leverage 1 to 125
@@ -3195,13 +3304,13 @@ let api = function Binance( options = {} ) {
 
         /**
          * Subscribe to a combined futures websocket
-         * @param {string} url - the futures websocket endpoint
+         * @param {string} streams - the list of websocket endpoints to connect to
          * @param {function} callback - optional execution callback
          * @param {object} params - Optional reconnect {boolean} (whether to reconnect on disconnect), openCallback {function}, id {string}
          * @return {WebSocket} the websocket reference
          */
-        futuresSubscribe: function ( url, callback, params = {} ) {
-            return futuresSubscribe( url, callback, params );
+        futuresSubscribe: function ( streams, callback, params = {} ) {
+            return futuresSubscribe( streams, callback, params );
         },
 
         /**
@@ -3263,6 +3372,25 @@ let api = function Binance( options = {} ) {
             let subscription = futuresSubscribeSingle( endpoint+speed, data => callback( fMarkPriceConvertData( data ) ), { reconnect } );
             return subscription.endpoint;
         },
+        
+        /**
+         * Futures WebSocket liquidations stream
+         * @param {symbol} symbol name or false. can also be a callback
+         * @param {function} callback - callback function
+         * @return {string} the websocket endpoint
+         */
+        futuresLiquidationStream: function fLiquidationStream( symbol = false, callback = console.log ) {
+            if ( typeof symbol == 'function' ) {
+                callback = symbol;
+                symbol = false;
+            }
+            let reconnect = () => {
+                if ( Binance.options.reconnect ) fLiquidationStream( symbol, callback );
+            };
+            const endpoint = symbol ? `${ symbol.toLowerCase() }@forceOrder` : '!forceOrder@arr'
+            let subscription = futuresSubscribeSingle( endpoint, data => callback( fLiquidationConvertData( data ) ), { reconnect } );
+            return subscription.endpoint;
+        },
 
         /**
          * Futures WebSocket prevDay ticker
@@ -3321,6 +3449,94 @@ let api = function Binance( options = {} ) {
             return subscription.endpoint;
         },
 
+        /**
+         * Websocket futures klines
+         * @param {array/string} symbols - an array or string of symbols to query
+         * @param {string} interval - the time interval
+         * @param {function} callback - callback function
+         * @param {int} limit - maximum results, no more than 1000
+         * @return {string} the websocket endpoint
+         */
+        futuresChart: async function futuresChart( symbols, interval, callback, limit = 500 ) {
+            let reconnect = () => {
+                if ( Binance.options.reconnect ) futuresChart( symbols, interval, callback, limit );
+            };
+
+            let futuresChartInit = symbol => {
+                if ( typeof Binance.futuresMeta[symbol] === 'undefined' ) Binance.futuresMeta[symbol] = {};
+                if ( typeof Binance.futuresMeta[symbol][interval] === 'undefined' ) Binance.futuresMeta[symbol][interval] = {};
+                if ( typeof Binance.futuresTicks[symbol] === 'undefined' ) Binance.futuresTicks[symbol] = {};
+                if ( typeof Binance.futuresTicks[symbol][interval] === 'undefined' ) Binance.futuresTicks[symbol][interval] = {};
+                if ( typeof Binance.futuresRealtime[symbol] === 'undefined' ) Binance.futuresRealtime[symbol] = {};
+                if ( typeof Binance.futuresRealtime[symbol][interval] === 'undefined' ) Binance.futuresRealtime[symbol][interval] = {};
+                if ( typeof Binance.futuresKlineQueue[symbol] === 'undefined' ) Binance.futuresKlineQueue[symbol] = {};
+                if ( typeof Binance.futuresKlineQueue[symbol][interval] === 'undefined' ) Binance.futuresKlineQueue[symbol][interval] = [];
+                Binance.futuresMeta[symbol][interval].timestamp = 0;
+            }
+
+            let handleFuturesKlineStream = kline => {
+                let symbol = kline.s;
+                if ( !Binance.futuresMeta[symbol][interval].timestamp ) {
+                    if ( typeof ( Binance.futuresKlineQueue[symbol][interval] ) !== 'undefined' && kline !== null ) {
+                        Binance.futuresKlineQueue[symbol][interval].push( kline );
+                    }
+                } else {
+                    //Binance.options.log('futures klines at ' + kline.k.t);
+                    futuresKlineHandler( symbol, kline );
+                    if ( callback ) callback( symbol, interval, futuresKlineConcat( symbol, interval ) );
+                }
+            };
+
+            let getFuturesKlineSnapshot = async ( symbol, limit = 500 ) => {
+                let data = await promiseRequest( 'v1/klines', { symbol, interval, limit }, { base:fapi } );
+                futuresKlineData( symbol, interval, data );
+                //Binance.options.log('/futures klines at ' + Binance.futuresMeta[symbol][interval].timestamp);
+                if ( typeof Binance.futuresKlineQueue[symbol][interval] !== 'undefined' ) {
+                    for ( let kline of Binance.futuresKlineQueue[symbol][interval] ) futuresKlineHandler( symbol, kline, Binance.futuresMeta[symbol][interval].timestamp );
+                    delete Binance.futuresKlineQueue[symbol][interval];
+                }
+                if ( callback ) callback( symbol, interval, futuresKlineConcat( symbol, interval ) );
+            };
+
+            let subscription;
+            if ( Array.isArray( symbols ) ) {
+                if ( !isArrayUnique( symbols ) ) throw Error( 'futuresChart: "symbols" array cannot contain duplicate elements.' );
+                symbols.forEach( futuresChartInit );
+                let streams = symbols.map( symbol => `${ symbol.toLowerCase() }@kline_${ interval }` );
+                subscription = futuresSubscribe( streams, handleFuturesKlineStream, reconnect );
+                symbols.forEach( element => getFuturesKlineSnapshot( element, limit ) );
+            } else {
+                let symbol = symbols;
+                futuresChartInit( symbol );
+                subscription = futuresSubscribeSingle( symbol.toLowerCase() + '@kline_' + interval, handleFuturesKlineStream, reconnect );
+                getFuturesKlineSnapshot( symbol, limit );
+            }
+            return subscription.endpoint;
+        },
+
+        /**
+         * Websocket futures candlesticks
+         * @param {array/string} symbols - an array or string of symbols to query
+         * @param {string} interval - the time interval
+         * @param {function} callback - callback function
+         * @return {string} the websocket endpoint
+         */
+        futuresCandlesticks: function futuresCandlesticks( symbols, interval, callback ) {
+            let reconnect = () => {
+                if ( Binance.options.reconnect ) futuresCandlesticks( symbols, interval, callback );
+            };
+            let subscription;
+            if ( Array.isArray( symbols ) ) {
+                if ( !isArrayUnique( symbols ) ) throw Error( 'futuresCandlesticks: "symbols" array cannot contain duplicate elements.' );
+                let streams = symbols.map( symbol => symbol.toLowerCase() + '@kline_' + interval );
+                subscription = futuresSubscribe( streams, callback, {reconnect} );
+            } else {
+                let symbol = symbols.toLowerCase();
+                subscription = futuresSubscribeSingle( symbol + '@kline_' + interval, callback, {reconnect} );
+            }
+            return subscription.endpoint;
+        },
+
         websockets: {
             /**
              * Userdata websockets function
@@ -3334,11 +3550,11 @@ let api = function Binance( options = {} ) {
                 let reconnect = () => {
                     if ( Binance.options.reconnect ) userData( callback, execution_callback, subscribed_callback );
                 };
-                apiRequest( base + 'v1/userDataStream', {}, function ( error, response ) {
+                apiRequest( base + 'v3/userDataStream', {}, function ( error, response ) {
                     Binance.options.listenKey = response.listenKey;
                     setTimeout( function userDataKeepAlive() { // keepalive
                         try {
-                            apiRequest( base + 'v1/userDataStream?listenKey=' + Binance.options.listenKey, {}, function ( err ) {
+                            apiRequest( base + 'v3/userDataStream?listenKey=' + Binance.options.listenKey, {}, function ( err ) {
                                 if ( err ) setTimeout( userDataKeepAlive, 60000 ); // retry in 1 minute
                                 else setTimeout( userDataKeepAlive, 60 * 30 * 1000 ); // 30 minute keepalive
                             }, 'PUT' );
@@ -3440,12 +3656,12 @@ let api = function Binance( options = {} ) {
                 if ( Array.isArray( symbols ) ) {
                     if ( !isArrayUnique( symbols ) ) throw Error( 'depth: "symbols" cannot contain duplicate elements.' );
                     let streams = symbols.map( function ( symbol ) {
-                        return symbol.toLowerCase() + '@depth';
+                        return symbol.toLowerCase() + '@depth@100ms';
                     } );
                     subscription = subscribeCombined( streams, callback, reconnect );
                 } else {
                     let symbol = symbols;
-                    subscription = subscribe( symbol.toLowerCase() + '@depth', callback, reconnect );
+                    subscription = subscribe( symbol.toLowerCase() + '@depth@100ms', callback, reconnect );
                 }
                 return subscription.endpoint;
             },
@@ -3494,7 +3710,7 @@ let api = function Binance( options = {} ) {
                 };
 
                 let getSymbolDepthSnapshot = ( symbol, cb ) => {
-                    publicRequest( base + 'v1/depth', { symbol: symbol, limit: limit }, function ( error, json ) {
+                    publicRequest( base + 'v3/depth', { symbol: symbol, limit: limit }, function ( error, json ) {
                         if ( error ) {
                             return cb( error, null );
                         }
@@ -3535,7 +3751,7 @@ let api = function Binance( options = {} ) {
                     if ( !isArrayUnique( symbols ) ) throw Error( 'depthCache: "symbols" cannot contain duplicate elements.' );
                     symbols.forEach( symbolDepthInit );
                     let streams = symbols.map( function ( symbol ) {
-                        return symbol.toLowerCase() + '@depth';
+                        return symbol.toLowerCase() + `@depth@100ms`;
                     } );
                     subscription = subscribeCombined( streams, handleDepthStreamData, reconnect, function () {
                         async.mapLimit( symbols, 50, getSymbolDepthSnapshot, ( err, results ) => {
@@ -3547,7 +3763,7 @@ let api = function Binance( options = {} ) {
                 } else {
                     let symbol = symbols;
                     symbolDepthInit( symbol );
-                    subscription = subscribe( symbol.toLowerCase() + '@depth', handleDepthStreamData, reconnect, function () {
+                    subscription = subscribe( symbol.toLowerCase() + `@depth@100ms`, handleDepthStreamData, reconnect, function () {
                         async.mapLimit( [symbol], 1, getSymbolDepthSnapshot, ( err, results ) => {
                             if ( err ) throw err;
                             results.forEach( updateSymbolDepthCache );
@@ -3681,7 +3897,7 @@ let api = function Binance( options = {} ) {
                 };
 
                 let getSymbolKlineSnapshot = ( symbol, limit = 500 ) => {
-                    publicRequest( base + 'v1/klines', { symbol: symbol, interval: interval, limit: limit }, function ( error, data ) {
+                    publicRequest( base + 'v3/klines', { symbol: symbol, interval: interval, limit: limit }, function ( error, data ) {
                         klineData( symbol, interval, data );
                         //Binance.options.log('/klines at ' + Binance.info[symbol][interval].timestamp);
                         if ( typeof Binance.klineQueue[symbol][interval] !== 'undefined' ) {
@@ -3830,9 +4046,5 @@ let api = function Binance( options = {} ) {
         }
     };
 }
-function instanceWrapper( options = {} ) {
-    if ( new.target ) return api( options );
-    return new api( options );
-}
-module.exports = instanceWrapper;
+module.exports = api;
 //https://github.com/binance-exchange/binance-official-api-docs
