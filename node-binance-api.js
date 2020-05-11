@@ -892,6 +892,29 @@ let api = function Binance( options = {} ) {
     };
 
     /**
+     * Converts the futures liquidation stream data into a friendly object
+     * @param {object} data - liquidation data callback data type
+     * @return {object} - user friendly data type
+     */
+    const fLiquidationConvertData = data => {
+        let eventType = data.e, eventTime = data.E;
+        let {
+            s: symbol,
+            S: side,
+            o: orderType,
+            f: timeInForce,
+            q: origAmount,
+            p: price,
+            ap: avgPrice,
+            X: orderStatus,
+            l: lastFilledQty,
+            z: totalFilledQty,
+            T: tradeTime
+        } = data.o;
+        return { symbol, side, orderType, timeInForce, origAmount, price, avgPrice, orderStatus, lastFilledQty, totalFilledQty, eventType, tradeTime, eventTime };
+    };
+    
+    /**
      * Converts the futures ticker stream data into a friendly object
      * @param {object} data - user data callback data type
      * @return {object} - user friendly data type
@@ -3347,6 +3370,25 @@ let api = function Binance( options = {} ) {
             };
             const endpoint = symbol ? `${ symbol.toLowerCase() }@markPrice` : '!markPrice@arr'
             let subscription = futuresSubscribeSingle( endpoint+speed, data => callback( fMarkPriceConvertData( data ) ), { reconnect } );
+            return subscription.endpoint;
+        },
+        
+        /**
+         * Futures WebSocket liquidations stream
+         * @param {symbol} symbol name or false. can also be a callback
+         * @param {function} callback - callback function
+         * @return {string} the websocket endpoint
+         */
+        futuresLiquidationStream: function fLiquidationStream( symbol = false, callback = console.log ) {
+            if ( typeof symbol == 'function' ) {
+                callback = symbol;
+                symbol = false;
+            }
+            let reconnect = () => {
+                if ( Binance.options.reconnect ) fLiquidationStream( symbol, callback );
+            };
+            const endpoint = symbol ? `${ symbol.toLowerCase() }@forceOrder` : '!forceOrder@arr'
+            let subscription = futuresSubscribeSingle( endpoint, data => callback( fLiquidationConvertData( data ) ), { reconnect } );
             return subscription.endpoint;
         },
 
