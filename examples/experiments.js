@@ -4,7 +4,7 @@
   const WebSocket = require('ws');
   let streams = [];
   let markets = [];
-  let prevDay = await axios.get('https://api.binance.com/api/v1/ticker/24hr');
+  let prevDay = await axios.get('https://api.binance.com/api/v3/ticker/24hr');
   for ( let obj of prevDay.data ) {
     markets.push(obj.symbol);
     streams.push(obj.symbol.toLowerCase()+'@aggTrade');
