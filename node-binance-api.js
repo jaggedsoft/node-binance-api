@@ -2574,7 +2574,7 @@ let api = function Binance( options = {} ) {
         /**
         * Get agg trades for given symbol
         * @param {string} symbol - the symbol
-        * @param {object} options - addtional optoins
+        * @param {object} options - additional optoins
         * @param {function} callback - the callback function
         * @return {promise or undefined} - omitting the callback returns a promise
         */
@@ -2589,10 +2589,10 @@ let api = function Binance( options = {} ) {
                             resolve( response );
                         }
                     }
-                    marketRequest( base + 'v3/aggTrades', parameters, callback );
+                    publicRequest( base + 'v3/aggTrades', parameters, callback );
                 } )
             } else {
-                marketRequest( base + 'v3/aggTrades', parameters, callback );
+                publicRequest( base + 'v3/aggTrades', parameters, callback );
             }
         },
 
