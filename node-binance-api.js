@@ -3475,7 +3475,7 @@ let api = function Binance( options = {} ) {
             }
 
             let handleFuturesKlineStream = kline => {
-                let symbol = kline.s;
+                let symbol = kline.s, interval = kline.k.i;
                 if ( !Binance.futuresMeta[symbol][interval].timestamp ) {
                     if ( typeof ( Binance.futuresKlineQueue[symbol][interval] ) !== 'undefined' && kline !== null ) {
                         Binance.futuresKlineQueue[symbol][interval].push( kline );
@@ -3884,7 +3884,7 @@ let api = function Binance( options = {} ) {
                 }
 
                 let handleKlineStreamData = kline => {
-                    let symbol = kline.s;
+                    let symbol = kline.s, interval = kline.k.i;
                     if ( !Binance.info[symbol][interval].timestamp ) {
                         if ( typeof ( Binance.klineQueue[symbol][interval] ) !== 'undefined' && kline !== null ) {
                             Binance.klineQueue[symbol][interval].push( kline );
