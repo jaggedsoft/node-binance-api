@@ -86,7 +86,7 @@ let api = function Binance( options = {} ) {
             if ( typeof urls.fstreamSingle === 'string' ) fstreamSingle = urls.fstreamSingle;
         }
         if ( Binance.options.useServerTime ) {
-            apiRequest( base + 'v3/time', {}, function ( error, response ) {
+            publicRequest( base + 'v3/time', {}, function ( error, response ) {
                 Binance.info.timeOffset = response.serverTime - new Date().getTime();
                 //Binance.options.log("server time set: ", response.serverTime, Binance.info.timeOffset);
                 if ( callback ) callback();
@@ -2534,14 +2534,14 @@ let api = function Binance( options = {} ) {
                             resolve( response );
                         }
                     }
-                    apiRequest( base + 'v3/time', {}, function ( error, response ) {
+                    publicRequest( base + 'v3/time', {}, function ( error, response ) {
                         Binance.info.timeOffset = response.serverTime - new Date().getTime();
                         //Binance.options.log("server time set: ", response.serverTime, Binance.info.timeOffset);
                         callback( error, response );
                     } );
                 } )
             } else {
-                apiRequest( base + 'v3/time', {}, function ( error, response ) {
+                publicRequest( base + 'v3/time', {}, function ( error, response ) {
                     Binance.info.timeOffset = response.serverTime - new Date().getTime();
                     //Binance.options.log("server time set: ", response.serverTime, Binance.info.timeOffset);
                     callback( error, response );
@@ -2550,7 +2550,7 @@ let api = function Binance( options = {} ) {
         },
 
         /**
-        * Gets the time
+        * Get Binance server time
         * @param {function} callback - the callback function
         * @return {promise or undefined} - omitting the callback returns a promise
         */
@@ -2564,10 +2564,10 @@ let api = function Binance( options = {} ) {
                             resolve( response );
                         }
                     }
-                    apiRequest( base + 'v3/time', {}, callback );
+                    publicRequest( base + 'v3/time', {}, callback );
                 } )
             } else {
-                apiRequest( base + 'v3/time', {}, callback );
+                publicRequest( base + 'v3/time', {}, callback );
             }
         },
 
