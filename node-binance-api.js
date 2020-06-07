@@ -54,6 +54,7 @@ let api = function Binance( options = {} ) {
         reconnect: true,
         verbose: false,
         test: false,
+        hedgeMode: false,
         log: function ( ...args ) {
             console.log( Array.prototype.slice.call( args ) );
         }
@@ -71,6 +72,7 @@ let api = function Binance( options = {} ) {
         if ( typeof Binance.options.useServerTime === 'undefined' ) Binance.options.useServerTime = default_options.useServerTime;
         if ( typeof Binance.options.reconnect === 'undefined' ) Binance.options.reconnect = default_options.reconnect;
         if ( typeof Binance.options.test === 'undefined' ) Binance.options.test = default_options.test;
+        if ( typeof Binance.options.hedgeMode === 'undefined' ) Binance.options.hedgeMode = default_options.hedgeMode;
         if ( typeof Binance.options.log === 'undefined' ) Binance.options.log = default_options.log;
         if ( typeof Binance.options.verbose === 'undefined' ) Binance.options.verbose = default_options.verbose;
         if ( typeof Binance.options.urls !== 'undefined' ) {
@@ -377,6 +379,10 @@ let api = function Binance( options = {} ) {
         params.symbol = symbol;
         params.side = side;
         params.quantity = quantity;
+        // if in the binance futures setting Hedged mode is active, positionSide parameter is mandatory
+        if( Binance.options.hedgeMode ){
+            params.positionSide = side === 'BUY' ? 'LONG' : 'SHORT';
+        }
         // LIMIT STOP MARKET STOP_MARKET TAKE_PROFIT TAKE_PROFIT_MARKET
         // reduceOnly stopPrice
         if ( price ) {
