@@ -812,14 +812,14 @@ let api = function Binance( options = {} ) {
                 host: parseProxy( socksproxy )[1],
                 port: parseProxy( socksproxy )[2]
             } );
-            ws = new WebSocket( ( ( Binance.test )?testNetFstream:fstream ) + queryParams, { agent } );
+            ws = new WebSocket( ( ( Binance.options.test )?testNetFstream:fstream ) + queryParams, { agent } );
         } else if ( httpsproxy !== false ) {
             if ( Binance.options.verbose ) Binance.options.log( `futuresSubscribe: using proxy server ${ httpsproxy }` );
             let config = url.parse( httpsproxy );
             let agent = new HttpsProxyAgent( config );
-            ws = new WebSocket( ( ( Binance.test )?testNetFstream:fstream ) + queryParams, { agent } );
+            ws = new WebSocket( ( ( Binance.options.test )?testNetFstream:fstream ) + queryParams, { agent } );
         } else {
-            ws = new WebSocket( ( ( Binance.test )?testNetFstream:fstream ) + queryParams );
+            ws = new WebSocket( ( ( Binance.options.test )?testNetFstream:fstream ) + queryParams );
         }
 
         ws.reconnect = Binance.options.reconnect;
