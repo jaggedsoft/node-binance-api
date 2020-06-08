@@ -31,6 +31,8 @@ let api = function Binance( options = {} ) {
     let fapiTest = 'https://testnet.binancefuture.com/fapi/';
     let fstream = 'wss://fstream.binance.com/stream?streams=';
     let fstreamSingle = 'wss://fstream.binance.com/ws/';
+    let testNetFstream = 'wss://stream.binancefuture.com/stream?streams=';
+    let testNetFstreamSingle = 'wss://stream.binancefuture.com/ws/';
     let stream = 'wss://stream.binance.com:9443/ws/';
     let combineStream = 'wss://stream.binance.com:9443/stream?streams=';
     const userAgent = 'Mozilla/4.0 (compatible; Node Binance API)';
@@ -54,6 +56,7 @@ let api = function Binance( options = {} ) {
         reconnect: true,
         verbose: false,
         test: false,
+        hedgeMode: false,
         log: function ( ...args ) {
             console.log( Array.prototype.slice.call( args ) );
         }
@@ -71,6 +74,7 @@ let api = function Binance( options = {} ) {
         if ( typeof Binance.options.useServerTime === 'undefined' ) Binance.options.useServerTime = default_options.useServerTime;
         if ( typeof Binance.options.reconnect === 'undefined' ) Binance.options.reconnect = default_options.reconnect;
         if ( typeof Binance.options.test === 'undefined' ) Binance.options.test = default_options.test;
+        if ( typeof Binance.options.hedgeMode === 'undefined' ) Binance.options.hedgeMode = default_options.hedgeMode;
         if ( typeof Binance.options.log === 'undefined' ) Binance.options.log = default_options.log;
         if ( typeof Binance.options.verbose === 'undefined' ) Binance.options.verbose = default_options.verbose;
         if ( typeof Binance.options.urls !== 'undefined' ) {
@@ -84,6 +88,8 @@ let api = function Binance( options = {} ) {
             if ( typeof urls.combineStream === 'string' ) combineStream = urls.combineStream;
             if ( typeof urls.fstream === 'string' ) fstream = urls.fstream;
             if ( typeof urls.fstreamSingle === 'string' ) fstreamSingle = urls.fstreamSingle;
+            if ( typeof urls.testNetFstream === 'string' ) testNetFstream = urls.testNetFstream;
+            if ( typeof urls.testNetFstreamSingle === 'string' ) testNetFstreamSingle = urls.testNetFstreamSingle;
         }
         if ( Binance.options.useServerTime ) {
             publicRequest( base + 'v3/time', {}, function ( error, response ) {
@@ -377,6 +383,10 @@ let api = function Binance( options = {} ) {
         params.symbol = symbol;
         params.side = side;
         params.quantity = quantity;
+        // if in the binance futures setting Hedged mode is active, positionSide parameter is mandatory
+        if( Binance.options.hedgeMode ){
+            params.positionSide = side === 'BUY' ? 'LONG' : 'SHORT';
+        }
         // LIMIT STOP MARKET STOP_MARKET TAKE_PROFIT TAKE_PROFIT_MARKET
         // reduceOnly stopPrice
         if ( price ) {
@@ -749,14 +759,14 @@ let api = function Binance( options = {} ) {
                 host: parseProxy( socksproxy )[1],
                 port: parseProxy( socksproxy )[2]
             } );
-            ws = new WebSocket( fstreamSingle + endpoint, { agent } );
+            ws = new WebSocket( ( ( Binance.options.test )?testNetFstreamSingle:fstreamSingle ) + endpoint, { agent } );
         } else if ( httpsproxy !== false ) {
             if ( Binance.options.verbose ) Binance.options.log( `futuresSubscribeSingle: using proxy server: ${ agent }` );
             let config = url.parse( httpsproxy );
             let agent = new HttpsProxyAgent( config );
-            ws = new WebSocket( fstreamSingle + endpoint, { agent } );
+            ws = new WebSocket( ( ( Binance.options.test )?testNetFstreamSingle:fstreamSingle ) + endpoint, { agent } );
         } else {
-            ws = new WebSocket( fstreamSingle + endpoint );
+            ws = new WebSocket( ( ( Binance.options.test )?testNetFstreamSingle:fstreamSingle ) + endpoint );
         }
 
         if ( Binance.options.verbose ) Binance.options.log( 'futuresSubscribeSingle: Subscribed to ' + endpoint );
@@ -802,14 +812,14 @@ let api = function Binance( options = {} ) {
                 host: parseProxy( socksproxy )[1],
                 port: parseProxy( socksproxy )[2]
             } );
-            ws = new WebSocket( fstream + queryParams, { agent } );
+            ws = new WebSocket( ( ( Binance.options.test )?testNetFstream:fstream ) + queryParams, { agent } );
         } else if ( httpsproxy !== false ) {
             if ( Binance.options.verbose ) Binance.options.log( `futuresSubscribe: using proxy server ${ httpsproxy }` );
             let config = url.parse( httpsproxy );
             let agent = new HttpsProxyAgent( config );
-            ws = new WebSocket( fstream + queryParams, { agent } );
+            ws = new WebSocket( ( ( Binance.options.test )?testNetFstream:fstream ) + queryParams, { agent } );
         } else {
-            ws = new WebSocket( fstream + queryParams );
+            ws = new WebSocket( ( ( Binance.options.test )?testNetFstream:fstream ) + queryParams );
         }
 
         ws.reconnect = Binance.options.reconnect;
