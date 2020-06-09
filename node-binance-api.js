@@ -8,13 +8,8 @@
  * @module jaggedsoft/node-binance-api
  * @return {object} instance to class object */
 let api = function Binance( options = {} ) {
-    if ( !new.target ) { // Legacy support for calling the constructor without 'new'
-        return new api( options );
-    }
-
-    //'use strict'; // eslint-disable-line no-unused-expressions
+    if ( !new.target ) return new api( options ); // Legacy support for calling the constructor without 'new'
     let Binance = this; // eslint-disable-line consistent-this
-    
     const WebSocket = require( 'ws' );
     const request = require( 'request' );
     const crypto = require( 'crypto' );
@@ -62,7 +57,18 @@ let api = function Binance( options = {} ) {
         }
     };
     Binance.options = default_options;
-    Binance.info = { timeOffset: 0 };
+    Binance.info = {
+        usedWeight: 0,
+        futuresLatency: false,
+        lastRequest: false,
+        lastURL: false,
+        statusCode: 0,
+        orderCount1s: 0,
+        orderCount1m: 0,
+        orderCount1h: 0,
+        orderCount1d: 0,
+        timeOffset: 0
+    };
     Binance.socketHeartbeatInterval = null;
     if ( options ) setOptions( options );
 
@@ -141,6 +147,14 @@ let api = function Binance( options = {} ) {
     }
 
     const reqHandler = cb => ( error, response, body ) => {
+        Binance.info.lastRequest = new Date().getTime();
+        Binance.info.lastURL = response.request.uri.href;
+        Binance.info.statusCode = response.statusCode;
+        Binance.info.usedWeight = response.headers['x-mbx-used-weight-1m'] || 0;
+        Binance.info.orderCount1s = response.headers['x-mbx-order-count-1s'] || 0;
+        Binance.info.orderCount1m = response.headers['x-mbx-order-count-1m'] || 0;
+        Binance.info.orderCount1h = response.headers['x-mbx-order-count-1h'] || 0;
+        Binance.info.orderCount1d = response.headers['x-mbx-order-count-1d'] || 0;
         if ( !cb ) return;
         if ( error ) return cb( error, {} );
         if ( response && response.statusCode !== 200 ) return cb( response, {} );
@@ -261,7 +275,7 @@ let api = function Binance( options = {} ) {
     };
 
     /**
-     * Create a signed http request
+     * Create a signed spot order
      * @param {string} side - BUY or SELL
      * @param {string} symbol - The symbol to buy or sell
      * @param {string} quantity - The quantity to buy or sell
@@ -323,7 +337,7 @@ let api = function Binance( options = {} ) {
     };
 
     /**
-     * Create a signed http request
+     * Create a signed margin order
      * @param {string} side - BUY or SELL
      * @param {string} symbol - The symbol to buy or sell
      * @param {string} quantity - The quantity to buy or sell
@@ -439,6 +453,11 @@ let api = function Binance( options = {} ) {
                 request( addProxy( opt ), ( error, response, body ) => {
                     if ( error ) return reject( error );
                     try {
+                        Binance.info.lastRequest = new Date().getTime();
+                        Binance.info.statusCode = response.statusCode;
+                        Binance.info.lastURL = response.request.uri.href;
+                        Binance.info.usedWeight = response.headers['x-mbx-used-weight-1m'] || 0;
+                        Binance.info.futuresLatency = response.headers['x-response-time'] || 0;
                         if ( !error && response.statusCode == 200 ) return resolve( JSON.parse( body ) );
                         if ( typeof response.body !== 'undefined' ) {
                             return resolve( JSON.parse( response.body ) );
@@ -458,9 +477,7 @@ let api = function Binance( options = {} ) {
      * No-operation function
      * @return {undefined}
      */
-    const noop = () => {
-        // Do nothing
-    };
+    const noop = () => { }; // Do nothing.
 
     /**
      * Reworked Tuitio's heartbeat code into a shared single interval tick
@@ -1719,25 +1736,49 @@ let api = function Binance( options = {} ) {
         * @param {string} key - the key to set
         * @return {undefined}
         */
-        getOption: function ( key ) {
-            return Binance.options[key];
-        },
+        getOption: key => Binance.options[key],
 
         /**
         * Returns the entire info object
         * @return {object} - the info object
         */
-        getInfo: function() {
-            return Binance.info;
-        },
+        getInfo: () => Binance.info,
+
+        /**
+        * Returns the used weight from the last request
+        * @return {object} - 1m weight used
+        */
+        usedWeight: () => Binance.info.usedWeight,
+
+        /**
+        * Returns the status code from the last http response
+        * @return {object} - status code
+        */
+        statusCode: () => Binance.info.statusCode,
+
+        /**
+        * Returns the ping time from the last futures request
+        * @return {object} - latency/ping (2ms)
+        */
+        futuresLatency: () => Binance.info.futuresLatency,
+
+        /**
+        * Returns the complete URL from the last request
+        * @return {object} - http address including query string
+        */
+        lastURL: () => Binance.info.lastURL,
+
+        /**
+        * Returns the order count from the last request
+        * @return {object} - orders allowed per 1m
+        */
+        orderCount: () => Binance.info.orderCount1m,
 
         /**
         * Returns the entire options object
         * @return {object} - the options object
         */
-        getOptions: function() {
-            return Binance.options;
-        },
+        getOptions: () => Binance.options,
 
         /**
         * Gets an option given a key
@@ -2893,7 +2934,7 @@ let api = function Binance( options = {} ) {
         },
         
         futuresPositionRisk: async ( params = {} ) => {
-            return promiseRequest( 'v1/positionRisk', params, {base:fapi, type:'SIGNED'} );
+            return promiseRequest( 'v2/positionRisk', params, {base:fapi, type:'SIGNED'} );
         },
 
         futuresFundingRate: async ( symbol, params = {} ) => {
@@ -2938,11 +2979,11 @@ let api = function Binance( options = {} ) {
         },
 
         futuresBalance: async ( params = {} ) => {
-            return promiseRequest( 'v1/balance', params, {base:fapi, type:'SIGNED'} );
+            return promiseRequest( 'v2/balance', params, {base:fapi, type:'SIGNED'} );
         },
 
         futuresAccount: async ( params = {} ) => {
-            return promiseRequest( 'v1/account', params, {base:fapi, type:'SIGNED'} );
+            return promiseRequest( 'v2/account', params, {base:fapi, type:'SIGNED'} );
         },
 
         futuresDepth: async ( symbol, params = {} ) => {
