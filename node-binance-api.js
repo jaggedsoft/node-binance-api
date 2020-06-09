@@ -8,13 +8,8 @@
  * @module jaggedsoft/node-binance-api
  * @return {object} instance to class object */
 let api = function Binance( options = {} ) {
-    if ( !new.target ) { // Legacy support for calling the constructor without 'new'
-        return new api( options );
-    }
-
-    //'use strict'; // eslint-disable-line no-unused-expressions
+    if ( !new.target ) return new api( options ); // Legacy support for calling the constructor without 'new'
     let Binance = this; // eslint-disable-line consistent-this
-    
     const WebSocket = require( 'ws' );
     const request = require( 'request' );
     const crypto = require( 'crypto' );
@@ -31,6 +26,8 @@ let api = function Binance( options = {} ) {
     let fapiTest = 'https://testnet.binancefuture.com/fapi/';
     let fstream = 'wss://fstream.binance.com/stream?streams=';
     let fstreamSingle = 'wss://fstream.binance.com/ws/';
+    let fstreamSingleTest = 'wss://stream.binancefuture.com/ws/';
+    let fstreamTest = 'wss://stream.binancefuture.com/stream?streams=';
     let stream = 'wss://stream.binance.com:9443/ws/';
     let combineStream = 'wss://stream.binance.com:9443/stream?streams=';
     const userAgent = 'Mozilla/4.0 (compatible; Node Binance API)';
@@ -54,12 +51,24 @@ let api = function Binance( options = {} ) {
         reconnect: true,
         verbose: false,
         test: false,
+        hedgeMode: false,
         log: function ( ...args ) {
             console.log( Array.prototype.slice.call( args ) );
         }
     };
     Binance.options = default_options;
-    Binance.info = { timeOffset: 0 };
+    Binance.info = {
+        usedWeight: 0,
+        futuresLatency: false,
+        lastRequest: false,
+        lastURL: false,
+        statusCode: 0,
+        orderCount1s: 0,
+        orderCount1m: 0,
+        orderCount1h: 0,
+        orderCount1d: 0,
+        timeOffset: 0
+    };
     Binance.socketHeartbeatInterval = null;
     if ( options ) setOptions( options );
 
@@ -71,6 +80,7 @@ let api = function Binance( options = {} ) {
         if ( typeof Binance.options.useServerTime === 'undefined' ) Binance.options.useServerTime = default_options.useServerTime;
         if ( typeof Binance.options.reconnect === 'undefined' ) Binance.options.reconnect = default_options.reconnect;
         if ( typeof Binance.options.test === 'undefined' ) Binance.options.test = default_options.test;
+        if ( typeof Binance.options.hedgeMode === 'undefined' ) Binance.options.hedgeMode = default_options.hedgeMode;
         if ( typeof Binance.options.log === 'undefined' ) Binance.options.log = default_options.log;
         if ( typeof Binance.options.verbose === 'undefined' ) Binance.options.verbose = default_options.verbose;
         if ( typeof Binance.options.urls !== 'undefined' ) {
@@ -84,9 +94,11 @@ let api = function Binance( options = {} ) {
             if ( typeof urls.combineStream === 'string' ) combineStream = urls.combineStream;
             if ( typeof urls.fstream === 'string' ) fstream = urls.fstream;
             if ( typeof urls.fstreamSingle === 'string' ) fstreamSingle = urls.fstreamSingle;
+            if ( typeof urls.fstreamTest === 'string' ) fstreamTest = urls.fstreamTest;
+            if ( typeof urls.fstreamSingleTest === 'string' ) fstreamSingleTest = urls.fstreamSingleTest;
         }
         if ( Binance.options.useServerTime ) {
-            apiRequest( base + 'v3/time', {}, function ( error, response ) {
+            publicRequest( base + 'v3/time', {}, function ( error, response ) {
                 Binance.info.timeOffset = response.serverTime - new Date().getTime();
                 //Binance.options.log("server time set: ", response.serverTime, Binance.info.timeOffset);
                 if ( callback ) callback();
@@ -135,6 +147,14 @@ let api = function Binance( options = {} ) {
     }
 
     const reqHandler = cb => ( error, response, body ) => {
+        Binance.info.lastRequest = new Date().getTime();
+        Binance.info.lastURL = response.request.uri.href;
+        Binance.info.statusCode = response.statusCode;
+        Binance.info.usedWeight = response.headers['x-mbx-used-weight-1m'] || 0;
+        Binance.info.orderCount1s = response.headers['x-mbx-order-count-1s'] || 0;
+        Binance.info.orderCount1m = response.headers['x-mbx-order-count-1m'] || 0;
+        Binance.info.orderCount1h = response.headers['x-mbx-order-count-1h'] || 0;
+        Binance.info.orderCount1d = response.headers['x-mbx-order-count-1d'] || 0;
         if ( !cb ) return;
         if ( error ) return cb( error, {} );
         if ( response && response.statusCode !== 200 ) return cb( response, {} );
@@ -255,7 +275,7 @@ let api = function Binance( options = {} ) {
     };
 
     /**
-     * Create a signed http request
+     * Create a signed spot order
      * @param {string} side - BUY or SELL
      * @param {string} symbol - The symbol to buy or sell
      * @param {string} quantity - The quantity to buy or sell
@@ -317,7 +337,7 @@ let api = function Binance( options = {} ) {
     };
 
     /**
-     * Create a signed http request
+     * Create a signed margin order
      * @param {string} side - BUY or SELL
      * @param {string} symbol - The symbol to buy or sell
      * @param {string} quantity - The quantity to buy or sell
@@ -377,6 +397,10 @@ let api = function Binance( options = {} ) {
         params.symbol = symbol;
         params.side = side;
         params.quantity = quantity;
+        // if in the binance futures setting Hedged mode is active, positionSide parameter is mandatory
+        if( Binance.options.hedgeMode ){
+            params.positionSide = side === 'BUY' ? 'LONG' : 'SHORT';
+        }
         // LIMIT STOP MARKET STOP_MARKET TAKE_PROFIT TAKE_PROFIT_MARKET
         // reduceOnly stopPrice
         if ( price ) {
@@ -429,6 +453,11 @@ let api = function Binance( options = {} ) {
                 request( addProxy( opt ), ( error, response, body ) => {
                     if ( error ) return reject( error );
                     try {
+                        Binance.info.lastRequest = new Date().getTime();
+                        Binance.info.statusCode = response.statusCode;
+                        Binance.info.lastURL = response.request.uri.href;
+                        Binance.info.usedWeight = response.headers['x-mbx-used-weight-1m'] || 0;
+                        Binance.info.futuresLatency = response.headers['x-response-time'] || 0;
                         if ( !error && response.statusCode == 200 ) return resolve( JSON.parse( body ) );
                         if ( typeof response.body !== 'undefined' ) {
                             return resolve( JSON.parse( response.body ) );
@@ -448,9 +477,7 @@ let api = function Binance( options = {} ) {
      * No-operation function
      * @return {undefined}
      */
-    const noop = () => {
-        // Do nothing
-    };
+    const noop = () => { }; // Do nothing.
 
     /**
      * Reworked Tuitio's heartbeat code into a shared single interval tick
@@ -749,14 +776,14 @@ let api = function Binance( options = {} ) {
                 host: parseProxy( socksproxy )[1],
                 port: parseProxy( socksproxy )[2]
             } );
-            ws = new WebSocket( fstreamSingle + endpoint, { agent } );
+            ws = new WebSocket( ( Binance.options.test ? fstreamSingleTest : fstreamSingle ) + endpoint, { agent } );
         } else if ( httpsproxy !== false ) {
             if ( Binance.options.verbose ) Binance.options.log( `futuresSubscribeSingle: using proxy server: ${ agent }` );
             let config = url.parse( httpsproxy );
             let agent = new HttpsProxyAgent( config );
-            ws = new WebSocket( fstreamSingle + endpoint, { agent } );
+            ws = new WebSocket( ( Binance.options.test ? fstreamSingleTest : fstreamSingle ) + endpoint, { agent } );
         } else {
-            ws = new WebSocket( fstreamSingle + endpoint );
+            ws = new WebSocket( ( Binance.options.test ? fstreamSingleTest : fstreamSingle ) + endpoint );
         }
 
         if ( Binance.options.verbose ) Binance.options.log( 'futuresSubscribeSingle: Subscribed to ' + endpoint );
@@ -802,14 +829,14 @@ let api = function Binance( options = {} ) {
                 host: parseProxy( socksproxy )[1],
                 port: parseProxy( socksproxy )[2]
             } );
-            ws = new WebSocket( fstream + queryParams, { agent } );
+            ws = new WebSocket( ( Binance.options.test ? fstreamTest : fstream ) + queryParams, { agent } );
         } else if ( httpsproxy !== false ) {
             if ( Binance.options.verbose ) Binance.options.log( `futuresSubscribe: using proxy server ${ httpsproxy }` );
             let config = url.parse( httpsproxy );
             let agent = new HttpsProxyAgent( config );
-            ws = new WebSocket( fstream + queryParams, { agent } );
+            ws = new WebSocket( ( Binance.options.test ? fstreamTest : fstream ) + queryParams, { agent } );
         } else {
-            ws = new WebSocket( fstream + queryParams );
+            ws = new WebSocket( ( Binance.options.test ? fstreamTest : fstream ) + queryParams );
         }
 
         ws.reconnect = Binance.options.reconnect;
@@ -1709,25 +1736,49 @@ let api = function Binance( options = {} ) {
         * @param {string} key - the key to set
         * @return {undefined}
         */
-        getOption: function ( key ) {
-            return Binance.options[key];
-        },
+        getOption: key => Binance.options[key],
 
         /**
         * Returns the entire info object
         * @return {object} - the info object
         */
-        getInfo: function() {
-            return Binance.info;
-        },
+        getInfo: () => Binance.info,
+
+        /**
+        * Returns the used weight from the last request
+        * @return {object} - 1m weight used
+        */
+        usedWeight: () => Binance.info.usedWeight,
+
+        /**
+        * Returns the status code from the last http response
+        * @return {object} - status code
+        */
+        statusCode: () => Binance.info.statusCode,
+
+        /**
+        * Returns the ping time from the last futures request
+        * @return {object} - latency/ping (2ms)
+        */
+        futuresLatency: () => Binance.info.futuresLatency,
+
+        /**
+        * Returns the complete URL from the last request
+        * @return {object} - http address including query string
+        */
+        lastURL: () => Binance.info.lastURL,
+
+        /**
+        * Returns the order count from the last request
+        * @return {object} - orders allowed per 1m
+        */
+        orderCount: () => Binance.info.orderCount1m,
 
         /**
         * Returns the entire options object
         * @return {object} - the options object
         */
-        getOptions: function() {
-            return Binance.options;
-        },
+        getOptions: () => Binance.options,
 
         /**
         * Gets an option given a key
@@ -2534,14 +2585,14 @@ let api = function Binance( options = {} ) {
                             resolve( response );
                         }
                     }
-                    apiRequest( base + 'v3/time', {}, function ( error, response ) {
+                    publicRequest( base + 'v3/time', {}, function ( error, response ) {
                         Binance.info.timeOffset = response.serverTime - new Date().getTime();
                         //Binance.options.log("server time set: ", response.serverTime, Binance.info.timeOffset);
                         callback( error, response );
                     } );
                 } )
             } else {
-                apiRequest( base + 'v3/time', {}, function ( error, response ) {
+                publicRequest( base + 'v3/time', {}, function ( error, response ) {
                     Binance.info.timeOffset = response.serverTime - new Date().getTime();
                     //Binance.options.log("server time set: ", response.serverTime, Binance.info.timeOffset);
                     callback( error, response );
@@ -2550,7 +2601,7 @@ let api = function Binance( options = {} ) {
         },
 
         /**
-        * Gets the time
+        * Get Binance server time
         * @param {function} callback - the callback function
         * @return {promise or undefined} - omitting the callback returns a promise
         */
@@ -2564,10 +2615,10 @@ let api = function Binance( options = {} ) {
                             resolve( response );
                         }
                     }
-                    apiRequest( base + 'v3/time', {}, callback );
+                    publicRequest( base + 'v3/time', {}, callback );
                 } )
             } else {
-                apiRequest( base + 'v3/time', {}, callback );
+                publicRequest( base + 'v3/time', {}, callback );
             }
         },
 
@@ -2883,7 +2934,7 @@ let api = function Binance( options = {} ) {
         },
         
         futuresPositionRisk: async ( params = {} ) => {
-            return promiseRequest( 'v1/positionRisk', params, {base:fapi, type:'SIGNED'} );
+            return promiseRequest( 'v2/positionRisk', params, {base:fapi, type:'SIGNED'} );
         },
 
         futuresFundingRate: async ( symbol, params = {} ) => {
@@ -2928,11 +2979,11 @@ let api = function Binance( options = {} ) {
         },
 
         futuresBalance: async ( params = {} ) => {
-            return promiseRequest( 'v1/balance', params, {base:fapi, type:'SIGNED'} );
+            return promiseRequest( 'v2/balance', params, {base:fapi, type:'SIGNED'} );
         },
 
         futuresAccount: async ( params = {} ) => {
-            return promiseRequest( 'v1/account', params, {base:fapi, type:'SIGNED'} );
+            return promiseRequest( 'v2/account', params, {base:fapi, type:'SIGNED'} );
         },
 
         futuresDepth: async ( symbol, params = {} ) => {
@@ -3475,7 +3526,7 @@ let api = function Binance( options = {} ) {
             }
 
             let handleFuturesKlineStream = kline => {
-                let symbol = kline.s;
+                let symbol = kline.s, interval = kline.k.i;
                 if ( !Binance.futuresMeta[symbol][interval].timestamp ) {
                     if ( typeof ( Binance.futuresKlineQueue[symbol][interval] ) !== 'undefined' && kline !== null ) {
                         Binance.futuresKlineQueue[symbol][interval].push( kline );
@@ -3884,7 +3935,7 @@ let api = function Binance( options = {} ) {
                 }
 
                 let handleKlineStreamData = kline => {
-                    let symbol = kline.s;
+                    let symbol = kline.s, interval = kline.k.i;
                     if ( !Binance.info[symbol][interval].timestamp ) {
                         if ( typeof ( Binance.klineQueue[symbol][interval] ) !== 'undefined' && kline !== null ) {
                             Binance.klineQueue[symbol][interval].push( kline );

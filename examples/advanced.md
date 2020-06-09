@@ -1,4 +1,4 @@
-![Downloads](https://img.shields.io/npm/dt/node-binance-api.svg?style=for-the-badge&maxAge=86400) ![Stars](https://img.shields.io/github/stars/jaggedsoft/node-binance-api.svg?style=for-the-badge&label=Stars) ![Contributors](https://img.shields.io/github/contributors/jaggedsoft/node-binance-api.svg?style=for-the-badge&maxAge=86400) ![Issues](https://img.shields.io/github/issues/jaggedsoft/node-binance-api.svg?style=for-the-badge&maxAge=86400) ![Issue Closure](https://img.shields.io/issuestats/i/github/jaggedsoft/node-binance-api.svg?style=for-the-badge&maxAge=86400)
+![Downloads](https://img.shields.io/npm/dt/node-binance-api.svg?style=for-the-badge&maxAge=86400) ![Stars](https://img.shields.io/github/stars/jaggedsoft/node-binance-api.svg?style=for-the-badge&label=Stars) ![Contributors](https://img.shields.io/github/contributors/jaggedsoft/node-binance-api.svg?style=for-the-badge&maxAge=86400) ![Issues](https://img.shields.io/github/issues/jaggedsoft/node-binance-api.svg?style=for-the-badge&maxAge=86400) <!-- ![Issue Closure](https://img.shields.io/issuestats/i/github/jaggedsoft/node-binance-api.svg?style=for-the-badge&maxAge=86400) -->
 ## Advanced Examples
 
 #### exchangeInfo(): Pull minimum order size, quantity, etc.
@@ -48,6 +48,29 @@ if ( price * amount < minNotional ) {
 
 // Round to stepSize
 amount = binance.roundStep(amount, stepSize);
+```
+#### Show Weight Used From Last Request
+> Note: Weight is not shared between Spot & Futures API
+```js
+const responseInfo = () => `[${ binance.statusCode() }] usedWeight:${ binance.usedWeight() } ${ binance.lastURL() }`;
+await binance.time();
+console.info( responseInfo() );
+await binance.exchangeInfo();
+console.info( responseInfo() );
+await binance.futuresExchangeInfo();
+console.info( responseInfo() );
+console.info( `Futures ping time: ${ binance.futuresLatency() } latency` );
+
+// Output:
+// [200] usedWeight:1 url: https://api.binance.com/api/v3/time
+// [200] usedWeight:2 url: https://api.binance.com/api/v3/exchangeInfo
+// [200] usedWeight:1 url: https://fapi.binance.com/fapi/v1/exchangeInfo
+// Futures ping time: 0ms latency
+
+// Note: binance.getInfo() includes orderCount1s, orderCount1m, orderCount1h, orderCount1d and more.
+// binance.usedWeight() defaults to X-MBX-USED-WEIGHT-1m
+// binance.orderCount() defaults to X-MBX-ORDER-COUNT-1m
+// binance.statusCode() usedWeight() and lastURL() are shortcuts. lastRequest is the timestamp of the last response.
 ```
 
 #### Show API Rate limits
