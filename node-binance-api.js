@@ -366,6 +366,7 @@ let api = function Binance( options = {} ) {
         if ( typeof flags.timeInForce !== 'undefined' ) opt.timeInForce = flags.timeInForce;
         if ( typeof flags.newOrderRespType !== 'undefined' ) opt.newOrderRespType = flags.newOrderRespType;
         if ( typeof flags.newClientOrderId !== 'undefined' ) opt.newClientOrderId = flags.newClientOrderId;
+        if ( typeof flags.sideEffectType !== 'undefined' ) opt.sideEffectType = flags.sideEffectType;
 
         /*
          * STOP_LOSS
