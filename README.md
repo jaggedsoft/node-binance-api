@@ -46,6 +46,51 @@ const binance = new Binance().options({
 
 # Binance Futures API
 
+#### Futures Prices
+```js
+console.info( await binance.futuresPrices() );
+```
+
+#### Futures Account Balances & Positions
+```js
+console.info( await binance.futuresAccount() );
+```
+
+#### Futures Balances
+```js
+console.info( await binance.futuresBalance() );
+```
+
+#### Futures Limit Buy
+```js
+console.info( await binance.futuresBuy( 'BTCUSDT', 0.1, 8222 ) );
+```
+
+#### Futures Limit Sell
+```js
+console.info( await binance.futuresSell( 'BTCUSDT', 0.5, 11111 ) );
+```
+
+#### Futures Market Buy
+```js
+console.info( await binance.futuresMarketBuy( 'BNBUSDT', 5 ) );
+```
+
+#### Futures Market Sell
+```js
+console.info( await binance.futuresMarketSell( 'TRXUSDT', 1 ) );
+```
+#### Futures Market Orders: Get the fill price using newOrderRespType
+```js
+console.info( await binance.futuresMarketBuy( 'BNBUSDT', amount, { newOrderRespType: 'RESULT' } ) );
+```
+
+#### Futures reduceOnly Order Example
+```js
+if ( side == 'LONG' ) order = await binance.futuresMarketSell( obj.symbol, amount, {reduceOnly: true} )
+else order = await binance.futuresMarketBuy( obj.symbol, amount, {reduceOnly: true} )
+```
+
 #### Get Futures Positions
 ```js
 console.info( await binance.futuresPositionRisk() );
@@ -64,42 +109,6 @@ for ( let market of markets ) {
 ```
 </details>
 
-#### Futures Account Balances & Positions
-```js
-console.info( await binance.futuresAccount() );
-```
-
-#### Futures Balances
-```js
-console.info( await binance.futuresBalance() );
-```
-
-#### Futures Market Buy
-```js
-console.info( await binance.futuresMarketBuy( 'BNBUSDT', 5 ) );
-```
-
-#### Futures Market Sell
-```js
-console.info( await binance.futuresMarketSell( 'TRXUSDT', 1 ) );
-```
-
-#### Futures Limit Buy
-```js
-console.info( await binance.futuresBuy( 'BTCUSDT', 0.1, 8222 ) );
-```
-
-#### Futures Limit Sell
-```js
-console.info( await binance.futuresSell( 'BTCUSDT', 0.5, 11111 ) );
-```
-
-#### Futures reduceOnly Order Example
-```js
-if ( side == 'LONG' ) order = await binance.futuresMarketSell( obj.symbol, amount, {reduceOnly: true} )
-else order = await binance.futuresMarketBuy( obj.symbol, amount, {reduceOnly: true} )
-```
-
 #### Adjust Leverage (1-125x)
 ```js
 console.info( await binance.futuresLeverage( 'ETHUSDT', 50 ) );
@@ -114,11 +123,6 @@ console.info( await binance.futuresMarginType( 'BTCUSDT', 'ISOLATED' ) );
 ```js
 // Type: 1: Add postion margin，2: Reduce postion margin
 console.info( await binance.futuresPositionMargin( "TRXUSDT", amount, type ) );
-```
-
-#### Futures Prices
-```js
-console.info( await binance.futuresPrices() );
 ```
 
 ```js
