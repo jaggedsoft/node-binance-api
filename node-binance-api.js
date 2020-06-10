@@ -2085,12 +2085,16 @@ let api = function Binance( options = {} ) {
         /**
         * Gets all order of a given symbol
         * @param {string} symbol - the symbol
-        * @param {function} callback - the callback function
+        * @param {function} callback - the callback function (can also accept options)
         * @param {object} options - additional options
         * @return {promise or undefined} - omitting the callback returns a promise
         */
         allOrders: function ( symbol, callback, options = {} ) {
-            let parameters = Object.assign( { symbol: symbol }, options );
+            let parameters = Object.assign( { symbol }, options );
+            if ( typeof callback == 'object' ) { // Allow second parameter to be options
+                options = callback;
+                callback = false;
+            }
             if ( !callback ) {
                 return new Promise( ( resolve, reject ) => {
                     callback = ( error, response ) => {
