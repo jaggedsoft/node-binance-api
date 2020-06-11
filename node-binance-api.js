@@ -148,7 +148,7 @@ let api = function Binance( options = {} ) {
 
     const reqHandler = cb => ( error, response, body ) => {
         Binance.info.lastRequest = new Date().getTime();
-        Binance.info.lastURL = response.request.uri.href;
+        if ( response && response.request ) Binance.info.lastURL = response.request.uri.href;
         Binance.info.statusCode = response.statusCode;
         Binance.info.usedWeight = response.headers['x-mbx-used-weight-1m'] || 0;
         Binance.info.orderCount1s = response.headers['x-mbx-order-count-1s'] || 0;
@@ -366,6 +366,7 @@ let api = function Binance( options = {} ) {
         if ( typeof flags.timeInForce !== 'undefined' ) opt.timeInForce = flags.timeInForce;
         if ( typeof flags.newOrderRespType !== 'undefined' ) opt.newOrderRespType = flags.newOrderRespType;
         if ( typeof flags.newClientOrderId !== 'undefined' ) opt.newClientOrderId = flags.newClientOrderId;
+        if ( typeof flags.sideEffectType !== 'undefined' ) opt.sideEffectType = flags.sideEffectType;
 
         /*
          * STOP_LOSS
@@ -455,7 +456,7 @@ let api = function Binance( options = {} ) {
                     try {
                         Binance.info.lastRequest = new Date().getTime();
                         Binance.info.statusCode = response.statusCode;
-                        Binance.info.lastURL = response.request.uri.href;
+                        if ( response && response.request ) Binance.info.lastURL = response.request.uri.href;
                         Binance.info.usedWeight = response.headers['x-mbx-used-weight-1m'] || 0;
                         Binance.info.futuresLatency = response.headers['x-response-time'] || 0;
                         if ( !error && response.statusCode == 200 ) return resolve( JSON.parse( body ) );
@@ -2085,12 +2086,16 @@ let api = function Binance( options = {} ) {
         /**
         * Gets all order of a given symbol
         * @param {string} symbol - the symbol
-        * @param {function} callback - the callback function
+        * @param {function} callback - the callback function (can also accept options)
         * @param {object} options - additional options
         * @return {promise or undefined} - omitting the callback returns a promise
         */
         allOrders: function ( symbol, callback, options = {} ) {
-            let parameters = Object.assign( { symbol: symbol }, options );
+            let parameters = Object.assign( { symbol }, options );
+            if ( typeof callback == 'object' ) { // Allow second parameter to be options
+                options = callback;
+                callback = false;
+            }
             if ( !callback ) {
                 return new Promise( ( resolve, reject ) => {
                     callback = ( error, response ) => {
