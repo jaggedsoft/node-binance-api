@@ -148,13 +148,17 @@ let api = function Binance( options = {} ) {
 
     const reqHandler = cb => ( error, response, body ) => {
         Binance.info.lastRequest = new Date().getTime();
-        if ( response && response.request ) Binance.info.lastURL = response.request.uri.href;
-        Binance.info.statusCode = response.statusCode;
-        Binance.info.usedWeight = response.headers['x-mbx-used-weight-1m'] || 0;
-        Binance.info.orderCount1s = response.headers['x-mbx-order-count-1s'] || 0;
-        Binance.info.orderCount1m = response.headers['x-mbx-order-count-1m'] || 0;
-        Binance.info.orderCount1h = response.headers['x-mbx-order-count-1h'] || 0;
-        Binance.info.orderCount1d = response.headers['x-mbx-order-count-1d'] || 0;
+        if ( response ) {
+            Binance.info.statusCode = response.statusCode;
+            if ( response.request ) Binance.info.lastURL = response.request.uri.href;
+            if ( response.headers ) {
+                Binance.info.usedWeight = response.headers['x-mbx-used-weight-1m'] || 0;
+                Binance.info.orderCount1s = response.headers['x-mbx-order-count-1s'] || 0;
+                Binance.info.orderCount1m = response.headers['x-mbx-order-count-1m'] || 0;
+                Binance.info.orderCount1h = response.headers['x-mbx-order-count-1h'] || 0;
+                Binance.info.orderCount1d = response.headers['x-mbx-order-count-1d'] || 0;
+            }
+        }
         if ( !cb ) return;
         if ( error ) return cb( error, {} );
         if ( response && response.statusCode !== 200 ) return cb( response, {} );
@@ -456,9 +460,13 @@ let api = function Binance( options = {} ) {
                     try {
                         Binance.info.lastRequest = new Date().getTime();
                         Binance.info.statusCode = response.statusCode;
-                        if ( response && response.request ) Binance.info.lastURL = response.request.uri.href;
-                        Binance.info.usedWeight = response.headers['x-mbx-used-weight-1m'] || 0;
-                        Binance.info.futuresLatency = response.headers['x-response-time'] || 0;
+                        if ( response ) {
+                            if ( response.request ) Binance.info.lastURL = response.request.uri.href;
+                            if ( response.headers ) {
+                                Binance.info.usedWeight = response.headers['x-mbx-used-weight-1m'] || 0;
+                                Binance.info.futuresLatency = response.headers['x-response-time'] || 0;
+                            }
+                        }
                         if ( !error && response.statusCode == 200 ) return resolve( JSON.parse( body ) );
                         if ( typeof response.body !== 'undefined' ) {
                             return resolve( JSON.parse( response.body ) );
