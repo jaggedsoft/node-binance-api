@@ -149,7 +149,7 @@ let api = function Binance( options = {} ) {
     const reqHandler = cb => ( error, response, body ) => {
         Binance.info.lastRequest = new Date().getTime();
         if ( response ) {
-            Binance.info.statusCode = response.statusCode;
+            Binance.info.statusCode = response.statusCode || 0;
             if ( response.request ) Binance.info.lastURL = response.request.uri.href;
             if ( response.headers ) {
                 Binance.info.usedWeight = response.headers['x-mbx-used-weight-1m'] || 0;
@@ -459,8 +459,8 @@ let api = function Binance( options = {} ) {
                     if ( error ) return reject( error );
                     try {
                         Binance.info.lastRequest = new Date().getTime();
-                        Binance.info.statusCode = response.statusCode;
                         if ( response ) {
+                            Binance.info.statusCode = response.statusCode || 0;
                             if ( response.request ) Binance.info.lastURL = response.request.uri.href;
                             if ( response.headers ) {
                                 Binance.info.usedWeight = response.headers['x-mbx-used-weight-1m'] || 0;
