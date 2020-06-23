@@ -145,6 +145,7 @@ console.info( await binance.futuresLeverageBracket( "LINKUSDT" ) );
 console.info( await binance.futuresIncome() );
 console.info( await binance.futuresCancelAll( "BTCUSDT" ) );
 console.info( await binance.futuresCancel( "BTCUSDT", {orderId: "1025137386"} ) );
+console.info( await binance.futuresCountdownCancelAll( "BTCUSDT", 45000 ) );
 console.info( await binance.futuresOrderStatus( "BTCUSDT", {orderId: "1025137386"} ) );
 console.info( await binance.futuresOpenOrders() );
 console.info( await binance.futuresOpenOrders( "BTCUSDT" ) );
