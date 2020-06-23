@@ -3045,6 +3045,12 @@ let api = function Binance( options = {} ) {
             return promiseRequest( 'v1/allOpenOrders', params, {base:fapi, type:'SIGNED', method:'DELETE'} );
         },
 
+        futuresCountdownCancelAll: async ( symbol, countdownTime = 0, params = {} ) => {
+            params.symbol = symbol;
+            params.countdownTime = countdownTime;
+            return promiseRequest( 'v1/countdownCancelAll', params, {base:fapi, type:'SIGNED', method:'POST'} );
+        },
+
         futuresOpenOrders: async ( symbol = false, params = {} ) => {
             if ( symbol ) params.symbol = symbol;
             return promiseRequest( 'v1/openOrders', params, {base:fapi, type:'SIGNED'} );
