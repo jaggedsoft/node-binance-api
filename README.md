@@ -2010,7 +2010,7 @@ binance.setOption( 'verbose', true );
 
 ***Special thanks to our most frequent or significant contributors:*** bmino, dmzoneill, dmitriz, keith1024
 
-***Thank you to all contributors:*** joelrich, Xodetaetl, PaulMuller, JasonMcz, kirosc, abou7mied, jmacioszek, DoobieD, Eluvade, dbvcode, pavlovdog, usama33, yanislk, learnathoner, vaielab, nickreese, Tuitio, grandmore, itnok, CollinEstes, sethyx, mstijak, MadDeveloper, balthazar, bitoiu, matthewwoop, robaleman, hems and others!
+***Thank you to all contributors:*** meetmangukiya, joelrich, Xodetaetl, PaulMuller, JasonMcz, kirosc, abou7mied, jmacioszek, DoobieD, Eluvade, dbvcode, pavlovdog, usama33, yanislk, learnathoner, vaielab, nickreese, Tuitio, grandmore, itnok, CollinEstes, sethyx, mstijak, MadDeveloper, balthazar, bitoiu, matthewwoop, robaleman, hems and others!
 
 ![Downloads](https://img.shields.io/npm/dt/node-binance-api.svg?style=for-the-badge&maxAge=86400) ![Stars](https://img.shields.io/github/stars/jaggedsoft/node-binance-api.svg?style=for-the-badge&label=Stars) ![Contributors](https://img.shields.io/github/contributors/jaggedsoft/node-binance-api.svg?style=for-the-badge&maxAge=86400)
 [![Stargazers over time](https://starcharts.herokuapp.com/jaggedsoft/node-binance-api.svg)](https://starcharts.herokuapp.com/jaggedsoft/node-binance-api)
