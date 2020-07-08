@@ -223,6 +223,52 @@ binance.futuresTerminate( 'btcusdt@kline_4h' );
 console.log( binance.futuresSubscriptions() );
 ```
 
+# Delivery API (Futures w/Expiration Date)
+```
+deliveryBuy
+deliverySell
+deliveryMarketBuy
+deliveryMarketSell
+deliveryPrices
+deliveryDaily
+deliveryOpenInterest
+deliveryExchangeInfo
+deliveryOpenOrders
+deliveryAllOrders
+deliveryCandles
+deliveryIndexKlines
+deliveryContinuousKlines
+deliveryMarkPriceKlines
+deliveryMarkPrice
+deliveryHistoricalTrades
+deliveryTrades
+deliveryAggTrades
+deliveryUserTrades
+deliveryLiquidationOrders
+deliveryPositionRisk
+deliveryLeverage
+deliveryMarginType
+deliveryPositionMargin
+deliveryPositionMarginHistory
+deliveryIncome
+deliveryBalance
+deliveryAccount
+deliveryDepth
+deliveryQuote
+deliveryLeverageBracket
+deliveryOrderStatus
+deliveryCancel
+deliveryCancelAll
+deliveryCountdownCancelAll
+deliveryOrder
+deliveryGetDataStream
+deliveryCloseDataStream
+deliveryKeepDataStream
+deliveryPing
+deliveryTime
+deliveryOrder
+```
+
 # Binance API (Spot Trading)
 
 #### Getting latest price of all symbols
