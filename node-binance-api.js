@@ -23,6 +23,7 @@ let api = function Binance( options = {} ) {
     let wapi = 'https://api.binance.com/wapi/';
     let sapi = 'https://api.binance.com/sapi/';
     let fapi = 'https://fapi.binance.com/fapi/';
+    let dapi = 'https://dapi.binance.com/dapi/';
     let fapiTest = 'https://testnet.binancefuture.com/fapi/';
     let fstream = 'wss://fstream.binance.com/stream?streams=';
     let fstreamSingle = 'wss://fstream.binance.com/ws/';
@@ -418,6 +419,27 @@ let api = function Binance( options = {} ) {
             params.timeInForce = 'GTX'; // Post only by default. Use GTC for limit orders.
         }
         return promiseRequest( 'v1/order', params, {base:fapi, type:'TRADE', method:'POST'} );
+    };
+    const deliveryOrder = async ( side, symbol, quantity, price = false, params = {} ) => {
+        params.symbol = symbol;
+        params.side = side;
+        params.quantity = quantity;
+        // if in the binance futures setting Hedged mode is active, positionSide parameter is mandatory
+        if( Binance.options.hedgeMode ){
+            params.positionSide = side === 'BUY' ? 'LONG' : 'SHORT';
+        }
+        // LIMIT STOP MARKET STOP_MARKET TAKE_PROFIT TAKE_PROFIT_MARKET
+        // reduceOnly stopPrice
+        if ( price ) {
+            params.price = price;
+            if ( typeof params.type === 'undefined' ) params.type = 'LIMIT';
+        } else {
+            if ( typeof params.type === 'undefined' ) params.type = 'MARKET';
+        }
+        if ( !params.timeInForce && ( params.type.includes( 'LIMIT' ) || params.type === 'STOP' || params.type === 'TAKE_PROFIT' ) ) {
+            params.timeInForce = 'GTX'; // Post only by default. Use GTC for limit orders.
+        }
+        return promiseRequest( 'v1/order', params, {base:dapi, type:'TRADE', method:'POST'} );
     };
     const promiseRequest = async ( url, data = {}, flags = {} ) => {
         return new Promise( ( resolve, reject ) => {
@@ -3103,7 +3125,213 @@ let api = function Binance( options = {} ) {
                 else return Binance.options.log(`futuresOrder ${side} (${symbol},${quantity},${price})`, response);
             }, 'POST');
         };*/
-          
+
+        //** Delivery methods */
+        deliveryPing: async ( params = {} ) => {
+            return promiseRequest( 'v1/ping', params, {base:dapi} );
+        },
+
+        deliveryTime: async ( params = {} ) => {
+            return promiseRequest( 'v1/time', params, {base:dapi} ).then( r => r.serverTime );
+        },
+
+        deliveryExchangeInfo: async () => {
+            return promiseRequest( 'v1/exchangeInfo', {}, {base:dapi} );
+        },
+
+        deliveryPrices: async ( params = {} ) => {
+            let data = await promiseRequest( 'v1/ticker/price', params, {base:dapi} );
+            return data.reduce( ( out, i ) => ( ( out[i.symbol] =  i.price ), out ), {} );
+        },
+
+        deliveryDaily: async ( symbol = false, params = {} ) => {
+            if ( symbol ) params.symbol = symbol;
+            let data = await promiseRequest( 'v1/ticker/24hr', params, {base:dapi} );
+            return symbol ? data : data.reduce( ( out, i ) => ( ( out[i.symbol] = i ), out ), {} );
+        },
+
+        deliveryOpenInterest: async ( symbol ) => {
+            return promiseRequest( 'v1/openInterest', {symbol}, {base:dapi} ).then( r => r.openInterest );
+        },
+
+        deliveryCandles: async ( symbol, interval = "30m", params = {} ) => {
+            params.symbol = symbol;
+            params.interval = interval;
+            return promiseRequest( 'v1/klines', params, {base:dapi} );
+        },
+
+        deliveryContiuousKlines: async (pair, contractType = "CURRENT_QUARTER", interval = "30m", params = {}) => {
+          params.pair = pair;
+          params.interval = interval;
+          pairs.contractType = contractType;
+          return promiseRequest( 'v1/continuousKlines', params, {base:dapi} );
+        },
+
+        deliveryIndexKlines: async (pair, interval = "30m", params = {}) => {
+          params.pair = pair;
+          params.interval = interval;
+          return promiseRequest( 'v1/indexPriceKlines', params, {base:dapi} );
+        },
+
+        deliveryMarkPriceKlines: async (symbol, interval = "30m", params = {} ) => {
+          params.symbol = symbol;
+          params.interval = interval;
+          return promiseRequest( 'v1/markPriceKlines', params, {base:dapi} );
+        },
+
+        deliveryMarkPrice: async ( symbol = false ) => {
+            return promiseRequest( 'v1/premiumIndex', symbol ? {symbol} : {}, {base:dapi} );
+        },
+
+        deliveryTrades: async ( symbol, params = {} ) => {
+            params.symbol = symbol;
+            return promiseRequest( 'v1/trades', params, {base:dapi} );
+        },
+
+        deliveryHistoricalTrades: async ( symbol, params = {} ) => {
+            params.symbol = symbol;
+            return promiseRequest( 'v1/historicalTrades', params, {base:dapi, type:'MARKET_DATA'} );
+        },
+
+        deliveryAggTrades: async ( symbol, params = {} ) => {
+            params.symbol = symbol;
+            return promiseRequest( 'v1/aggTrades', params, {base:dapi} );
+        },
+
+        deliveryUserTrades: async ( symbol, params = {} ) => {
+            params.symbol = symbol;
+            return promiseRequest( 'v1/userTrades', params, {base:dapi, type:'SIGNED'} );
+        },
+
+        deliveryGetDataStream: async ( params = {} ) => {
+            //A User Data Stream listenKey is valid for 60 minutes after creation. setInterval
+            return promiseRequest( 'v1/listenKey', params, {base:dapi, type:'SIGNED', method:'POST'} );
+        },
+
+        deliveryKeepDataStream: async ( params = {} ) => {
+            return promiseRequest( 'v1/listenKey', params, {base:dapi, type:'SIGNED', method:'PUT'} );
+        },
+
+        deliveryCloseDataStream: async ( params = {} ) => {
+            return promiseRequest( 'v1/listenKey', params, {base:dapi, type:'SIGNED', method:'DELETE'} );
+        },
+
+        deliveryLiquidationOrders: async ( symbol = false, params = {} ) => {
+            if ( symbol ) params.symbol = symbol;
+            return promiseRequest( 'v1/allForceOrders', params, {base:dapi} );
+        },
+
+        deliveryPositionRisk: async ( params = {} ) => {
+            return promiseRequest( 'v1/positionRisk', params, {base:dapi, type:'SIGNED'} );
+        },
+
+        deliveryLeverageBracket: async ( symbol = false, params = {} ) => {
+            if ( symbol ) params.symbol = symbol;
+            return promiseRequest( 'v1/leverageBracket', params, {base:dapi, type:'USER_DATA'} );
+        },
+
+        // leverage 1 to 125
+        deliveryLeverage: async ( symbol, leverage, params = {} ) => {
+            params.symbol = symbol;
+            params.leverage = leverage;
+            return promiseRequest( 'v1/leverage', params, {base:dapi, method:'POST', type:'SIGNED'} );
+        },
+
+        // ISOLATED, CROSSED
+        deliveryMarginType: async ( symbol, marginType, params = {} ) => {
+            params.symbol = symbol;
+            params.marginType = marginType;
+            return promiseRequest( 'v1/marginType', params, {base:dapi, method:'POST', type:'SIGNED'} );
+        },
+
+        // type: 1: Add postion margin，2: Reduce postion margin
+        deliveryPositionMargin: async ( symbol, amount, type = 1, params = {} ) => {
+            params.symbol = symbol;
+            params.amount = amount;
+            params.type = type;
+            return promiseRequest( 'v1/positionMargin', params, {base:dapi, method:'POST', type:'SIGNED'} );
+        },
+
+        deliveryPositionMarginHistory: async ( symbol, params = {} ) => {
+            params.symbol = symbol;
+            return promiseRequest( 'v1/positionMargin/history', params, {base:dapi, type:'SIGNED'} );
+        },
+
+        deliveryIncome: async ( params = {} ) => {
+            return promiseRequest( 'v1/income', params, {base:dapi, type:'SIGNED'} );
+        },
+
+        deliveryBalance: async ( params = {} ) => {
+            return promiseRequest( 'v1/balance', params, {base:dapi, type:'SIGNED'} );
+        },
+
+        deliveryAccount: async ( params = {} ) => {
+            return promiseRequest( 'v1/account', params, {base:dapi, type:'SIGNED'} );
+        },
+
+        deliveryDepth: async ( symbol, params = {} ) => {
+            params.symbol = symbol;
+            return promiseRequest( 'v1/depth', params, {base:dapi} );
+        },
+
+        deliveryQuote: async ( symbol = false, params = {} ) => {
+            if ( symbol ) params.symbol = symbol;
+            //let data = await promiseRequest( 'v1/ticker/bookTicker', params, {base:dapi} );
+            //return data.reduce((out, i) => ((out[i.symbol] = i), out), {}),
+            let data = await promiseRequest( 'v1/ticker/bookTicker', params, {base:dapi} );
+            return symbol ? data : data.reduce( ( out, i ) => ( ( out[i.symbol] = i ), out ), {} );
+        },
+
+        deliveryBuy: async ( symbol, quantity, price, params = {} ) => {
+            return deliveryOrder( 'BUY', symbol, quantity, price, params );
+        },
+
+        deliverySell: async ( symbol, quantity, price, params = {} ) => {
+            return deliveryOrder( 'SELL', symbol, quantity, price, params );
+        },
+
+        deliveryMarketBuy: async ( symbol, quantity, params = {} ) => {
+            return deliveryOrder( 'BUY', symbol, quantity, false, params );
+        },
+
+        deliveryMarketSell: async ( symbol, quantity, params = {} ) => {
+            return deliveryOrder( 'SELL', symbol, quantity, false, params );
+        },
+
+        deliveryOrder, // side symbol quantity [price] [params]
+
+        deliveryOrderStatus: async ( symbol, params = {} ) => { // Either orderId or origClientOrderId must be sent
+            params.symbol = symbol;
+            return promiseRequest( 'v1/order', params, {base:dapi, type:'SIGNED'} );
+        },
+
+        deliveryCancel: async ( symbol, params = {} ) => { // Either orderId or origClientOrderId must be sent
+            params.symbol = symbol;
+            return promiseRequest( 'v1/order', params, {base:dapi, type:'SIGNED', method:'DELETE'} );
+        },
+
+        deliveryCancelAll: async ( symbol, params = {} ) => {
+            params.symbol = symbol;
+            return promiseRequest( 'v1/allOpenOrders', params, {base:dapi, type:'SIGNED', method:'DELETE'} );
+        },
+
+        deliveryCountdownCancelAll: async ( symbol, countdownTime = 0, params = {} ) => {
+            params.symbol = symbol;
+            params.countdownTime = countdownTime;
+            return promiseRequest( 'v1/countdownCancelAll', params, {base:dapi, type:'SIGNED', method:'POST'} );
+        },
+
+        deliveryOpenOrders: async ( symbol = false, params = {} ) => {
+            if ( symbol ) params.symbol = symbol;
+            return promiseRequest( 'v1/openOrders', params, {base:dapi, type:'SIGNED'} );
+        },
+
+        deliveryAllOrders: async ( symbol = false, params = {} ) => { // Get all account orders; active, canceled, or filled.
+            if ( symbol ) params.symbol = symbol;
+            return promiseRequest( 'v1/allOrders', params, {base:dapi, type:'SIGNED'} );
+        },
+
+
         //** Margin methods */
         /**
          * Creates an order
