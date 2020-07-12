@@ -3582,6 +3582,14 @@ let api = function Binance( options = {} ) {
             return promiseRequest( 'v1/allOrders', params, {base:fapi, type:'SIGNED'} );
         },
 
+        futuresPositionSideDual: async ( params = {} ) => {
+            return promiseRequest( 'v1/positionSide/dual', params, {base:fapi, type:'SIGNED'} );
+        },
+
+        futuresChangePositionSideDual: async ( dualSidePosition, params = {} ) => {
+            params.dualSidePosition = dualSidePosition;
+            return promiseRequest( 'v1/positionSide/dual', params, {base:fapi, type:'SIGNED', method:'POST'} );
+        },
         // futures websockets support: ticker bookTicker miniTicker aggTrade markPrice
         /* TODO: https://binance-docs.github.io/apidocs/futures/en/#change-log
         Cancel multiple orders DELETE /fapi/v1/batchOrders
