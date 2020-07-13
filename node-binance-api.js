@@ -25,6 +25,7 @@ let api = function Binance( options = {} ) {
     let fapi = 'https://fapi.binance.com/fapi/';
     let dapi = 'https://dapi.binance.com/dapi/';
     let fapiTest = 'https://testnet.binancefuture.com/fapi/';
+    let dapiTest= 'https://testnet.binancefuture.com/dapi/';
     let fstream = 'wss://fstream.binance.com/stream?streams=';
     let fstreamSingle = 'wss://fstream.binance.com/ws/';
     let fstreamSingleTest = 'wss://stream.binancefuture.com/ws/';
@@ -470,6 +471,7 @@ let api = function Binance( options = {} ) {
             }
             let baseURL = typeof flags.base === 'undefined' ? base : flags.base;
             if ( Binance.options.test && baseURL === fapi ) baseURL = fapiTest;
+            if ( Binance.options.test && baseURL === dapi ) baseURL = dapiTest;
             let opt = {
                 headers,
                 url: baseURL + url,
