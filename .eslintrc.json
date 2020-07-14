@@ -7,7 +7,13 @@
   },
   "extends": "eslint:recommended",
   "rules": {
-    "indent": 0,
+    "indent": [
+      "error",
+      4,
+      {
+        "SwitchCase": 1
+      }
+    ],
     "space-in-parens": [
       2,
       "always",
@@ -16,6 +22,18 @@
           "empty"
         ]
       }
+    ],
+    "template-curly-spacing": [
+      2,
+      "always"
+    ],
+    "comma-spacing": [
+      2,
+      { "after": true }
+    ],
+    "array-bracket-spacing": [
+      2,
+      "always"
     ],
     "no-undef": 0,
     "no-console": [
