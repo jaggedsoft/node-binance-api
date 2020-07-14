@@ -24,6 +24,10 @@
         ]
       }
     ],
+    "object-curly-spacing": [
+      2,
+      "always"
+    ],
     "template-curly-spacing": [
       2,
       "always"
