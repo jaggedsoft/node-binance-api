@@ -36,6 +36,7 @@
       2,
       "always"
     ],
+    "arrow-spacing": [ "error", { "before": true, "after": true } ],
     "no-undef": 0,
     "no-console": [
       "error",
@@ -44,7 +45,8 @@
           "warn",
           "error",
           "info",
-          "log"
+          "log",
+          "clear
         ]
       }
     ]
