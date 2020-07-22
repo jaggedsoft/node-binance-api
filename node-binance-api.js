@@ -2871,8 +2871,9 @@ let api = function Binance( options = {} ) {
         * @param {string} name - the name to save the address as. Set falsy to prevent Binance saving to address book
         * @return {promise or undefined} - omitting the callback returns a promise
         */
-        withdraw: function ( asset, address, amount, addressTag = false, callback = false, name = 'API Withdraw' ) {
+        withdraw: function ( asset, address, amount, addressTag = false, callback = false, name = false ) {
             let params = { asset, address, amount };
+            if ( name ) params.name = name;
             if ( addressTag ) params.addressTag = addressTag;
             if ( !callback ) {
                 return new Promise( ( resolve, reject ) => {
