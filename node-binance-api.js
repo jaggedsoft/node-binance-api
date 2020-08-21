@@ -3447,6 +3447,14 @@ let api = function Binance( options = {} ) {
             return promiseRequest( 'v1/aggTrades', params, { base:fapi } );
         },
         
+        futuresForceOrders: async ( params = {} ) => {
+            return promiseRequest( 'v1/forceOrders', params, { base:fapi, type:'SIGNED' } );
+        },
+        
+        futuresDeleverageQuantile: async ( params = {} ) => {
+            return promiseRequest( 'v1/adlQuantile', params, { base:fapi, type:'SIGNED' } );
+        },
+        
         futuresUserTrades: async ( symbol, params = {} ) => {
             params.symbol = symbol;
             return promiseRequest( 'v1/userTrades', params, { base:fapi, type:'SIGNED' } );
