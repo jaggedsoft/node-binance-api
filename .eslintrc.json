@@ -7,7 +7,14 @@
   },
   "extends": "eslint:recommended",
   "rules": {
-    "indent": 0,
+    "indent": [
+      "error",
+      4,
+      {
+        "SwitchCase": 1
+      }
+    ],
+    "space-infix-ops": ["error", { "int32Hint": false }],
     "space-in-parens": [
       2,
       "always",
@@ -17,6 +24,23 @@
         ]
       }
     ],
+    "object-curly-spacing": [
+      2,
+      "always"
+    ],
+    "template-curly-spacing": [
+      2,
+      "always"
+    ],
+    "comma-spacing": [
+      2,
+      { "after": true }
+    ],
+    "array-bracket-spacing": [
+      2,
+      "always"
+    ],
+    "arrow-spacing": [ "error", { "before": true, "after": true } ],
     "no-undef": 0,
     "no-console": [
       "error",
@@ -25,7 +49,8 @@
           "warn",
           "error",
           "info",
-          "log"
+          "log",
+          "clear"
         ]
       }
     ]
