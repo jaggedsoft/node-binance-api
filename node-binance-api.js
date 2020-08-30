@@ -3601,8 +3601,7 @@ let api = function Binance( options = {} ) {
             params.dualSidePosition = dualSidePosition;
             return promiseRequest( 'v1/positionSide/dual', params, { base:fapi, type:'SIGNED', method:'POST' } );
         },
-        futuresTransferBtwSpotFutres: async ( asset, amount, type ) =>
-        {
+        futuresTransferAsset: async ( asset, amount, type ) => {
             let params = Object.assign( { asset, amount, type } );
             return promiseRequest( 'v1/futures/transfer', params, { base:sapi, type:'SIGNED', method:'POST' } );
         },
@@ -3622,7 +3621,7 @@ let api = function Binance( options = {} ) {
         Live Subscribing/Unsubscribing to streams: requires sending futures subscription id when connecting
         futuresSubscriptions { "method": "LIST_SUBSCRIPTIONS", "id": 1 }
         futuresUnsubscribe { "method": "UNSUBSCRIBE", "params": [ "btcusdt@depth" ], "id": 1 }
-        futures depthCache & complete realtime chart updates
+        futures depthCache
         */
 
         /*
