@@ -199,6 +199,9 @@ let api = function Binance( options = {} ) {
         form: data,
         method: method,
         timeout: Binance.options.recvWindow,
+        qsStringifyOptions: {
+          arrayFormat: 'repeat'
+        },
         headers: {
             'User-Agent': userAgent,
             'Content-type': contentType,
@@ -218,7 +221,21 @@ let api = function Binance( options = {} ) {
         proxyRequest( opt, callback );
     };
 
-    const makeQueryString = q => Object.keys( q ).reduce( ( a, k ) => { if ( q[k] !== undefined ) { a.push( k + '=' + encodeURIComponent( q[k] ) ) } return a }, [] ).join( '&' );
+    // XXX: This one works with array (e.g. for dust.transfer)
+    // XXX: I _guess_ we could use replace this function with the `qs` module
+    const makeQueryString = q =>
+      Object.keys(q)
+        .reduce((a, k) => {
+          if (Array.isArray(q[k])) {
+            q[k].forEach(v => {
+              a.push(k + "=" + encodeURIComponent(v))
+            })
+          } else if (q[k] !== undefined) {
+            a.push(k + "=" + encodeURIComponent(q[k]));
+          }
+          return a;
+        }, [])
+        .join("&");
 
     /**
      * Create a http request to the public API
@@ -3079,6 +3096,14 @@ let api = function Binance( options = {} ) {
             } else {
                 signedRequest( wapi + '/v3/userAssetDribbletLog.html', {}, callback );
             }
+        },
+
+        dustTransfer: function (assets, callback) {
+          signedRequest(sapi + 'v1/asset/dust', { asset: assets }, callback, 'POST');
+        },
+
+        assetDividendRecord: function (callback) {
+          signedRequest(sapi + 'v1/asset/assetDividend', {}, callback);
         },
 
         /**
