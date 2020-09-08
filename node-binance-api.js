@@ -1880,13 +1880,13 @@ let api = function Binance( options = {} ) {
     const userDataHandler = data => {
         let type = data.e;
         if ( type === 'outboundAccountInfo' ) {
-            Binance.options.balance_callback( data );
+          // XXX: Deprecated in 2020-09-08
         } else if ( type === 'executionReport' ) {
             if ( Binance.options.execution_callback ) Binance.options.execution_callback( data );
         } else if ( type === 'listStatus' ) {
             if ( Binance.options.list_status_callback ) Binance.options.list_status_callback( data );
         } else if ( type === 'outboundAccountPosition' ) {
-            // TODO: Does this mean something?
+            Binance.options.balance_callback( data );
         } else {
             Binance.options.log( 'Unexpected userData: ' + type );
         }
