@@ -1947,7 +1947,7 @@ let api = function Binance( options = {} ) {
                 Binance.options.future_order_update_callback( fUserDataOrderUpdateConvertData(data));
             }
         } else {
-            Binance.options.log( 'Unexpected userMarginData: ' + type );
+            Binance.options.log( 'Unexpected userFutureData: ' + type );
         }
     };
 
@@ -4945,11 +4945,16 @@ let api = function Binance( options = {} ) {
              */
             userFutureData: function userFutureData( margin_call_callback, account_update_callback = undefined, order_update_callback = undefined, subscribed_callback = undefined) {
                 const url = ( Binance.options.test ) ? fapiTest : fapi;
+                
+                let reconnect = () => {
+                    if (Binance.options.reconnect) userFutureData(margin_call_callback, account_update_callback, order_update_callback, subscribed_callback)
+                }
+                
                 apiRequest( url + 'v1/listenKey', {}, function ( error, response ) {
                     Binance.options.listenFutureKey = response.listenKey;
                     setTimeout( function userDataKeepAlive() { // keepalive
                         try {
-                            apiRequest( fapi + 'v1/userDataStream?listenKey=' + Binance.options.listenFutureKey, {}, function ( err ) {
+                            apiRequest( fapi + 'v1/listenKey?listenKey=' + Binance.options.listenFutureKey, {}, function ( err ) {
                                 if ( err ) setTimeout( userDataKeepAlive, 60000 ); // retry in 1 minute
                                 else setTimeout( userDataKeepAlive, 60 * 30 * 1000 ); // 30 minute keepalive
                             }, 'PUT' );
@@ -4960,7 +4965,7 @@ let api = function Binance( options = {} ) {
                     Binance.options.future_margin_call_callback = margin_call_callback;
                     Binance.options.future_account_update_callback = account_update_callback;
                     Binance.options.future_order_update_callback = order_update_callback;
-                    const subscription = futuresSubscribe( Binance.options.listenFutureKey, userFutureDataHandler, Binance.options.reconnect );
+                    const subscription = futuresSubscribe( Binance.options.listenFutureKey, userFutureDataHandler, { reconnect } );
                     if ( subscribed_callback ) subscribed_callback( subscription.endpoint );
                 }, 'POST' );
             },
