@@ -1947,7 +1947,7 @@ let api = function Binance( options = {} ) {
                 Binance.options.future_order_update_callback( fUserDataOrderUpdateConvertData(data));
             }
         } else {
-            Binance.options.log( 'Unexpected userMarginData: ' + type );
+            Binance.options.log( 'Unexpected userFutureData: ' + type );
         }
     };
 
@@ -4949,7 +4949,7 @@ let api = function Binance( options = {} ) {
                     Binance.options.listenFutureKey = response.listenKey;
                     setTimeout( function userDataKeepAlive() { // keepalive
                         try {
-                            apiRequest( fapi + 'v1/userDataStream?listenKey=' + Binance.options.listenFutureKey, {}, function ( err ) {
+                            apiRequest( fapi + 'v1/listenKey?listenKey=' + Binance.options.listenFutureKey, {}, function ( err ) {
                                 if ( err ) setTimeout( userDataKeepAlive, 60000 ); // retry in 1 minute
                                 else setTimeout( userDataKeepAlive, 60 * 30 * 1000 ); // 30 minute keepalive
                             }, 'PUT' );
