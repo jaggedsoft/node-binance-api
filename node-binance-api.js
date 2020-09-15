@@ -4945,6 +4945,11 @@ let api = function Binance( options = {} ) {
              */
             userFutureData: function userFutureData( margin_call_callback, account_update_callback = undefined, order_update_callback = undefined, subscribed_callback = undefined) {
                 const url = ( Binance.options.test ) ? fapiTest : fapi;
+                
+                let reconnect = () => {
+                    if (Binance.options.reconnect) userFutureData(margin_call_callback, account_update_callback, order_update_callback, subscribed_callback)
+                }
+                
                 apiRequest( url + 'v1/listenKey', {}, function ( error, response ) {
                     Binance.options.listenFutureKey = response.listenKey;
                     setTimeout( function userDataKeepAlive() { // keepalive
@@ -4960,7 +4965,7 @@ let api = function Binance( options = {} ) {
                     Binance.options.future_margin_call_callback = margin_call_callback;
                     Binance.options.future_account_update_callback = account_update_callback;
                     Binance.options.future_order_update_callback = order_update_callback;
-                    const subscription = futuresSubscribe( Binance.options.listenFutureKey, userFutureDataHandler, Binance.options.reconnect );
+                    const subscription = futuresSubscribe( Binance.options.listenFutureKey, userFutureDataHandler, { reconnect } );
                     if ( subscribed_callback ) subscribed_callback( subscription.endpoint );
                 }, 'POST' );
             },
