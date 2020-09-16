@@ -39,6 +39,7 @@ let api = function Binance(options) {
     Binance.ohlcLatest = {};
     Binance.klineQueue = {};
     Binance.ohlc = {};
+    Binance.pairsSocketMap = new Map(); // To hold Pairs and their Sockets for orderBook ws
     const default_options = {
         recvWindow: 5000,
         useServerTime: false,
@@ -408,6 +409,17 @@ let api = function Binance(options) {
         });
         return ws;
     };
+
+    const unSubscribeCombined = function (streams) {
+        const unSubscriptionMessage = {'method' : 'UNSUBSCRIBE', 'params' : [], 'id' : 1};
+        streams.forEach((stream) => {
+            unSubscriptionMessage.params = [stream];
+            let socket = Binance.pairsSocketMap.get(stream.split('@')[0]);
+            if(socket) {
+                socket.send(JSON.stringify(unSubscriptionMessage));
+            }
+        });
+    }
 
     /**
      * Used to subscribe to a combined websocket endpoint
@@ -1683,18 +1695,20 @@ let api = function Binance(options) {
                 }
 
                 let handleDepthStreamData = function (depth) {
-                    let symbol = depth.s;
-                    let context = Binance.depthCacheContext[symbol];
-                    if (context.messageQueue && !context.snapshotUpdateId) {
-                        context.messageQueue.push(depth);
-                    } else {
-                        try {
-                            depthHandler(depth);
-                        } catch (err) {
-                            return terminate(context.endpointId, true);
+                    if(depth && depth.s) {
+                        let symbol = depth.s;
+                        let context = Binance.depthCacheContext[symbol];
+                        if (context.messageQueue && !context.snapshotUpdateId) {
+                            context.messageQueue.push(depth);
+                        } else {
+                            try {
+                                depthHandler(depth);
+                            } catch (err) {
+                                return terminate(context.endpointId, true);
+                            }
+                            if (callback) callback(Binance.depthCache, depth);
+                            if (customCallback) customCallback(Binance.depthCache, depth);
                         }
-                        if (callback) callback(Binance.depthCache, depth);
-                        if (customCallback) customCallback(Binance.depthCache, depth);
                     }
                 };
 
@@ -1761,7 +1775,10 @@ let api = function Binance(options) {
                             results.forEach(updateSymbolDepthCache);
                         });
                     });
-                    symbols.forEach(s => assignEndpointIdToContext(s, subscription.endpoint));
+                    symbols.forEach(s => {
+                        assignEndpointIdToContext(s, subscription.endpoint);
+                        Binance.pairsSocketMap.set(s.toLowerCase(),subscription);
+                    });
                 } else {
                     let symbol = symbols;
                     symbolDepthInit(symbol);
@@ -1771,10 +1788,29 @@ let api = function Binance(options) {
                             results.forEach(updateSymbolDepthCache);
                         });
                     });
+                    Binance.pairsSocketMap.set(symbol.toLowerCase(),subscription);
                     assignEndpointIdToContext(symbol, subscription.endpoint);
                 }
                 return subscription.endpoint;
             },
+
+             /**
+            * Websocket depth cache Unsubscribe
+            * @param {array/string} symbols - an array or string of symbols to query
+            */
+           depthCacheUnSubscribe: function depthCacheUnsubscribeFunction(symbols) {
+                if (Array.isArray(symbols)) {
+                    if (!isArrayUnique(symbols)) throw Error('depthCache: "symbols" cannot contain duplicate elements.');
+                    let streams = symbols.map(function (symbol) {
+                        return symbol.toLowerCase() + '@depth';
+                    });
+                    unSubscribeCombined(streams);   
+                }
+                else {
+                    unSubscribeCombined(symbols.toLowerCase() + '@depth');
+                }
+            },
+
 
             /**
             * Websocket aggregated trades
