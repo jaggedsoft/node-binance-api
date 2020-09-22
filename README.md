@@ -2001,7 +2001,7 @@ You can enable verbose mode to help with debugging WebSocket streams:
 binance.setOption( 'verbose', true );
 ```
 
-> ### For support go to [Telegram](https://t.me/binance_api_english)
+> ### For support go to [Telegram](https://t.me/binance_api_english) or [Binance Developers](https://dev.binance.vision/)
 ---
 
 <a href="https://allcontributors.org"><img src="https://raw.githubusercontent.com/all-contributors/all-contributors/master/docs/assets/logo-full.svg" alt="✨ All Contributors ✨" width="800px" /></a> ✨
