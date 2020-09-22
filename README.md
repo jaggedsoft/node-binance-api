@@ -2081,7 +2081,7 @@ binance.setOption( 'verbose', true );
 <!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
 <!-- [![All Contributors](https://img.shields.io/badge/all_contributors-48-orange.svg?style=flat-square)](#contributors-) -->
 <!-- ALL-CONTRIBUTORS-BADGE:END -->
-This project follows the [all-contributors](https://github.com/all-contributors/all-contributors) specification. Contributions of any kind are welcome!
+<i><small>This project follows the [all-contributors](https://github.com/all-contributors/all-contributors) specification. Contributions of any kind are welcome</small></i>
 
 ***Thank you to all contributors!*** dmzoneill, bmino, dmitriz, keith1024, Eluvade, itnok, GusGold, gunar, kirosc, MadDeveloper, nimanr, robaleman, gemmell, lht147, abou7mied, arenddeboer, ejfrancis, charlesdarkwind, joaquinnunez, meetmangukiya, afsharsafavi, boyhagemann, davewang, dbvcode, sethyx, andersonaguiar, hoota, balthazar, ifmad, CollinEstes, dpereskokov, Dobberoonski75, guygberg, joelrich, mstijak, matthewwoop, bhnow, Rolaus, pavlovdog, toant13, Fuzzyma, bitoiu, WWWSpider, dreyescat, hems, mathlet0x, nurdtechie98 and others!
 
@@ -2092,6 +2092,5 @@ This project follows the [all-contributors](https://github.com/all-contributors/
 
 ![Downloads](https://img.shields.io/npm/dt/node-binance-api.svg?style=for-the-badge&maxAge=86400) ![Stars](https://img.shields.io/github/stars/jaggedsoft/node-binance-api.svg?style=for-the-badge&label=Stars) ![Contributors](https://img.shields.io/github/contributors/jaggedsoft/node-binance-api.svg?style=for-the-badge&maxAge=86400)
 [![Stargazers over time](https://starcharts.herokuapp.com/jaggedsoft/node-binance-api.svg)](https://starcharts.herokuapp.com/jaggedsoft/node-binance-api)
-
 [![Views](http://hits.dwyl.io/jaggedsoft/node-binance-api.svg)](http://hits.dwyl.io/jaggedsoft/node-binance-api)
 [![jaggedsoft on Twitter](https://img.shields.io/twitter/follow/jaggedsoft.svg?style=social)](https://twitter.com/jaggedsoft)
