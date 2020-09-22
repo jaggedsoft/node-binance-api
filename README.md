@@ -2001,8 +2001,8 @@ You can enable verbose mode to help with debugging WebSocket streams:
 binance.setOption( 'verbose', true );
 ```
 
-> ### For support go to [Telegram](https://t.me/binance_api_english)
-
+> ### For support go to [Telegram](https://t.me/binance_api_english) or [Binance Developers](https://dev.binance.vision/)
+---
 
 <a href="https://allcontributors.org"><img src="https://raw.githubusercontent.com/all-contributors/all-contributors/master/docs/assets/logo-full.svg" alt="✨ All Contributors ✨" width="800px" /></a> ✨
 <!-- Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/docs/en/emoji-key)): -->
@@ -2011,7 +2011,7 @@ binance.setOption( 'verbose', true );
 <!-- markdownlint-disable -->
 <table>
   <tr>
-  <td align="center"><a href="https://liquidity.ltd/"><img src="https://avatars3.githubusercontent.com/u/4283360?v=4?s=60" width="60px;" alt=""/><br /><sub><b>Jon Eyrick</b></sub></a><br /><a href="#question-jaggedsoft" title="Answering Questions">💬</a> <a href="https://github.com/jaggedsoft/node-binance-api/pulls?q=is%3Apr+reviewed-by%3Ajaggedsoft" title="Reviewed Pull Requests">👀</a> <a href="#maintenance-jaggedsoft" title="Maintenance">🚧</a> <a href="https://github.com/jaggedsoft/node-binance-api/commits?author=jaggedsoft" title="Code">💻</a></td>
+  <td align="center"><a href="https://liquidity.ltd/"><img src="https://avatars3.githubusercontent.com/u/4283360?v=4?s=60" width="60px;" alt=""/><br /><sub><b>Jon Eyrick</b></sub></a><br /><a href="#question-jaggedsoft" title="Answering Questions">💬</a><!-- <a href="https://github.com/jaggedsoft/node-binance-api/pulls?q=is%3Apr+reviewed-by%3Ajaggedsoft" title="Reviewed Pull Requests">👀</a>--> <a href="#maintenance-jaggedsoft" title="Maintenance">🚧</a> <a href="https://github.com/jaggedsoft/node-binance-api/commits?author=jaggedsoft" title="Code">💻</a></td>
     <td align="center"><a href="https://www.fio.ie/"><img src="https://avatars1.githubusercontent.com/u/15192260?v=4?s=60" width="60px;" alt=""/><br /><sub><b>Dave</b></sub></a><br /><a href="https://github.com/jaggedsoft/node-binance-api/commits?author=dmzoneill" title="Code">💻</a></td>
     <td align="center"><a href="https://github.com/bmino"><img src="https://avatars3.githubusercontent.com/u/10902767?v=4?s=60" width="60px;" alt=""/><br /><sub><b>Brandon</b></sub></a><br /><a href="https://github.com/jaggedsoft/node-binance-api/commits?author=bmino" title="Code">💻</a></td>
     <td align="center"><a href="https://ie.linkedin.com/in/dmitrizaitsev"><img src="https://avatars2.githubusercontent.com/u/2513193?v=4?s=60" width="60px;" alt=""/><br /><sub><b>Dmitri Zaitsev</b></sub></a><br /><a href="https://github.com/jaggedsoft/node-binance-api/commits?author=dmitriz" title="Code">💻</a></td>
@@ -2081,16 +2081,16 @@ binance.setOption( 'verbose', true );
 <!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
 <!-- [![All Contributors](https://img.shields.io/badge/all_contributors-48-orange.svg?style=flat-square)](#contributors-) -->
 <!-- ALL-CONTRIBUTORS-BADGE:END -->
+<i><small>This project follows the [all-contributors](https://github.com/all-contributors/all-contributors) specification. Contributions of any kind are welcome</small></i>
+
+***Thank you to all contributors!*** dmzoneill, bmino, dmitriz, keith1024, Eluvade, itnok, GusGold, gunar, kirosc, MadDeveloper, nimanr, robaleman, gemmell, lht147, abou7mied, arenddeboer, ejfrancis, charlesdarkwind, joaquinnunez, meetmangukiya, afsharsafavi, boyhagemann, davewang, dbvcode, sethyx, andersonaguiar, hoota, balthazar, ifmad, CollinEstes, dpereskokov, Dobberoonski75, guygberg, joelrich, mstijak, matthewwoop, bhnow, Rolaus, pavlovdog, toant13, Fuzzyma, bitoiu, WWWSpider, dreyescat, hems, mathlet0x, nurdtechie98 and others!
 
 ## Contribution
 - Give us a star :star:
 - Fork and Clone! Awesome
 - Select existing [issues](https://github.com/jaggedsoft/node-binance-api/issues) or create a [new issue](https://github.com/jaggedsoft/node-binance-api/issues/new) and give us a PR with your bugfix or improvement after. We love it ❤️
 
-This project follows the [all-contributors](https://github.com/all-contributors/all-contributors) specification. Contributions of any kind are welcome!
-
 ![Downloads](https://img.shields.io/npm/dt/node-binance-api.svg?style=for-the-badge&maxAge=86400) ![Stars](https://img.shields.io/github/stars/jaggedsoft/node-binance-api.svg?style=for-the-badge&label=Stars) ![Contributors](https://img.shields.io/github/contributors/jaggedsoft/node-binance-api.svg?style=for-the-badge&maxAge=86400)
 [![Stargazers over time](https://starcharts.herokuapp.com/jaggedsoft/node-binance-api.svg)](https://starcharts.herokuapp.com/jaggedsoft/node-binance-api)
-
 [![Views](http://hits.dwyl.io/jaggedsoft/node-binance-api.svg)](http://hits.dwyl.io/jaggedsoft/node-binance-api)
 [![jaggedsoft on Twitter](https://img.shields.io/twitter/follow/jaggedsoft.svg?style=social)](https://twitter.com/jaggedsoft)
