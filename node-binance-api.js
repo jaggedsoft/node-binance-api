@@ -3661,6 +3661,26 @@ let api = function Binance( options = {} ) {
             return promiseRequest( 'v1/lending/union/account', params, { base:sapi, type:'SIGNED' } );
         },
 
+        bswapPools: async ( params = {} ) => {
+            return promiseRequest('v1/bswap/pools', params, { base:sapi, type: 'SIGNED' } );
+        },
+
+        bswapLiquidity: async ( params = {} ) => {
+            return promiseRequest('v1/bswap/liquidity', params, { base:sapi, type: 'SIGNED' } );
+        },
+
+        bswapLiquidityOps: async( params = {} ) => {
+            return promiseRequest('v1/bswap/liquidityOps', params, { base:sapi, type: 'SIGNED' } );
+        },
+
+        bswapQuote: async( params = {} ) => {
+            return promiseRequest('v1/bswap/quote', params, { base:sapi, type: 'SIGNED' } );
+        },
+
+        bswapHistory: async( params = {} ) => {
+            return promiseRequest('v1/bswap/swap', params, { base:sapi, type: 'SIGNED' } );
+        },
+
         //** Futures methods */
         futuresPing: async ( params = {} ) => {
             return promiseRequest( 'v1/ping', params, { base:fapi } );
@@ -4945,11 +4965,11 @@ let api = function Binance( options = {} ) {
              */
             userFutureData: function userFutureData( margin_call_callback, account_update_callback = undefined, order_update_callback = undefined, subscribed_callback = undefined) {
                 const url = ( Binance.options.test ) ? fapiTest : fapi;
-                
+
                 let reconnect = () => {
                     if (Binance.options.reconnect) userFutureData(margin_call_callback, account_update_callback, order_update_callback, subscribed_callback)
                 }
-                
+
                 apiRequest( url + 'v1/listenKey', {}, function ( error, response ) {
                     Binance.options.listenFutureKey = response.listenKey;
                     setTimeout( function userDataKeepAlive() { // keepalive

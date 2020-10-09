@@ -11,7 +11,7 @@ https://badgen.net/npm/dm/node-binance-api?labelColor=7C4DFF&color=green&scale=2
 👀👁 Watchers 48 https://badgen.net/github/watchers/jaggedsoft/node-binance-api
 color=blueviolet 🔵
 -->
-[![Latest Version](https://img.shields.io/github/release/jaggedsoft/node-binance-api.svg?style=flat-square&labelColor=blueviolet&label=release)](https://github.com/jaggedsoft/node-binance-api/releases) [![GitHub last commit](https://img.shields.io/github/last-commit/jaggedsoft/node-binance-api.svg?maxAge=2400&labelColor=333&label=🟣%20updated)](#) [![Monthly Downloads](https://img.shields.io/npm/dm/node-binance-api.svg?labelColor=29B6F6&color=3D5AFE&label=downloads&logo=bitcoin-lightning)](https://npm-stat.com/charts.html?package=node-binance-api&from=2017-07-01&to=2020-07-01) 
+[![Latest Version](https://img.shields.io/github/release/jaggedsoft/node-binance-api.svg?style=flat-square&labelColor=blueviolet&label=release)](https://github.com/jaggedsoft/node-binance-api/releases) [![GitHub last commit](https://img.shields.io/github/last-commit/jaggedsoft/node-binance-api.svg?maxAge=2400&labelColor=333&label=🟣%20updated)](#) [![Monthly Downloads](https://img.shields.io/npm/dm/node-binance-api.svg?labelColor=29B6F6&color=3D5AFE&label=downloads&logo=bitcoin-lightning)](https://npm-stat.com/charts.html?package=node-binance-api&from=2017-07-01&to=2020-07-01)
 [![jaggedsoft on Twitter](https://img.shields.io/twitter/follow/jaggedsoft.svg?style=social)](https://twitter.com/jaggedsoft)
 
 [![NPM](https://nodei.co/npm/node-binance-api.png?compact=true)](https://npmjs.org/package/node-binance-api)
@@ -25,7 +25,8 @@ This project is designed to help you make your own projects that interact with t
   <a href="#binance-api-spot-trading" style="color:#282828">Spot Trading API</a> &amp;
   <a href="#websockets-implementation" style="color:#282828">Streams</a> •
   <a href="#binance-margin-api">Margin API</a> •
-  <a href="#binance-lending-api">Lending API</a><br/>
+  <a href="#binance-lending-api">Lending API</a> •
+  <a href="#binance-bswap-api">BSwap API</a><br/>
   <a href="https://github.com/jaggedsoft/node-binance-api/tree/master/examples">Examples</a> •
   <a href="#troubleshooting">Troubleshooting</a> •
   <a href="https://github.com/jaggedsoft/node-binance-api/releases">Changelog</a> •
@@ -428,7 +429,7 @@ binance.bookTickers('BNBBTC', (error, ticker) => {
  <details>
   <summary>View Response</summary>
 
-```js 		 
+```js
 {
   "symbol": "BNBBTC",
   "bidPrice": "4.00000000",
@@ -1917,7 +1918,7 @@ let lendingData = await binance.lending();
 
 <details>
   <summary>View response</summary>
-  
+
   ```javascript
     lendingData {
       positionAmountVos: [
@@ -1955,6 +1956,39 @@ let lendingData = await binance.lending();
     }
   ```
 </details>
+
+# Binance BSwap API
+
+#### List All Swap Pools
+```javascript
+let pools = await binance.bswapPools()
+```
+
+#### Get liquidity information of a pool
+```javascript
+let liquidity = binance.bswapLiquidity({ timestamp: Date.now() })
+```
+
+#### Get Liquidity Operation Record
+```javascript
+let liquidityOps = await binance.bswapLiquidityOps({ timestamp: Date.now() })
+```
+
+#### Request Quote
+```javascript
+let quote = await binance.bswapQuote({
+    timestamp: Date.now(),
+    quoteAsset: 'USDT',
+    baseAsset: 'BUSD',
+    quoteQty: 100.0
+})
+```
+
+#### Get Swap History
+```javascript
+let history = await binance.bswapHistory({ timestamp: Date.now() })
+```
+
 
 #### [Advanced Examples](https://github.com/jaggedsoft/node-binance-api/blob/master/examples/advanced.md)
 > [exchangeInfo: Pull minimum order size, quantity, etc](https://github.com/jaggedsoft/node-binance-api/blob/master/examples/advanced.md#exchangeinfo-pull-minimum-order-size-quantity-etc)\
