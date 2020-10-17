@@ -2310,8 +2310,7 @@ let api = function Binance( options = {} ) {
      * @return {boolean} - true or false
      */
     const isArrayUnique = array => {
-        let s = new Set( array );
-        return s.size === array.length;
+        return new Set( array ).size === array.length;
     };
     return {
         /**
@@ -2487,7 +2486,7 @@ let api = function Binance( options = {} ) {
         * @return {array} - the array of entires
         */
         slice: function ( object, start = 0 ) {
-            return Object.entries( object ).slice( start ).map( entry => entry[0] );
+            return Object.keys( object ).slice( start );
         },
 
         /**
