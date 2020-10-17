@@ -2425,16 +2425,14 @@ let api = function Binance( options = {} ) {
             let object = {}, count = 0, cache;
             if ( typeof symbol === 'object' ) cache = symbol;
             else cache = getDepthCache( symbol ).bids;
-            let sorted = Object.keys( cache ).sort( function ( a, b ) {
-                return parseFloat( b ) - parseFloat( a )
-            } );
+            const sorted = Object.keys( cache ).sort( ( a, b ) => parseFloat( b ) - parseFloat( a ) );
             let cumulative = 0;
             for ( let price of sorted ) {
-                if ( baseValue === 'cumulative' ) {
-                    cumulative += parseFloat( cache[price] );
+                if ( !baseValue ) object[price] = cache[price];
+                else if ( baseValue === 'cumulative' ) {
+                    cumulative += cache[price];
                     object[price] = cumulative;
-                } else if ( !baseValue ) object[price] = parseFloat( cache[price] );
-                else object[price] = parseFloat( ( cache[price] * parseFloat( price ) ).toFixed( 8 ) );
+                } else object[price] = parseFloat( ( cache[price] * parseFloat( price ) ).toFixed( 8 ) );
                 if ( ++count >= max ) break;
             }
             return object;
@@ -2451,16 +2449,14 @@ let api = function Binance( options = {} ) {
             let object = {}, count = 0, cache;
             if ( typeof symbol === 'object' ) cache = symbol;
             else cache = getDepthCache( symbol ).asks;
-            let sorted = Object.keys( cache ).sort( function ( a, b ) {
-                return parseFloat( a ) - parseFloat( b );
-            } );
+            const sorted = Object.keys( cache ).sort( ( a, b ) => parseFloat( a ) - parseFloat( b ) );
             let cumulative = 0;
             for ( let price of sorted ) {
-                if ( baseValue === 'cumulative' ) {
-                    cumulative += parseFloat( cache[price] );
+                if ( !baseValue ) object[price] = cache[price];
+                else if ( baseValue === 'cumulative' ) {
+                    cumulative += cache[price];
                     object[price] = cumulative;
-                } else if ( !baseValue ) object[price] = parseFloat( cache[price] );
-                else object[price] = parseFloat( ( cache[price] * parseFloat( price ) ).toFixed( 8 ) );
+                } else object[price] = parseFloat( ( cache[price] * parseFloat( price ) ).toFixed( 8 ) );
                 if ( ++count >= max ) break;
             }
             return object;
