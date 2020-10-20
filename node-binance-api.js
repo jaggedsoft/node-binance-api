@@ -61,6 +61,7 @@ let api = function Binance( options = {} ) {
         recvWindow: 5000,
         useServerTime: false,
         reconnect: true,
+        keepAlive: true,
         verbose: false,
         test: false,
         hedgeMode: false,
@@ -95,6 +96,7 @@ let api = function Binance( options = {} ) {
         if ( typeof Binance.options.hedgeMode === 'undefined' ) Binance.options.hedgeMode = default_options.hedgeMode;
         if ( typeof Binance.options.log === 'undefined' ) Binance.options.log = default_options.log;
         if ( typeof Binance.options.verbose === 'undefined' ) Binance.options.verbose = default_options.verbose;
+        if ( typeof Binance.options.keepAlive === 'undefined' ) Binance.options.keepAlive = default_options.keepAlive;
         if ( typeof Binance.options.urls !== 'undefined' ) {
             const { urls } = Binance.options;
             if ( typeof urls.base === 'string' ) base = urls.base;
@@ -188,6 +190,7 @@ let api = function Binance( options = {} ) {
         qs: data,
         method: method,
         timeout: Binance.options.recvWindow,
+        forever: Binance.options.keepAlive,
         headers: {
             'User-Agent': userAgent,
             'Content-type': contentType,
@@ -199,6 +202,7 @@ let api = function Binance( options = {} ) {
         form: data,
         method: method,
         timeout: Binance.options.recvWindow,
+        forever: Binance.options.keepAlive,
         qsStringifyOptions: {
           arrayFormat: 'repeat'
         },
