@@ -65,6 +65,8 @@ let api = function Binance( options = {} ) {
         verbose: false,
         test: false,
         hedgeMode: false,
+        localAddress: false,
+        family: false,
         log: function ( ...args ) {
             console.log( Array.prototype.slice.call( args ) );
         }
@@ -97,6 +99,8 @@ let api = function Binance( options = {} ) {
         if ( typeof Binance.options.log === 'undefined' ) Binance.options.log = default_options.log;
         if ( typeof Binance.options.verbose === 'undefined' ) Binance.options.verbose = default_options.verbose;
         if ( typeof Binance.options.keepAlive === 'undefined' ) Binance.options.keepAlive = default_options.keepAlive;
+        if ( typeof Binance.options.localAddress === 'undefined' ) Binance.options.localAddress = default_options.localAddress;
+        if ( typeof Binance.options.family === 'undefined' ) Binance.options.localAddress = default_options.family;
         if ( typeof Binance.options.urls !== 'undefined' ) {
             const { urls } = Binance.options;
             if ( typeof urls.base === 'string' ) base = urls.base;
@@ -189,6 +193,8 @@ let api = function Binance( options = {} ) {
         url: url,
         qs: data,
         method: method,
+        family: Binance.options.family,
+        localAddress: Binance.options.localAddress,
         timeout: Binance.options.recvWindow,
         forever: Binance.options.keepAlive,
         headers: {
@@ -201,6 +207,8 @@ let api = function Binance( options = {} ) {
         url: url,
         form: data,
         method: method,
+        family: Binance.options.family,
+        localAddress: Binance.options.localAddress,
         timeout: Binance.options.recvWindow,
         forever: Binance.options.keepAlive,
         qsStringifyOptions: {
