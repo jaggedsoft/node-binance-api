@@ -3112,8 +3112,8 @@ let api = function Binance( options = {} ) {
           signedRequest(sapi + 'v1/asset/dust', { asset: assets }, callback, 'POST');
         },
 
-        assetDividendRecord: function (callback) {
-          signedRequest(sapi + 'v1/asset/assetDividend', {}, callback);
+        assetDividendRecord: function (callback, params = {}) {
+          signedRequest(sapi + 'v1/asset/assetDividend', params, callback);
         },
 
         /**
