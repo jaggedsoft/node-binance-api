@@ -4463,7 +4463,7 @@ let api = function Binance( options = {} ) {
                 symbol = false;
             }
             let reconnect = () => {
-                if ( Binance.options.reconnect ) fMarkPriceStream( symbol, callback );
+                if ( Binance.options.reconnect ) fMarkPriceStream( symbol, callback, speed);
             };
             const endpoint = symbol ? `${ symbol.toLowerCase() }@markPrice` : '!markPrice@arr'
             let subscription = futuresSubscribeSingle( endpoint + speed, data => callback( fMarkPriceConvertData( data ) ), { reconnect } );
