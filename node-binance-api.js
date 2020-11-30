@@ -306,11 +306,12 @@ let api = function Binance( options = {} ) {
         let signature = crypto.createHmac( 'sha256', Binance.options.APISECRET ).update( query ).digest( 'hex' ); // set the HMAC hash header
         if ( method === 'POST' ) {
             let opt = reqObjPOST(
-                url + '?signature=' + signature,
+                url,
                 data,
                 method,
                 Binance.options.APIKEY
             );
+            opt.form.signature = signature;
             proxyRequest( opt, callback );
         } else {
             let opt = reqObj(
