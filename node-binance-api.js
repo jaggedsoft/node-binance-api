@@ -4006,6 +4006,16 @@ let api = function Binance( options = {} ) {
             let params = Object.assign( { asset, amount, type } );
             return promiseRequest( 'v1/futures/transfer', params, { base:sapi, type:'SIGNED', method:'POST' } );
         },
+
+        futuresHistDataId: async ( symbol = false, params = {} ) => {
+            if (symbol) params.symbol = symbol;
+            return promiseRequest( 'v1/futuresHistDataId', params, {base: sapi, type: 'SIGNED', method: 'POST'} )
+        },
+
+        futuresDownloadLink: async (downloadId) => {
+            return promiseRequest( 'v1/downloadLink', { downloadId }, {base: sapi, type: 'SIGNED'} )
+        },
+
         // futures websockets support: ticker bookTicker miniTicker aggTrade markPrice
         /* TODO: https://binance-docs.github.io/apidocs/futures/en/#change-log
         Cancel multiple orders DELETE /fapi/v1/batchOrders

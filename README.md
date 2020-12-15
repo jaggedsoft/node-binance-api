@@ -158,6 +158,26 @@ console.info( await binance.promiseRequest( 'v1/time' ) );
 // Batch orders, remaining WebSocket streams, and better documentation will be come later
 ```
 
+#### Futures Historical Bulk Data Download API
+
+##### Get Download ID
+
+```js
+console.info( await binance.futuresHistDataId(
+  "BTCUSDT", {
+    startTime: new Date().getTime() - 24 * 60 * 60 * 1000,
+    endTime: new Date().getTime(),
+    dataType: 'T_TRADE'
+  } )
+)
+```
+
+##### Get Download Link
+
+```js
+console.info( await binance.futuresDownloadLink(7343)
+```
+
 # Futures WebSocket Streams
 
 #### Futures miniTicker stream for all symbols
