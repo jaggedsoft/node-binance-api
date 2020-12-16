@@ -2090,6 +2090,48 @@ let api = function Binance( options = {} ) {
         }
       };
 
+     /**
+   * Transfer between main account and futures/delivery accounts
+   * @param {string} asset - the asset
+   * @param {number} amount - the asset
+   * @param {function} callback - the callback function
+   * @param {object} options - additional options
+   * @return {undefined}
+   */
+  const transferBetweenMainAndFutures = function (
+    asset,
+    amount,
+    type,
+    callback
+  ) {
+    let parameters = Object.assign({
+      asset,
+      amount,
+      type,
+    });
+    if (!callback) {
+      return new Promise((resolve, reject) => {
+        signedRequest(
+          sapi + "v1/futures/transfer",
+          parameters,
+          function (error, data) {
+            if (error) return reject(error);
+            return resolve(data);
+          },
+          "POST"
+        );
+      });
+    }
+    signedRequest(
+      sapi + "v1/futures/transfer",
+      parameters,
+      function (error, data) {
+        if (callback) return callback(error, data);
+      },
+      "POST"
+    );
+  };
+    
     /**
      * Converts the previous day stream into friendly object
      * @param {object} data - user data callback data type
@@ -4459,6 +4501,48 @@ let api = function Binance( options = {} ) {
                 if ( callback ) return callback( error, data );
             }, 'POST' );
         },
+        
+        /**
+     * Transfer from main account to delivery account
+     * @param {string} asset - the asset
+     * @param {number} amount - the asset
+     * @param {function} callback - the callback function (optionnal)
+     * @param {object} options - additional options
+     * @return {undefined}
+     */
+    transferMainToFutures: (asset, amount, callback) =>
+      transferBetweenMainAndFutures(asset, amount, 1, callback),
+
+    /**
+     * Transfer from delivery account to main account
+     * @param {string} asset - the asset
+     * @param {number} amount - the asset
+     * @param {function} callback - the callback function (optionnal)
+     * @return {undefined}
+     */
+    transferFuturesToMain: (asset, amount, callback) =>
+      transferBetweenMainAndFutures(asset, amount, 2, callback),
+
+    /**
+     * Transfer from main account to delivery account
+     * @param {string} asset - the asset
+     * @param {number} amount - the asset
+     * @param {function} callback - the callback function (optionnal)
+     * @param {object} options - additional options
+     * @return {undefined}
+     */
+    transferMainToDelivery: (asset, amount, callback) =>
+      transferBetweenMainAndFutures(asset, amount, 3, callback),
+
+    /**
+     * Transfer from delivery account to main account
+     * @param {string} asset - the asset
+     * @param {number} amount - the asset
+     * @param {function} callback - the callback function (optionnal)
+     * @return {undefined}
+     */
+    transferDeliveryToMain: (asset, amount, callback) =>
+      transferBetweenMainAndFutures(asset, amount, 4, callback),
 
         /**
          * Get maximum transfer-out amount of an asset
