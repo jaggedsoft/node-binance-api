@@ -15,6 +15,7 @@ let api = function Binance( options = {} ) {
     const crypto = require( 'crypto' );
     const file = require( 'fs' );
     const url = require( 'url' );
+    const JSONbig = require('json-bigint');
     const HttpsProxyAgent = require( 'https-proxy-agent' );
     const SocksProxyAgent = require( 'socks-proxy-agent' );
     const stringHash = require( 'string-hash' );
@@ -184,7 +185,7 @@ let api = function Binance( options = {} ) {
         if ( !cb ) return;
         if ( error ) return cb( error, {} );
         if ( response && response.statusCode !== 200 ) return cb( response, {} );
-        return cb( null, JSON.parse( body ) );
+        return cb( null, JSONbig.parse( body ) );
     }
 
     const proxyRequest = ( opt, cb ) => request( addProxy( opt ), reqHandler( cb ) );
@@ -258,7 +259,7 @@ let api = function Binance( options = {} ) {
      * @return {undefined}
      */
     const apiRequest = ( url, data = {}, callback, method = 'GET' ) => {
-        if ( !Binance.options.APIKEY ) throw Error( 'apiRequest: Invalid API Key' );
+        requireApiKey('apiRequest');
         let opt = reqObj(
             url,
             data,
@@ -268,6 +269,28 @@ let api = function Binance( options = {} ) {
         proxyRequest( opt, callback );
     };
 
+    // Check if API key is empty or invalid
+    const requireApiKey = function(source = 'requireApiKey', fatalError = true) {
+        if ( !Binance.options.APIKEY ) {
+            if ( fatalError ) throw Error( `${source}: Invalid API Key!` );
+            return false;
+        }
+        return true;
+    }
+    
+    // Check if API secret is present
+    const requireApiSecret = function(source = 'requireApiSecret', fatalError = true) {
+        if ( !Binance.options.APIKEY ) {
+            if ( fatalError ) throw Error( `${source}: Invalid API Key!` );
+            return false;
+        }
+        if ( !Binance.options.APISECRET ) {
+            if ( fatalError ) throw Error( `${source}: Invalid API Secret!` );
+            return false;
+        }
+        return true;
+    }
+    
     /**
      * Make market request
      * @param {string} url - The http endpoint
@@ -277,7 +300,7 @@ let api = function Binance( options = {} ) {
      * @return {undefined}
      */
     const marketRequest = ( url, data = {}, callback, method = 'GET' ) => {
-        if ( !Binance.options.APIKEY ) throw Error( 'apiRequest: Invalid API Key' );
+        requireApiKey('marketRequest');
         let query = makeQueryString( data );
         let opt = reqObj(
             url + ( query ? '?' + query : '' ),
@@ -298,8 +321,7 @@ let api = function Binance( options = {} ) {
      * @return {undefined}
      */
     const signedRequest = ( url, data = {}, callback, method = 'GET', noDataInSignature = false ) => {
-        if ( !Binance.options.APIKEY ) throw Error( 'apiRequest: Invalid API Key' );
-        if ( !Binance.options.APISECRET ) throw Error( 'signedRequest: Invalid API Secret' );
+        requireApiSecret('signedRequest');
         data.timestamp = new Date().getTime() + Binance.info.timeOffset;
         if ( typeof data.recvWindow === 'undefined' ) data.recvWindow = Binance.options.recvWindow;
         let query = method === 'POST' && noDataInSignature ? '' : makeQueryString( data );
@@ -499,8 +521,8 @@ let api = function Binance( options = {} ) {
             if ( typeof flags.type === 'undefined' ) flags.type = false; // TRADE, SIGNED, MARKET_DATA, USER_DATA, USER_STREAM
             else {
                 if ( typeof data.recvWindow === 'undefined' ) data.recvWindow = Binance.options.recvWindow;
+                requireApiKey('promiseRequest');
                 headers['X-MBX-APIKEY'] = Binance.options.APIKEY;
-                if ( !Binance.options.APIKEY ) return reject( 'Invalid API Key' );
             }
             let baseURL = typeof flags.base === 'undefined' ? base : flags.base;
             if ( Binance.options.test && baseURL === fapi ) baseURL = fapiTest;
@@ -513,7 +535,7 @@ let api = function Binance( options = {} ) {
                 followAllRedirects: true
             };
             if ( flags.type === 'SIGNED' || flags.type === 'TRADE' || flags.type === 'USER_DATA' ) {
-                if ( !Binance.options.APISECRET ) return reject( 'Invalid API Secret' );
+                if ( !requireApiSecret('promiseRequest') ) return reject( 'promiseRequest: Invalid API Secret!' );
                 data.timestamp = new Date().getTime() + Binance.info.timeOffset;
                 query = makeQueryString( data );
                 data.signature = crypto.createHmac( 'sha256', Binance.options.APISECRET ).update( query ).digest( 'hex' ); // HMAC hash header
@@ -538,9 +560,9 @@ let api = function Binance( options = {} ) {
                                 Binance.info.futuresLatency = response.headers['x-response-time'] || 0;
                             }
                         }
-                        if ( !error && response.statusCode == 200 ) return resolve( JSON.parse( body ) );
+                        if ( !error && response.statusCode == 200 ) return resolve( JSONbig.parse( body ) );
                         if ( typeof response.body !== 'undefined' ) {
-                            return resolve( JSON.parse( response.body ) );
+                            return resolve( JSONbig.parse( response.body ) );
                         }
                         return reject( response );
                     } catch ( err ) {
