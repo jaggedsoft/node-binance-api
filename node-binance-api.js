@@ -100,7 +100,7 @@ let api = function Binance( options = {} ) {
         if ( typeof Binance.options.verbose === 'undefined' ) Binance.options.verbose = default_options.verbose;
         if ( typeof Binance.options.keepAlive === 'undefined' ) Binance.options.keepAlive = default_options.keepAlive;
         if ( typeof Binance.options.localAddress === 'undefined' ) Binance.options.localAddress = default_options.localAddress;
-        if ( typeof Binance.options.family === 'undefined' ) Binance.options.localAddress = default_options.family;
+        if ( typeof Binance.options.family === 'undefined' ) Binance.options.family = default_options.family;
         if ( typeof Binance.options.urls !== 'undefined' ) {
             const { urls } = Binance.options;
             if ( typeof urls.base === 'string' ) base = urls.base;
