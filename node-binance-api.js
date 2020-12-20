@@ -4170,7 +4170,7 @@ let api = function Binance( options = {} ) {
         deliveryContinuousKlines: async ( pair, contractType = "CURRENT_QUARTER", interval = "30m", params = {} ) => {
             params.pair = pair;
             params.interval = interval;
-            pairs.contractType = contractType;
+            params.contractType = contractType;
             return promiseRequest( 'v1/continuousKlines', params, { base:dapi } );
         },
 
