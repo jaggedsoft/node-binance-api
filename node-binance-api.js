@@ -188,7 +188,10 @@ let api = function Binance( options = {} ) {
         return cb( null, JSONbig.parse( body ) );
     }
 
-    const proxyRequest = ( opt, cb ) => request( addProxy( opt ), reqHandler( cb ) );
+    const proxyRequest = ( opt, cb ) => {
+        const req = request( addProxy( opt ), reqHandler( cb ) ).on('error', (err) => { cb( err, {} ) });
+        return req;
+    }
 
     const reqObj = ( url, data = {}, method = 'GET', key ) => ( {
         url: url,
@@ -568,7 +571,7 @@ let api = function Binance( options = {} ) {
                     } catch ( err ) {
                         return reject( `promiseRequest error #${ response.statusCode }` );
                     }
-                } );
+                } ).on( 'error', reject );
             } catch ( err ) {
                 return reject( err );
             }
@@ -3151,7 +3154,7 @@ let api = function Binance( options = {} ) {
                         let result = {};
                         result[symbol] = JSON.parse( response.body ).price;
                         return resolve( result );
-                    } );
+                    } ).on( 'error', reject );
                 } );
             }
             request( addProxy( opt ), ( error, response, body ) => {
@@ -3160,7 +3163,7 @@ let api = function Binance( options = {} ) {
                 let result = {};
                 result[symbol] = JSON.parse( response.body ).price;
                 return callback( null, result );
-            } );
+            } ).on( 'error', callback );
         },
 
         /**
@@ -3183,14 +3186,14 @@ let api = function Binance( options = {} ) {
                         if ( error ) return reject( error );
                         if ( response.statusCode !== 200 ) return reject( response );
                         return resolve( priceData( JSON.parse( body ) ) );
-                    } );
+                    } ).on( 'error', reject );
                 } );
             }
             request( addProxy( opt ), ( error, response, body ) => {
                 if ( error ) return callback( error );
                 if ( response.statusCode !== 200 ) return callback( response );
                 return callback( null, priceData( JSON.parse( body ) ) );
-            } );
+            } ).on( 'error', callback );
         },
 
         /**
@@ -3213,7 +3216,7 @@ let api = function Binance( options = {} ) {
                         if ( response.statusCode !== 200 ) return reject( response );
                         const result = symbol ? JSON.parse( body ) : bookPriceData( JSON.parse( body ) );
                         return resolve( result );
-                    } );
+                    } ).on( 'error', reject );
                 } );
             }
             request( addProxy( opt ), ( error, response, body ) => {
@@ -3221,7 +3224,7 @@ let api = function Binance( options = {} ) {
                 if ( response.statusCode !== 200 ) return callback( response );
                 const result = symbol ? JSON.parse( body ) : bookPriceData( JSON.parse( body ) );
                 return callback( null, result );
-            } );
+            } ).on( 'error', callback );
         },
 
         /**
