@@ -4338,6 +4338,14 @@ let api = function Binance( options = {} ) {
             return promiseRequest( 'v1/allOrders', params, { base:dapi, type:'SIGNED' } );
         },
 
+        deliveryPositionSideDual: async ( params = {} ) => {
+            return promiseRequest( 'v1/positionSide/dual', params, { base:dapi, type:'SIGNED' } );
+        },
+
+        deliveryChangePositionSideDual: async ( dualSidePosition, params = {} ) => {
+            params.dualSidePosition = dualSidePosition;
+            return promiseRequest( 'v1/positionSide/dual', params, { base:dapi, type:'SIGNED', method:'POST' } );
+        },
 
         //** Margin methods */
         /**
