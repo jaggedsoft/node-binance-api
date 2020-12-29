@@ -687,9 +687,9 @@ let api = function Binance( options = {} ) {
             } );
             ws = new WebSocket( stream + endpoint, { agent: agent } );
         } else if ( httpsproxy !== false ) {
-            if ( Binance.options.verbose ) Binance.options.log( 'using proxy server ' + agent );
             let config = url.parse( httpsproxy );
             let agent = new HttpsProxyAgent( config );
+            if ( Binance.options.verbose ) Binance.options.log( 'using proxy server ' + agent );
             ws = new WebSocket( stream + endpoint, { agent: agent } );
         } else {
             ws = new WebSocket( stream + endpoint );
