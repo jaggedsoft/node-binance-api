@@ -2760,7 +2760,19 @@ let api = function Binance( options = {} ) {
         * Returns the ping time from the last futures request
         * @return {object} - latency/ping (2ms)
         */
-        futuresLatency: () => Binance.info.futuresLatency,
+        futuresLatency: () => Binance.info.futuresLatency, // Binance.futuresInfo.latency
+
+        /**
+        * Returns the used weight from the last futures request
+        * @return {object} - 1m weight used
+        */
+        futuresUsedWeight: () => Binance.futuresInfo.usedWeight,
+
+        /**
+        * Returns the order count from the last futures request
+        * @return {object} - orders allowed per 1m
+        */
+        futuresOrderCount: () => Binance.futuresInfo.orderCount,
 
         /**
         * Returns the complete URL from the last request
