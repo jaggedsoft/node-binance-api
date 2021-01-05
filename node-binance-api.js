@@ -563,7 +563,11 @@ let api = function Binance( options = {} ) {
                             Binance.info.statusCode = response.statusCode || 0;
                             if ( response.request ) Binance.info.lastURL = response.request.uri.href;
                             if ( response.headers ) {
-                                Binance.info.usedWeight = response.headers['x-mbx-used-weight-1m'] || 0;
+                                Binance.futuresInfo.usedWeight = response.headers['x-mbx-used-weight-1m'] || 0;
+                                if (response.headers['x-mbx-order-count-1m'] !== undefined) {
+                                    Binance.futuresInfo.orderCount = response.headers['x-mbx-order-count-1m'];
+                                    // never see other x-mbx-order-count-* than 1m...
+                                }
                                 Binance.info.futuresLatency = response.headers['x-response-time'] || 0;
                             }
                         }
