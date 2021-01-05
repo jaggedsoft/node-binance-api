@@ -41,7 +41,7 @@ let api = function Binance( options = {} ) {
     const contentType = 'application/x-www-form-urlencoded';
     Binance.subscriptions = {};
     Binance.futuresSubscriptions = {};
-    Binance.futuresInfo = {};
+    // Binance.futuresInfo = {};
     Binance.futuresMeta = {};
     Binance.futuresTicks = {};
     Binance.futuresRealtime = {};
@@ -84,6 +84,10 @@ let api = function Binance( options = {} ) {
         orderCount1h: 0,
         orderCount1d: 0,
         timeOffset: 0
+    };
+    Binance.futuresInfo = {
+        usedWeight: 0,
+        orderCount: 0
     };
     Binance.socketHeartbeatInterval = null;
     if ( options ) setOptions( options );
