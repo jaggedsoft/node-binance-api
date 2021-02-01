@@ -2101,7 +2101,7 @@ let api = function Binance( options = {} ) {
             if ( Binance.options.future_account_update_callback ) {
                 Binance.options.future_account_update_callback( fUserDataAccountUpdateConvertData( data ) );
             }
-        else if ( type === 'ACCOUNT_CONFIG_UPDATE' ) {
+        } else if ( type === 'ACCOUNT_CONFIG_UPDATE' ) {
             if ( Binance.options.account_config_update_callback ) {
                 Binance.options.account_config_update_callback( fUserDataAccountConfigUpdateConvertData( data ) );
             }
