@@ -188,10 +188,7 @@ let api = function Binance( options = {} ) {
         return cb( null, JSONbig.parse( body ) );
     }
 
-    const proxyRequest = ( opt, cb ) => {
-        const req = request( addProxy( opt ), reqHandler( cb ) ).on('error', (err) => { cb( err, {} ) });
-        return req;
-    }
+    const proxyRequest = ( opt, cb ) => request( addProxy( opt ), reqHandler( cb ) );
 
     const reqObj = ( url, data = {}, method = 'GET', key ) => ( {
         url: url,
@@ -571,7 +568,7 @@ let api = function Binance( options = {} ) {
                     } catch ( err ) {
                         return reject( `promiseRequest error #${ response.statusCode }` );
                     }
-                } ).on( 'error', reject );
+                } );
             } catch ( err ) {
                 return reject( err );
             }
@@ -687,9 +684,9 @@ let api = function Binance( options = {} ) {
             } );
             ws = new WebSocket( stream + endpoint, { agent: agent } );
         } else if ( httpsproxy !== false ) {
+            if ( Binance.options.verbose ) Binance.options.log( 'using proxy server ' + agent );
             let config = url.parse( httpsproxy );
             let agent = new HttpsProxyAgent( config );
-            if ( Binance.options.verbose ) Binance.options.log( 'using proxy server ' + agent );
             ws = new WebSocket( stream + endpoint, { agent: agent } );
         } else {
             ws = new WebSocket( stream + endpoint );
@@ -1214,6 +1211,11 @@ let api = function Binance( options = {} ) {
             positions
         };
     };
+
+    const fUserDataAccountConfigUpdateConvertData = data => {
+        // TODO: create mapper
+        return data;
+    }
 
     /**
      * Converts the futures UserData stream ACCOUNT_UPDATE data into a friendly object
@@ -2081,6 +2083,10 @@ let api = function Binance( options = {} ) {
         } else if ( type === 'ORDER_TRADE_UPDATE' ) {
             if ( Binance.options.future_order_update_callback ) {
                 Binance.options.future_order_update_callback( fUserDataOrderUpdateConvertData( data ) );
+            }
+        } else if ( type === 'ACCOUNT_CONFIG_UPDATE' ) {
+            if ( Binance.options.account_config_update_callback ) {
+                Binance.options.account_config_update_callback( fUserDataAccountConfigUpdateConvertData( data ) );
             }
         } else {
             Binance.options.log( 'Unexpected userFutureData: ' + type );
@@ -3154,7 +3160,7 @@ let api = function Binance( options = {} ) {
                         let result = {};
                         result[symbol] = JSON.parse( response.body ).price;
                         return resolve( result );
-                    } ).on( 'error', reject );
+                    } );
                 } );
             }
             request( addProxy( opt ), ( error, response, body ) => {
@@ -3163,7 +3169,7 @@ let api = function Binance( options = {} ) {
                 let result = {};
                 result[symbol] = JSON.parse( response.body ).price;
                 return callback( null, result );
-            } ).on( 'error', callback );
+            } );
         },
 
         /**
@@ -3186,14 +3192,14 @@ let api = function Binance( options = {} ) {
                         if ( error ) return reject( error );
                         if ( response.statusCode !== 200 ) return reject( response );
                         return resolve( priceData( JSON.parse( body ) ) );
-                    } ).on( 'error', reject );
+                    } );
                 } );
             }
             request( addProxy( opt ), ( error, response, body ) => {
                 if ( error ) return callback( error );
                 if ( response.statusCode !== 200 ) return callback( response );
                 return callback( null, priceData( JSON.parse( body ) ) );
-            } ).on( 'error', callback );
+            } );
         },
 
         /**
@@ -3216,7 +3222,7 @@ let api = function Binance( options = {} ) {
                         if ( response.statusCode !== 200 ) return reject( response );
                         const result = symbol ? JSON.parse( body ) : bookPriceData( JSON.parse( body ) );
                         return resolve( result );
-                    } ).on( 'error', reject );
+                    } );
                 } );
             }
             request( addProxy( opt ), ( error, response, body ) => {
@@ -3224,7 +3230,7 @@ let api = function Binance( options = {} ) {
                 if ( response.statusCode !== 200 ) return callback( response );
                 const result = symbol ? JSON.parse( body ) : bookPriceData( JSON.parse( body ) );
                 return callback( null, result );
-            } ).on( 'error', callback );
+            } );
         },
 
         /**
@@ -4173,7 +4179,7 @@ let api = function Binance( options = {} ) {
         deliveryContinuousKlines: async ( pair, contractType = "CURRENT_QUARTER", interval = "30m", params = {} ) => {
             params.pair = pair;
             params.interval = interval;
-            params.contractType = contractType;
+            pairs.contractType = contractType;
             return promiseRequest( 'v1/continuousKlines', params, { base:dapi } );
         },
 
@@ -4341,14 +4347,6 @@ let api = function Binance( options = {} ) {
             return promiseRequest( 'v1/allOrders', params, { base:dapi, type:'SIGNED' } );
         },
 
-        deliveryPositionSideDual: async ( params = {} ) => {
-            return promiseRequest( 'v1/positionSide/dual', params, { base:dapi, type:'SIGNED' } );
-        },
-
-        deliveryChangePositionSideDual: async ( dualSidePosition, params = {} ) => {
-            params.dualSidePosition = dualSidePosition;
-            return promiseRequest( 'v1/positionSide/dual', params, { base:dapi, type:'SIGNED', method:'POST' } );
-        },
 
         //** Margin methods */
         /**
@@ -5211,14 +5209,15 @@ let api = function Binance( options = {} ) {
              * Future Userdata websockets function
              * @param {function} margin_call_callback
              * @param {function} account_update_callback
+             * @param {function} account_config_update_callback
              * @param {function} order_update_callback
              * @param {Function} subscribed_callback - subscription callback
              */
-            userFutureData: function userFutureData( margin_call_callback, account_update_callback = undefined, order_update_callback = undefined, subscribed_callback = undefined ) {
+            userFutureData: function userFutureData( margin_call_callback, account_update_callback = undefined, account_config_update_callback = undefined, order_update_callback = undefined, subscribed_callback = undefined ) {
                 const url = ( Binance.options.test ) ? fapiTest : fapi;
 
                 let reconnect = () => {
-                    if ( Binance.options.reconnect ) userFutureData( margin_call_callback, account_update_callback, order_update_callback, subscribed_callback )
+                    if ( Binance.options.reconnect ) userFutureData( margin_call_callback, account_update_callback, account_config_update_callback, order_update_callback, subscribed_callback )
                 }
 
                 apiRequest( url + 'v1/listenKey', {}, function ( error, response ) {
@@ -5235,6 +5234,7 @@ let api = function Binance( options = {} ) {
                     }, 60 * 30 * 1000 ); // 30 minute keepalive
                     Binance.options.future_margin_call_callback = margin_call_callback;
                     Binance.options.future_account_update_callback = account_update_callback;
+                    Binance.options.account_config_update_callback = account_config_update_callback;
                     Binance.options.future_order_update_callback = order_update_callback;
                     const subscription = futuresSubscribe( Binance.options.listenFutureKey, userFutureDataHandler, { reconnect } );
                     if ( subscribed_callback ) subscribed_callback( subscription.endpoint );
