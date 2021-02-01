@@ -2082,6 +2082,10 @@ let api = function Binance( options = {} ) {
             if ( Binance.options.future_order_update_callback ) {
                 Binance.options.future_order_update_callback( fUserDataOrderUpdateConvertData( data ) );
             }
+        } else if ( type === 'listenKeyExpired' ) {
+            if ( Binance.options.future_subscribed_callback ) {
+                Binance.options.future_subscribed_callback( type );
+            }
         } else {
             Binance.options.log( 'Unexpected userFutureData: ' + type );
         }
