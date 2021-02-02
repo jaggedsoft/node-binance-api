@@ -434,6 +434,7 @@ let api = function Binance( options = {} ) {
             quantity: quantity
         };
         if ( typeof flags.type !== 'undefined' ) opt.type = flags.type;
+        if (typeof flags.isIsolated !== 'undefined') opt.isIsolated = flags.isIsolated;
         if ( opt.type.includes( 'LIMIT' ) ) {
             opt.price = price;
             if ( opt.type !== 'LIMIT_MAKER' ) {
@@ -2898,7 +2899,7 @@ let api = function Binance( options = {} ) {
         * @param {function} callback - the callback function
         * @return {promise or undefined} - omitting the callback returns a promise
         */
-        marketSell: function ( symbol, quantity, flags = { type: 'MARKET' }, callback = false ) {
+       marketSell: function ( symbol, quantity, flags = { type: 'MARKET' }, callback = false ) {
             if ( typeof flags === 'function' ) { // Accept callback as third parameter
                 callback = flags;
                 flags = { type: 'MARKET' };
@@ -4359,10 +4360,11 @@ let api = function Binance( options = {} ) {
          * @param {numeric} price - the price to pay for each unit
          * @param {object} flags - additional buy order flags
          * @param {function} callback - the callback function
+         * @param {string} isIsolated - the isolate margin option
          * @return {undefined}
          */
-        mgOrder: function ( side, symbol, quantity, price, flags = {}, callback = false ) {
-            marginOrder( side, symbol, quantity, price, flags, callback );
+        mgOrder: function ( side, symbol, quantity, price, flags = {}, callback = false,isIsolated='FALSE'  ) {
+            marginOrder( side, symbol, quantity, price, {...flags,isIsolated}, callback );
         },
 
         /**
@@ -4372,10 +4374,11 @@ let api = function Binance( options = {} ) {
          * @param {numeric} price - the price to pay for each unit
          * @param {object} flags - additional buy order flags
          * @param {function} callback - the callback function
+         * @param {string} isIsolated - the isolate margin option
          * @return {undefined}
          */
-        mgBuy: function ( symbol, quantity, price, flags = {}, callback = false ) {
-            marginOrder( 'BUY', symbol, quantity, price, flags, callback );
+        mgBuy: function ( symbol, quantity, price, flags = {}, callback = false,isIsolated='FALSE'  ) {
+            marginOrder( 'BUY', symbol, quantity, price, {...flags,isIsolated}, callback );
         },
 
         /**
@@ -4385,10 +4388,11 @@ let api = function Binance( options = {} ) {
          * @param {numeric} price - the price to sell each unit for
          * @param {object} flags - additional order flags
          * @param {function} callback - the callback function
+         * @param {string} isIsolated - the isolate margin option
          * @return {undefined}
          */
-        mgSell: function ( symbol, quantity, price, flags = {}, callback = false ) {
-            marginOrder( 'SELL', symbol, quantity, price, flags, callback );
+        mgSell: function ( symbol, quantity, price, flags = {}, callback = false,isIsolated='FALSE'  ) {
+            marginOrder( 'SELL', symbol, quantity, price, {...flags,isIsolated}, callback );
         },
 
         /**
@@ -4397,15 +4401,16 @@ let api = function Binance( options = {} ) {
          * @param {numeric} quantity - the quantity required
          * @param {object} flags - additional buy order flags
          * @param {function} callback - the callback function
+         * @param {string} isIsolated - the isolate margin option
          * @return {undefined}
          */
-        mgMarketBuy: function ( symbol, quantity, flags = { type: 'MARKET' }, callback = false ) {
+        mgMarketBuy: function ( symbol, quantity, flags = { type: 'MARKET' }, callback = false,isIsolated='FALSE' ) {
             if ( typeof flags === 'function' ) { // Accept callback as third parameter
                 callback = flags;
                 flags = { type: 'MARKET' };
             }
             if ( typeof flags.type === 'undefined' ) flags.type = 'MARKET';
-            marginOrder( 'BUY', symbol, quantity, 0, flags, callback );
+            marginOrder( 'BUY', symbol, quantity, 0, {...flags,isIsolated}, callback );
         },
 
         /**
@@ -4414,15 +4419,16 @@ let api = function Binance( options = {} ) {
          * @param {numeric} quantity - the quantity required
          * @param {object} flags - additional sell order flags
          * @param {function} callback - the callback function
+         * @param {string} isIsolated - the isolate margin option
          * @return {undefined}
          */
-        mgMarketSell: function ( symbol, quantity, flags = { type: 'MARKET' }, callback = false ) {
+        mgMarketSell: function ( symbol, quantity, flags = { type: 'MARKET' }, callback = false, isIsolated='FALSE'  ) {
             if ( typeof flags === 'function' ) { // Accept callback as third parameter
                 callback = flags;
                 flags = { type: 'MARKET' };
             }
             if ( typeof flags.type === 'undefined' ) flags.type = 'MARKET';
-            marginOrder( 'SELL', symbol, quantity, 0, flags, callback );
+            marginOrder( 'SELL', symbol, quantity, 0, {...flags,isIsolated}, callback );
         },
 
         /**
@@ -4432,8 +4438,8 @@ let api = function Binance( options = {} ) {
          * @param {function} callback - the callback function
          * @return {undefined}
          */
-        mgCancel: function ( symbol, orderid, callback = false ) {
-            signedRequest( sapi + 'v1/margin/order', { symbol: symbol, orderId: orderid }, function ( error, data ) {
+        mgCancel: function ( symbol, orderid, callback = false,isIsolated='FALSE') {
+            signedRequest( sapi + 'v1/margin/order', { symbol: symbol, orderId: orderid,isIsolated }, function ( error, data ) {
                 if ( callback ) return callback.call( this, error, data, symbol );
             }, 'DELETE' );
         },
@@ -4604,11 +4610,18 @@ let api = function Binance( options = {} ) {
          * @param {string} asset - the asset
          * @param {number} amount - the asset
          * @param {function} callback - the callback function
+         * @param {string} isIsolated - the isolated option
+         * @param {string} symbol - symbol for isolated margin
          * @return {undefined}
          */
-        mgBorrow: function ( asset, amount, callback ) {
+        mgBorrow: function ( asset, amount, callback, isIsolated='FALSE',symbol=null ) {
             let parameters = Object.assign( { asset: asset, amount: amount } );
-            signedRequest( sapi + 'v1/margin/loan', parameters, function ( error, data ) {
+            if (isIsolated ==='TRUE' && !symbol) throw new Error('If "isIsolated" = "TRUE", "symbol" must be sent')
+            const isolatedObj = isIsolated === 'TRUE'?{
+                isIsolated,
+                symbol
+            }:{}
+            signedRequest( sapi + 'v1/margin/loan', {...parameters,...isolatedObj}, function ( error, data ) {
                 if ( callback ) return callback( error, data );
             }, 'POST' );
         },
@@ -4618,21 +4631,30 @@ let api = function Binance( options = {} ) {
          * @param {string} asset - the asset
          * @param {number} amount - the asset
          * @param {function} callback - the callback function
+         * @param {string} isIsolated - the isolated option
+         * @param {string} symbol - symbol for isolated margin
          * @return {undefined}
          */
-        mgRepay: function ( asset, amount, callback ) {
+        mgRepay: function ( asset, amount, callback ,isIsolated='FALSE',symbol=null ) {
             let parameters = Object.assign( { asset: asset, amount: amount } );
-            signedRequest( sapi + 'v1/margin/repay', parameters, function ( error, data ) {
+            if (isIsolated ==='TRUE' && !symbol) throw new Error('If "isIsolated" = "TRUE", "symbol" must be sent')
+            const isolatedObj = isIsolated === 'TRUE'?{
+                isIsolated,
+                symbol
+            }:{}
+            signedRequest( sapi + 'v1/margin/repay', {...parameters,...isolatedObj}, function ( error, data ) {
                 if ( callback ) return callback( error, data );
             }, 'POST' );
         },
         /**
          * Margin account details
          * @param {function} callback - the callback function
+         * @param {boolean} isIsolated - the callback function
          * @return {undefined}
          */
-        mgAccount: function( callback ) {
-            signedRequest( sapi + 'v1/margin/account', {}, function( error, data ) {
+        mgAccount: function( callback ,isIsolated = false) {
+            const endpoint = 'v1/margin' + (isIsolated)?'/isolated':''  + '/account'
+            signedRequest( sapi + endpoint, {}, function( error, data ) {
                 if( callback ) return callback( error, data );
             } );
         },
