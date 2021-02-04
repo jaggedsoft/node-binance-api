@@ -5225,7 +5225,7 @@ let api = function Binance( options = {} ) {
                     Binance.options.listenFutureKey = response.listenKey;
                     setTimeout( function userDataKeepAlive() { // keepalive
                         try {
-                            apiRequest( fapi + 'v1/listenKey?listenKey=' + Binance.options.listenFutureKey, {}, function ( err ) {
+                            apiRequest( url + 'v1/listenKey?listenKey=' + Binance.options.listenFutureKey, {}, function ( err ) {
                                 if ( err ) setTimeout( userDataKeepAlive, 60000 ); // retry in 1 minute
                                 else setTimeout( userDataKeepAlive, 60 * 30 * 1000 ); // 30 minute keepalive
                             }, 'PUT' );
