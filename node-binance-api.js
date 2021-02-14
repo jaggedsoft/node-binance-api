@@ -3967,7 +3967,7 @@ let api = function Binance( options = {} ) {
 
         futuresCommissionRate: async ( symbol = false, params = {} ) => {
             if ( symbol ) params.symbol = symbol;
-            return promiseRequest( 'v1/commissionRate ', params, { base:fapi, type:'USER_DATA' } );
+            return promiseRequest( 'v1/commissionRate', params, { base:fapi, type:'USER_DATA' } );
         },
 
         // leverage 1 to 125
