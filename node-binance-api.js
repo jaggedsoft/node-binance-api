@@ -2053,13 +2053,13 @@ let api = function Binance( options = {} ) {
     const userMarginDataHandler = data => {
         let type = data.e;
         if ( type === 'outboundAccountInfo' ) {
-            Binance.options.margin_balance_callback( data );
+            // XXX: Deprecated in 2020-09-08
         } else if ( type === 'executionReport' ) {
             if ( Binance.options.margin_execution_callback ) Binance.options.margin_execution_callback( data );
         } else if ( type === 'listStatus' ) {
             if ( Binance.options.margin_list_status_callback ) Binance.options.margin_list_status_callback( data );
         } else if ( type === 'outboundAccountPosition' ) {
-            // TODO: Does this mean something?
+            Binance.options.margin_balance_callback( data );
         } else {
             Binance.options.log( 'Unexpected userMarginData: ' + type );
         }
