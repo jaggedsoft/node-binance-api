@@ -5712,7 +5712,7 @@ let api = function Binance( options = {} ) {
              */
             prevDay: function prevDay( symbols, callback, singleCallback ) {
                 let reconnect = () => {
-                    if ( Binance.options.reconnect ) prevDay( symbols, callback );
+                    if ( Binance.options.reconnect ) prevDay( symbols, callback, singleCallback );
                 };
 
                 let subscription;
