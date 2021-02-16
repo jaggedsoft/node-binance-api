@@ -3591,15 +3591,19 @@ let api = function Binance( options = {} ) {
                         }
                     }
                     publicRequest( base + 'v3/time', {}, function ( error, response ) {
-                        Binance.info.timeOffset = response.serverTime - new Date().getTime();
-                        //Binance.options.log("server time set: ", response.serverTime, Binance.info.timeOffset);
+                        if ( !error ) {
+                            Binance.info.timeOffset = response.serverTime - new Date().getTime();
+                            //Binance.options.log("server time set: ", response.serverTime, Binance.info.timeOffset);
+                        }
                         callback( error, response );
                     } );
                 } )
             } else {
                 publicRequest( base + 'v3/time', {}, function ( error, response ) {
-                    Binance.info.timeOffset = response.serverTime - new Date().getTime();
-                    //Binance.options.log("server time set: ", response.serverTime, Binance.info.timeOffset);
+                    if ( !error ) {
+                        Binance.info.timeOffset = response.serverTime - new Date().getTime();
+                        //Binance.options.log("server time set: ", response.serverTime, Binance.info.timeOffset);
+                    }
                     callback( error, response );
                 } );
             }
