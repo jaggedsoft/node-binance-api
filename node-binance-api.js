@@ -2082,6 +2082,10 @@ let api = function Binance( options = {} ) {
             if ( Binance.options.future_order_update_callback ) {
                 Binance.options.future_order_update_callback( fUserDataOrderUpdateConvertData( data ) );
             }
+        } else if ( type === 'listenKeyExpired' ) {
+            if ( Binance.options.future_subscribed_callback ) {
+                Binance.options.future_subscribed_callback( type );
+            }
         } else {
             Binance.options.log( 'Unexpected userFutureData: ' + type );
         }
@@ -5240,6 +5244,7 @@ let api = function Binance( options = {} ) {
                     Binance.options.future_margin_call_callback = margin_call_callback;
                     Binance.options.future_account_update_callback = account_update_callback;
                     Binance.options.future_order_update_callback = order_update_callback;
+                    Binance.options.future_subscribed_callback = subscribed_callback;
                     const subscription = futuresSubscribe( Binance.options.listenFutureKey, userFutureDataHandler, { reconnect } );
                     if ( subscribed_callback ) subscribed_callback( subscription.endpoint );
                 }, 'POST' );
