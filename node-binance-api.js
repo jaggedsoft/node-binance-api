@@ -1216,6 +1216,23 @@ let api = function Binance( options = {} ) {
     };
 
     /**
+     * Converts the futures UserData stream ACCOUNT_CONFIG_UPDATE into a friendly object
+     * @param {object} data - user config callback data type
+     * @return {object} - user friendly data type
+     */
+    const fUserConfigDataAccountUpdateConvertData = data => {
+        return {
+            eventType: data.e,
+            eventTime: data.E,
+            transactionTime: data.T,
+            ac: {
+                symbol: data.ac.s,
+                leverage: data.ac.l
+            }
+        };
+    };
+
+    /**
      * Converts the futures UserData stream ACCOUNT_UPDATE data into a friendly object
      * @param {object} data - user data callback data type
      * @return {object} - user friendly data type
@@ -2081,6 +2098,10 @@ let api = function Binance( options = {} ) {
         } else if ( type === 'ORDER_TRADE_UPDATE' ) {
             if ( Binance.options.future_order_update_callback ) {
                 Binance.options.future_order_update_callback( fUserDataOrderUpdateConvertData( data ) );
+            }
+        } else if ( type === 'ACCOUNT_CONFIG_UPDATE' ) {
+            if ( Binance.options.future_account_config_update_callback ) {
+                Binance.options.future_account_config_update_callback( fUserConfigDataAccountUpdateConvertData( data ) );
             }
         } else {
             Binance.options.log( 'Unexpected userFutureData: ' + type );
@@ -5218,7 +5239,7 @@ let api = function Binance( options = {} ) {
              * @param {function} order_update_callback
              * @param {Function} subscribed_callback - subscription callback
              */
-            userFutureData: function userFutureData( margin_call_callback, account_update_callback = undefined, order_update_callback = undefined, subscribed_callback = undefined ) {
+            userFutureData: function userFutureData( margin_call_callback, account_update_callback = undefined, order_update_callback = undefined, subscribed_callback = undefined, account_config_update_callback = undefined ) {
                 const url = ( Binance.options.test ) ? fapiTest : fapi;
 
                 let reconnect = () => {
@@ -5239,6 +5260,7 @@ let api = function Binance( options = {} ) {
                     }, 60 * 30 * 1000 ); // 30 minute keepalive
                     Binance.options.future_margin_call_callback = margin_call_callback;
                     Binance.options.future_account_update_callback = account_update_callback;
+                    Binance.options.future_account_config_update_callback = account_config_update_callback;
                     Binance.options.future_order_update_callback = order_update_callback;
                     const subscription = futuresSubscribe( Binance.options.listenFutureKey, userFutureDataHandler, { reconnect } );
                     if ( subscribed_callback ) subscribed_callback( subscription.endpoint );
