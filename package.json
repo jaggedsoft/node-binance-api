@@ -1,6 +1,6 @@
 {
   "name": "node-binance-api",
-  "version": "0.12.4",
+  "version": "0.12.5",
   "description": "Binance API for node https://github.com/jaggedsoft/node-binance-api",
   "main": "node-binance-api.js",
   "dependencies": {
