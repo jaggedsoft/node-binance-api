@@ -4265,6 +4265,11 @@ let api = function Binance( options = {} ) {
             return promiseRequest( 'v1/leverageBracket', params, { base:dapi, type:'USER_DATA' } );
         },
 
+        deliveryLeverageBracketSymbols: async ( symbol = false, params = {} ) => {
+            if ( symbol ) params.symbol = symbol;
+            return promiseRequest( 'v2/leverageBracket', params, { base:dapi, type:'USER_DATA' } );
+        },
+
         // leverage 1 to 125
         deliveryLeverage: async ( symbol, leverage, params = {} ) => {
             params.symbol = symbol;
