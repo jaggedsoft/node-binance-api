@@ -4683,7 +4683,7 @@ let api = function Binance( options = {} ) {
          * @return {undefined}
          */
         mgAccount: function( callback ,isIsolated = false) {
-            const endpoint = 'v1/margin' + (isIsolated)?'/isolated':''  + '/account'
+            const endpoint = 'v1/margin' + (isIsolated?'/isolated':'')  + '/account'
             signedRequest( sapi + endpoint, {}, function( error, data ) {
                 if( callback ) return callback( error, data );
             } );
