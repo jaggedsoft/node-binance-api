@@ -2578,7 +2578,7 @@ let api = function Binance( options = {} ) {
         roundStep: function ( qty, stepSize ) {
             // Integers do not require rounding
             if ( Number.isInteger( qty ) ) return qty;
-            const qtyString = qty.toFixed( 16 );
+            const qtyString = parseFloat( qty ).toFixed( 16 );
             const desiredDecimals = Math.max( stepSize.indexOf( '1' ) - 1, 0 );
             const decimalIndex = qtyString.indexOf( '.' );
             return parseFloat( qtyString.slice( 0, decimalIndex + desiredDecimals + 1 ) );
