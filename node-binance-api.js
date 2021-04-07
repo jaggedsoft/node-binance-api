@@ -4918,7 +4918,7 @@ let api = function Binance( options = {} ) {
             } else {
                 let symbol = symbols;
                 futuresChartInit( symbol );
-                subscription = futuresSubscribeSingle( symbol.toLowerCase() + '@kline_' + interval, handleFuturesKlineStream, reconnect );
+                subscription = futuresSubscribeSingle( symbol.toLowerCase() + '@kline_' + interval, handleFuturesKlineStream, { reconnect } );
                 getFuturesKlineSnapshot( symbol, limit );
             }
             return subscription.endpoint;
