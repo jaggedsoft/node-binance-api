@@ -1895,6 +1895,33 @@ For order operations, use `binance.mgCancel()`, `binance.mgCancelOrders()`, `bin
 
 Usage and callbacks are the same as the 'regular account' counterparts.
 
+#### Get your Trade History for the Margin account
+Use `binance.mgTrades()` instead of `binance.trades()`. 
+
+```javascript
+binance.mgTrades("ETHUSDT", (error, trades, symbol) => {
+  console.info(symbol+" trade history", trades);
+});
+```
+<details>
+ <summary>View Response</summary>
+
+```js
+[ { symbol: 'ETHUSDT',
+    id: 9572,
+    orderId: 47884,
+    price: '2063.07',
+    qty: '1.44877',
+    commission: '2.98891392',
+    commissionAsset: 'USDT',
+    time: 1617900638521,
+    isBuyer: false,
+    isMaker: false,
+    isBestMatch: true,
+    isIsolated: true }]
+```
+</details>
+
 #### Margin account details
 ```javascript
 binance.mgAccount((error, response) => {

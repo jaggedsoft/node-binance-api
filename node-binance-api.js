@@ -4582,6 +4582,35 @@ let api = function Binance( options = {} ) {
         },
 
         /**
+        * Get trades for a given symbol - margin account 
+        * @param {string} symbol - the symbol
+        * @param {function} callback - the callback function
+        * @param {object} options - additional options
+        * @return {promise or undefined} - omitting the callback returns a promise
+        */
+        mgTrades: ( symbol, callback, options = {} ) => {
+            let parameters = Object.assign( { symbol: symbol }, options );
+            if ( !callback ) {
+                return new Promise( ( resolve, reject ) => {
+                    callback = ( error, response ) => {
+                        if ( error ) {
+                            reject( error );
+                        } else {
+                            resolve( response );
+                        }
+                    }
+                    signedRequest( sapi + 'v1/margin/myTrades', parameters, function ( error, data ) {
+                        return callback.call( this, error, data, symbol );
+                    } );
+                } )
+            } else {
+                signedRequest( sapi + 'v1/margin/myTrades', parameters, function ( error, data ) {
+                    return callback.call( this, error, data, symbol );
+                } );
+            }
+        },
+
+        /**
      * Transfer from main account to delivery account
      * @param {string} asset - the asset
      * @param {number} amount - the asset
