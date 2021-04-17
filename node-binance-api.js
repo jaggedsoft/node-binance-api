@@ -2136,6 +2136,44 @@ let api = function Binance( options = {} ) {
             Binance.options.log( "Unexpected userDeliveryData: " + type );
         }
     };
+	
+	/**
+    * Universal Transfer requires API permissions enabled 
+    * @param {string} type - ENUM , example MAIN_UMFUTURE for SPOT to USDT futures, see https://binance-docs.github.io/apidocs/spot/en/#user-universal-transfer
+    * @param {string} asset - the asset - example :USDT    * 
+    * @param {number} amount - the callback function
+    * @param {function} callback - the callback function
+    * @return {promise}
+    */
+    const universalTransfer = (type, asset, amount, callback = false) => {
+        let parameters = Object.assign({
+            asset,
+            amount,
+            type,
+        });
+        if (!callback) {
+            return new Promise((resolve, reject) => {
+                signedRequest(
+                    sapi + "v1/asset/transfer",
+                    parameters,
+                    function (error, data) {
+                        if (error) return reject(error);
+                        return resolve(data);
+                    },
+                    "POST"
+                );
+            });
+        }
+        signedRequest(
+            sapi + "v1/asset/transfer",
+            parameters,
+            function (error, data) {
+                if (callback) return callback(error, data);
+            },
+            "POST"
+        );
+
+    }
 
     /**
    * Transfer between main account and futures/delivery accounts
@@ -4580,6 +4618,16 @@ let api = function Binance( options = {} ) {
                 if ( callback ) return callback( error, data );
             }, 'POST' );
         },
+		/**
+		* Universal Transfer requires API permissions enabled
+		* @param {string} type - ENUM , example MAIN_UMFUTURE for SPOT to USDT futures, see https://binance-docs.github.io/apidocs/spot/en/#user-universal-transfer
+		* @param {string} asset - the asset - example :USDT
+		* @param {number} amount - the callback function
+		* @param {function} callback - the callback function (optionnal)
+		* @return {promise}
+		*/
+		universalTransfer: (type, asset, amount, callback) =>
+			universalTransfer(type, asset, amount, callback),
 
         /**
      * Transfer from main account to delivery account

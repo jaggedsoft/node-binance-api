@@ -1836,6 +1836,13 @@ binance.withdraw("XMR", address, amount, addressTag);
 binance.withdraw("BTC", "1C5gqLRs96Xq4V2ZZAR1347yUCpHie7sa", 0.2);
 ```
 
+### Univeral Transfer / Internal Wallet Transfer
+Example Spot account transfer to USDⓈ-M Futures account , use ENUM -> "MAIN_UMFUTURE"
+```js
+console.info( await binance.universalTransfer("MAIN_UMFUTURE","USDT",10) );
+```
+for more account transfers (ENUMs) see [docs](https://binance-docs.github.io/apidocs/spot/en/#user-universal-transfer)
+
 # Binance Margin API
 
 #### Transfer from Main account to Margin account
