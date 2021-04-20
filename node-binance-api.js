@@ -415,7 +415,7 @@ let api = function Binance(options) {
         streams.forEach((stream) => {
             unSubscriptionMessage.params = [stream];
             let socket = Binance.pairsSocketMap.get(stream.split('@')[0]);
-            if(socket) {
+            if (socket && socket.readyState === socket.OPEN) {
                 socket.send(JSON.stringify(unSubscriptionMessage));
             }
         });
