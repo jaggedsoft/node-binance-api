@@ -4686,6 +4686,34 @@ let api = function Binance( options = {} ) {
         },
 
         /**
+         * Margin account borrow/loan
+         * @param {string} asset - the asset
+         * @param {object} options - additional options
+         * @param {function} callback - the callback function
+         * @return {undefined}
+         */
+        mgQueryLoan: function ( asset, options, callback) {
+            let parameters = Object.assign( { asset: asset }, options );
+            signedRequest( sapi + 'v1/margin/loan', {...parameters}, function ( error, data ) {
+                if ( callback ) return callback( error, data );
+            }, 'GET' );
+        },
+
+        /**
+         * Margin account repay
+         * @param {string} asset - the asset
+         * @param {object} options - additional options
+         * @param {function} callback - the callback function
+         * @return {undefined}
+         */
+        mgQueryRepay: function ( asset, options, callback ) {
+            let parameters = Object.assign( { asset: asset }, options );
+            signedRequest( sapi + 'v1/margin/repay', {...parameters}, function ( error, data ) {
+                if ( callback ) return callback( error, data );
+            }, 'GET' );
+        },
+        
+        /**
          * Margin account repay
          * @param {string} asset - the asset
          * @param {number} amount - the asset
@@ -4705,6 +4733,7 @@ let api = function Binance( options = {} ) {
                 if ( callback ) return callback( error, data );
             }, 'POST' );
         },
+        
         /**
          * Margin account details
          * @param {function} callback - the callback function
