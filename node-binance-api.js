@@ -1277,13 +1277,15 @@ let api = function Binance( options = {} ) {
                 let {
                     a: asset,
                     wb: walletBalance,
-                    cw: crossWalletBalance
+                    cw: crossWalletBalance,
+                    bc: balanceChange
                 } = balance;
                 return {
                     asset,
                     walletBalance,
-                    crossWalletBalance
-                }
+                    crossWalletBalance,
+                    balanceChange
+                };
             };
 
             const balanceResult = [];
