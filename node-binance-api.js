@@ -4238,6 +4238,11 @@ let api = function Binance( options = {} ) {
             params.symbol = symbol;
             return promiseRequest( 'v1/userTrades', params, { base:dapi, type:'SIGNED' } );
         },
+        
+        deliveryCommissionRate: async ( symbol, params = {} ) => {
+            if ( symbol ) params.symbol = symbol;
+            return promiseRequest( 'v1/commissionRate', params, { base:dapi, type:'SIGNED' } );
+        },
 
         deliveryGetDataStream: async ( params = {} ) => {
             //A User Data Stream listenKey is valid for 60 minutes after creation. setInterval
