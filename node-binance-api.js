@@ -716,13 +716,13 @@ let api = function Binance(options) {
         let updateDepthCache = function () {
             for (obj of depth.b) { //bids
                 Binance.depthCache[symbol].bids[obj[0]] = parseFloat(obj[1]);
-                if (obj[1] === '0.00000000') {
+                if (parseFloat(obj[1]) === 0) {
                     delete Binance.depthCache[symbol].bids[obj[0]];
                 }
             }
             for (obj of depth.a) { //asks
                 Binance.depthCache[symbol].asks[obj[0]] = parseFloat(obj[1]);
-                if (obj[1] === '0.00000000') {
+                if (parseFloat(obj[1]) === 0) {
                     delete Binance.depthCache[symbol].asks[obj[0]];
                 }
             }
