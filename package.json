@@ -1,6 +1,6 @@
 {
   "name": "node-binance-api-with-trades-and-orders-by-date",
-  "version": "0.12.5",
+  "version": "0.12.6",
   "description": "Binance API for node https://github.com/jaggedsoft/node-binance-api",
   "main": "node-binance-api.js",
   "dependencies": {
