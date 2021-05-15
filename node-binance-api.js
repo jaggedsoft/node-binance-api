@@ -3153,12 +3153,12 @@ let api = function Binance( options = {} ) {
                             resolve( response );
                         }
                     }
-                    signedRequest( baseTest + 'v3/allOrders', parameters, function ( error, data ) {
+                    signedRequest( base + 'v3/allOrders', parameters, function ( error, data ) {
                         return callback.call( this, error, data, symbol, startTime, endTime );
                     } );
                 } )
             } else {
-                signedRequest( baseTest + 'v3/allOrders', parameters, function ( error, data ) {
+                signedRequest( base + 'v3/allOrders', parameters, function ( error, data ) {
                     return callback.call( this, error, data, symbol, startTime, endTime );
                 } );
             }
@@ -3652,12 +3652,12 @@ let api = function Binance( options = {} ) {
                             resolve( response );
                         }
                     }
-                    signedRequest( baseTest + 'v3/myTrades', parameters, function ( error, data ) {
+                    signedRequest( base + 'v3/myTrades', parameters, function ( error, data ) {
                         return callback.call( this, error, data, symbol, startTime, endTime );
                     } );
                 } )
             } else {
-                signedRequest( baseTest + 'v3/myTrades', parameters, function ( error, data ) {
+                signedRequest( base + 'v3/myTrades', parameters, function ( error, data ) {
                     return callback.call( this, error, data, symbol, startTime, endTime );
                 } );
             }
