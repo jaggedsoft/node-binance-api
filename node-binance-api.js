@@ -2973,13 +2973,17 @@ let api = function Binance( options = {} ) {
         /**
         * Gets the status of an order
         * @param {string} symbol - the symbol to check
-        * @param {string} orderid - the orderid to check
+        * @param {string} orderid - the orderid to check if !orderid then  use flags to search
         * @param {function} callback - the callback function
         * @param {object} flags - any additional flags
         * @return {promise or undefined} - omitting the callback returns a promise
         */
         orderStatus: function ( symbol, orderid, callback, flags = {} ) {
-            let parameters = Object.assign( { symbol: symbol, orderId: orderid }, flags );
+            let parameters = Object.assign( { symbol: symbol }, flags );
+            if (orderid){
+                Object.assign( { orderId: orderid }, parameters )
+            }
+
             if ( !callback ) {
                 return new Promise( ( resolve, reject ) => {
                     callback = ( error, response ) => {
