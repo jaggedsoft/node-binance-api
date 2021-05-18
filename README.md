@@ -1395,7 +1395,7 @@ Market Buy response {
   transactTime: 1509049376261,
   price: '0.00000000',
   origQty: '1.00000000',
-  exeutedQty: '1.00000000',
+  executedQty: '1.00000000',
   status: 'FILLED',
   timeInForce: 'GTC',
   type: 'MARKET',
