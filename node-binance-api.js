@@ -290,7 +290,7 @@ let api = function Binance(options) {
                 ws.isAlive = false;
                 if (ws.readyState === WebSocket.OPEN) ws.ping(noop);
             } else {
-                if (Binance.options.verbose) Binance.options.log('Terminating inactive/broken WebSocket: ' + ws.endpoint);
+                // if (Binance.options.verbose) Binance.options.log('Terminating inactive/broken WebSocket: ' + ws.endpoint); // too noisy for cloudwatch
                 // if (ws.readyState === WebSocket.OPEN) ws.terminate();
                 Binance.options.log('ws would terminate here');
             }
@@ -356,7 +356,7 @@ let api = function Binance(options) {
      * @return {undefined}
      */
     const handleSocketHeartbeat = function () {
-        Binance.options.log('ping/pong to keep alive');
+        // Binance.options.log('ping/pong to keep alive'); // too noisy for cloudwatch
         this.isAlive = true;
     };
 
