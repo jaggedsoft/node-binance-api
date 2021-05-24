@@ -80,6 +80,26 @@ console.info( await binance.futuresMarketBuy( 'BNBUSDT', 5 ) );
 ```js
 console.info( await binance.futuresMarketSell( 'TRXUSDT', 1 ) );
 ```
+
+#### Futures Place Multiple Orders
+```js
+let orders = [
+  {
+  symbol:"BTCUSDT",
+  side: "BUY",
+  type: "MARKET",
+  quantity: "0.01",
+  },
+  {
+  symbol:"BNBUSDT",
+  side: "SELL",
+  type: "MARKET",
+  quantity: "0.5",
+  }
+]
+console.info( await binance.futuresMultipleOrders(orders) );
+```
+
 #### Futures Market Orders: Get the fill price using newOrderRespType
 ```js
 console.info( await binance.futuresMarketBuy( 'BNBUSDT', amount, { newOrderRespType: 'RESULT' } ) );
