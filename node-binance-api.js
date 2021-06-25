@@ -884,9 +884,9 @@ let api = function Binance( options = {} ) {
             } );
             ws = new WebSocket( ( Binance.options.test ? fstreamSingleTest : fstreamSingle ) + endpoint, { agent } );
         } else if ( httpsproxy !== false ) {
-            if ( Binance.options.verbose ) Binance.options.log( `futuresSubscribeSingle: using proxy server: ${ agent }` );
             let config = url.parse( httpsproxy );
             let agent = new HttpsProxyAgent( config );
+            if ( Binance.options.verbose ) Binance.options.log( `futuresSubscribeSingle: using proxy server: ${ agent }` );
             ws = new WebSocket( ( Binance.options.test ? fstreamSingleTest : fstreamSingle ) + endpoint, { agent } );
         } else {
             ws = new WebSocket( ( Binance.options.test ? fstreamSingleTest : fstreamSingle ) + endpoint );
@@ -1586,9 +1586,9 @@ let api = function Binance( options = {} ) {
             } );
             ws = new WebSocket( ( Binance.options.test ? dstreamSingleTest : dstreamSingle ) + endpoint, { agent } );
         } else if ( httpsproxy !== false ) {
-            if ( Binance.options.verbose ) Binance.options.log( `deliverySubscribeSingle: using proxy server: ${ agent }` );
             let config = url.parse( httpsproxy );
             let agent = new HttpsProxyAgent( config );
+            if ( Binance.options.verbose ) Binance.options.log( `deliverySubscribeSingle: using proxy server: ${ agent }` );
             ws = new WebSocket( ( Binance.options.test ? dstreamSingleTest : dstreamSingle ) + endpoint, { agent } );
         } else {
             ws = new WebSocket( ( Binance.options.test ? dstreamSingleTest : dstreamSingle ) + endpoint );
