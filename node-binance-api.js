@@ -188,10 +188,15 @@ let api = function Binance( options = {} ) {
         return cb( null, JSONbig.parse( body ) );
     }
 
-    const proxyRequest = ( opt, cb ) => {
-        const req = request( addProxy( opt ), reqHandler( cb ) ).on('error', (err) => { cb( err, {} ) });
-        return req;
+    const safeRequest = ( options, callback ) => {
+        try {
+            request( options, callback );
+        } catch ( err ) {
+            callback( err );
+        }
     }
+
+    const proxyRequest = ( opt, cb ) => safeRequest( addProxy( opt ), reqHandler( cb ) );
 
     const reqObj = ( url, data = {}, method = 'GET', key ) => ( {
         url: url,
@@ -551,31 +556,27 @@ let api = function Binance( options = {} ) {
             } else {
                 opt.qs = data;
             }*/
-            try {
-                request( addProxy( opt ), ( error, response, body ) => {
-                    if ( error ) return reject( error );
-                    try {
-                        Binance.info.lastRequest = new Date().getTime();
-                        if ( response ) {
-                            Binance.info.statusCode = response.statusCode || 0;
-                            if ( response.request ) Binance.info.lastURL = response.request.uri.href;
-                            if ( response.headers ) {
-                                Binance.info.usedWeight = response.headers['x-mbx-used-weight-1m'] || 0;
-                                Binance.info.futuresLatency = response.headers['x-response-time'] || 0;
-                            }
+            safeRequest( addProxy( opt ), ( error, response, body ) => {
+                if ( error ) return reject( error );
+                try {
+                    Binance.info.lastRequest = new Date().getTime();
+                    if ( response ) {
+                        Binance.info.statusCode = response.statusCode || 0;
+                        if ( response.request ) Binance.info.lastURL = response.request.uri.href;
+                        if ( response.headers ) {
+                            Binance.info.usedWeight = response.headers['x-mbx-used-weight-1m'] || 0;
+                            Binance.info.futuresLatency = response.headers['x-response-time'] || 0;
                         }
-                        if ( !error && response.statusCode == 200 ) return resolve( JSONbig.parse( body ) );
-                        if ( typeof response.body !== 'undefined' ) {
-                            return resolve( JSONbig.parse( response.body ) );
-                        }
-                        return reject( response );
-                    } catch ( err ) {
-                        return reject( `promiseRequest error #${ response.statusCode }` );
                     }
-                } ).on( 'error', reject );
-            } catch ( err ) {
-                return reject( err );
-            }
+                    if ( !error && response.statusCode == 200 ) return resolve( JSONbig.parse( body ) );
+                    if ( typeof response.body !== 'undefined' ) {
+                        return resolve( JSONbig.parse( response.body ) );
+                    }
+                    return reject( response );
+                } catch ( err ) {
+                    return reject( `promiseRequest error #${ response.statusCode }` );
+                }
+            } );
         } );
     };
 
@@ -3170,22 +3171,22 @@ let api = function Binance( options = {} ) {
             };
             if ( !callback ) {
                 return new Promise( ( resolve, reject ) => {
-                    request( addProxy( opt ), ( error, response, body ) => {
+                    safeRequest( addProxy( opt ), ( error, response, body ) => {
                         if ( error ) return reject( error );
                         if ( response.statusCode !== 200 ) return reject( response );
                         let result = {};
                         result[symbol] = JSON.parse( response.body ).price;
                         return resolve( result );
-                    } ).on( 'error', reject );
+                    } );
                 } );
             }
-            request( addProxy( opt ), ( error, response, body ) => {
+            safeRequest( addProxy( opt ), ( error, response, body ) => {
                 if ( error ) return callback( error );
                 if ( response.statusCode !== 200 ) return callback( response );
                 let result = {};
                 result[symbol] = JSON.parse( response.body ).price;
                 return callback( null, result );
-            } ).on( 'error', callback );
+            } );
         },
 
         /**
@@ -3204,18 +3205,18 @@ let api = function Binance( options = {} ) {
             };
             if ( !callback ) {
                 return new Promise( ( resolve, reject ) => {
-                    request( addProxy( opt ), ( error, response, body ) => {
+                    safeRequest( addProxy( opt ), ( error, response, body ) => {
                         if ( error ) return reject( error );
                         if ( response.statusCode !== 200 ) return reject( response );
                         return resolve( priceData( JSON.parse( body ) ) );
-                    } ).on( 'error', reject );
+                    } );
                 } );
             }
-            request( addProxy( opt ), ( error, response, body ) => {
+            safeRequest( addProxy( opt ), ( error, response, body ) => {
                 if ( error ) return callback( error );
                 if ( response.statusCode !== 200 ) return callback( response );
                 return callback( null, priceData( JSON.parse( body ) ) );
-            } ).on( 'error', callback );
+            } );
         },
 
         /**
@@ -3233,20 +3234,20 @@ let api = function Binance( options = {} ) {
             };
             if ( !callback ) {
                 return new Promise( ( resolve, reject ) => {
-                    request( addProxy( opt ), function ( error, response, body ) {
+                    safeRequest( addProxy( opt ), function ( error, response, body ) {
                         if ( error ) return reject( error );
                         if ( response.statusCode !== 200 ) return reject( response );
                         const result = symbol ? JSON.parse( body ) : bookPriceData( JSON.parse( body ) );
                         return resolve( result );
-                    } ).on( 'error', reject );
+                    } );
                 } );
             }
-            request( addProxy( opt ), ( error, response, body ) => {
+            safeRequest( addProxy( opt ), ( error, response, body ) => {
                 if ( error ) return callback( error );
                 if ( response.statusCode !== 200 ) return callback( response );
                 const result = symbol ? JSON.parse( body ) : bookPriceData( JSON.parse( body ) );
                 return callback( null, result );
-            } ).on( 'error', callback );
+            } );
         },
 
         /**
@@ -4913,12 +4914,12 @@ let api = function Binance( options = {} ) {
                 if ( !isArrayUnique( symbols ) ) throw Error( 'futuresChart: "symbols" array cannot contain duplicate elements.' );
                 symbols.forEach( futuresChartInit );
                 let streams = symbols.map( symbol => `${ symbol.toLowerCase() }@kline_${ interval }` );
-                subscription = futuresSubscribe( streams, handleFuturesKlineStream, reconnect );
+                subscription = futuresSubscribe( streams, handleFuturesKlineStream, { reconnect } );
                 symbols.forEach( element => getFuturesKlineSnapshot( element, limit ) );
             } else {
                 let symbol = symbols;
                 futuresChartInit( symbol );
-                subscription = futuresSubscribeSingle( symbol.toLowerCase() + '@kline_' + interval, handleFuturesKlineStream, reconnect );
+                subscription = futuresSubscribeSingle( symbol.toLowerCase() + '@kline_' + interval, handleFuturesKlineStream, { reconnect } );
                 getFuturesKlineSnapshot( symbol, limit );
             }
             return subscription.endpoint;
@@ -5160,12 +5161,12 @@ let api = function Binance( options = {} ) {
                 if ( !isArrayUnique( symbols ) ) throw Error( 'deliveryChart: "symbols" array cannot contain duplicate elements.' );
                 symbols.forEach( deliveryChartInit );
                 let streams = symbols.map( symbol => `${ symbol.toLowerCase() }@kline_${ interval }` );
-                subscription = deliverySubscribe( streams, handleDeliveryKlineStream, reconnect );
+                subscription = deliverySubscribe( streams, handleDeliveryKlineStream, { reconnect } );
                 symbols.forEach( element => getDeliveryKlineSnapshot( element, limit ) );
             } else {
                 let symbol = symbols;
                 deliveryChartInit( symbol );
-                subscription = deliverySubscribeSingle( symbol.toLowerCase() + '@kline_' + interval, handleDeliveryKlineStream, reconnect );
+                subscription = deliverySubscribeSingle( symbol.toLowerCase() + '@kline_' + interval, handleDeliveryKlineStream, { reconnect } );
                 getDeliveryKlineSnapshot( symbol, limit );
             }
             return subscription.endpoint;
@@ -5208,6 +5209,7 @@ let api = function Binance( options = {} ) {
                     if ( Binance.options.reconnect ) userData( callback, execution_callback, subscribed_callback );
                 };
                 apiRequest( base + 'v3/userDataStream', {}, function ( error, response ) {
+                    if (!response.listenKey) return reconnect();
                     Binance.options.listenKey = response.listenKey;
                     setTimeout( function userDataKeepAlive() { // keepalive
                         try {
@@ -5222,7 +5224,7 @@ let api = function Binance( options = {} ) {
                     Binance.options.balance_callback = callback;
                     Binance.options.execution_callback = execution_callback;
                     Binance.options.list_status_callback = list_status_callback;
-                    const subscription = subscribe( Binance.options.listenKey, userDataHandler, reconnect );
+                    const subscription = subscribe( Binance.options.listenKey, userDataHandler, { reconnect } );
                     if ( subscribed_callback ) subscribed_callback( subscription.endpoint );
                 }, 'POST' );
             },
@@ -5240,6 +5242,7 @@ let api = function Binance( options = {} ) {
                     if ( Binance.options.reconnect ) userMarginData( callback, execution_callback, subscribed_callback );
                 };
                 apiRequest( sapi + 'v1/userDataStream', {}, function ( error, response ) {
+                    if (!response.listenKey) return reconnect();
                     Binance.options.listenMarginKey = response.listenKey;
                     setTimeout( function userDataKeepAlive() { // keepalive
                         try {
@@ -5254,7 +5257,7 @@ let api = function Binance( options = {} ) {
                     Binance.options.margin_balance_callback = callback;
                     Binance.options.margin_execution_callback = execution_callback;
                     Binance.options.margin_list_status_callback = list_status_callback;
-                    const subscription = subscribe( Binance.options.listenMarginKey, userMarginDataHandler, reconnect );
+                    const subscription = subscribe( Binance.options.listenMarginKey, userMarginDataHandler, { reconnect } );
                     if ( subscribed_callback ) subscribed_callback( subscription.endpoint );
                 }, 'POST' );
             },
@@ -5274,6 +5277,7 @@ let api = function Binance( options = {} ) {
                 }
 
                 apiRequest( url + 'v1/listenKey', {}, function ( error, response ) {
+                    if (!response.listenKey) return reconnect();
                     Binance.options.listenFutureKey = response.listenKey;
                     setTimeout( function userDataKeepAlive() { // keepalive
                         try {
@@ -5323,6 +5327,7 @@ let api = function Binance( options = {} ) {
                     url + "v1/listenKey",
                     {},
                     function ( error, response ) {
+                        if (!response.listenKey) return reconnect();
                         Binance.options.listenDeliveryKey = response.listenKey;
                         setTimeout( function userDataKeepAlive() {
                             // keepalive
