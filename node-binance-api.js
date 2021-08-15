@@ -3314,10 +3314,10 @@ let api = function Binance( options = {} ) {
                             resolve( response );
                         }
                     }
-                    signedRequest( wapi + '/v3/userAssetDribbletLog.html', {}, callback );
+                  signedRequest( sapi + 'v1/asset/dribblet', {}, callback );
                 } )
             } else {
-                signedRequest( wapi + '/v3/userAssetDribbletLog.html', {}, callback );
+                signedRequest( sapi + 'v1/asset/dribblet', {}, callback );
             }
         },
 
@@ -3398,10 +3398,10 @@ let api = function Binance( options = {} ) {
                             resolve( response );
                         }
                     }
-                    signedRequest( wapi + 'v3/withdrawHistory.html', params, callback );
+                    signedRequest( sapi + 'v1/capital/withdraw/history', params, callback );
                 } )
             } else {
-                signedRequest( wapi + 'v3/withdrawHistory.html', params, callback );
+                signedRequest( sapi + 'v1/capital/withdraw/history', params, callback );
             }
         },
 
@@ -3422,10 +3422,10 @@ let api = function Binance( options = {} ) {
                             resolve( response );
                         }
                     }
-                    signedRequest( wapi + 'v3/depositHistory.html', params, callback );
+                    signedRequest( sapi + 'v1/capital/deposit/hisrec', params, callback );
                 } )
             } else {
-                signedRequest( wapi + 'v3/depositHistory.html', params, callback );
+                signedRequest( sapi + 'v1/capital/deposit/hisrec', params, callback );
             }
         },
 
