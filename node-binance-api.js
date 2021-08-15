@@ -375,6 +375,10 @@ let api = function Binance( options = {} ) {
                 opt.timeInForce = 'GTC';
             }
         }
+        if (opt.type == 'MARKET' && typeof flags.quoteOrderQty !== 'undefined') {
+            opt.quoteOrderQty = flags.quoteOrderQty
+            delete opt.quantity;
+        }
         if ( opt.type === 'OCO' ) {
             opt.price = price;
             opt.stopLimitPrice = flags.stopLimitPrice;
