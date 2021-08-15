@@ -195,7 +195,7 @@ console.info( await binance.futuresHistDataId(
 ##### Get Download Link
 
 ```js
-console.info( await binance.futuresDownloadLink(7343)
+console.info( await binance.futuresDownloadLink(7343) )
 ```
 
 # Futures WebSocket Streams
