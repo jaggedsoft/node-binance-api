@@ -1,6 +1,6 @@
 {
   "name": "node-binance-api",
-  "version": "0.12.5",
+  "version": "0.13.0",
   "description": "Binance API for node https://github.com/jaggedsoft/node-binance-api",
   "main": "node-binance-api.js",
   "typings": "node-binance-api.d.ts",
@@ -31,7 +31,7 @@
     "binance",
     "api"
   ],
-  "author": "Jon Eyrick <mm@liquidity.ltd> (https://liquidity.ltd)",
+  "author": "Jon Eyrick <info@liquidity.ltd> (https://darkpool.ventures)",
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/jaggedsoft/node-binance-api/issues"
