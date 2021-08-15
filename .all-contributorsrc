@@ -441,7 +441,16 @@
       "contributions": [
         "code"
       ]
-    }
+    },
+    {
+      "login": "tripolskypetr",
+      "name": "Petr Tripolsky",
+      "avatar_url": "https://avatars.githubusercontent.com/u/19227776?v=4",
+      "profile": "https://github.com/tripolskypetr",
+      "contributions": [
+        "maintenance", "code"
+      ]
+    },
   ],
   "contributorsPerLine": 7
 }
