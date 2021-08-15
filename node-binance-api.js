@@ -3909,7 +3909,7 @@ let api = function Binance( options = {} ) {
 
         futuresPrices: async ( params = {} ) => {
             let data = await promiseRequest( 'v1/ticker/price', params, { base:fapi } );
-            return data.reduce( ( out, i ) => ( ( out[i.symbol] =  i.price ), out ), {} );
+            return Array.isArray(data) ? data.reduce( ( out, i ) => ( ( out[i.symbol] =  i.price ), out ), {} ) : data;
         },
 
         futuresDaily: async ( symbol = false, params = {} ) => {
