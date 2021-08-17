@@ -3025,7 +3025,7 @@ let api = function Binance( options = {} ) {
         orderStatus: function ( symbol, orderid, callback, flags = {} ) {
             let parameters = Object.assign( { symbol: symbol }, flags );
             if (orderid){
-                Object.assign( { orderId: orderid }, parameters )
+                parameters = Object.assign( { orderId: orderid }, parameters )
             }
 
             if ( !callback ) {
