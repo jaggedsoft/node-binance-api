@@ -3483,7 +3483,7 @@ let api = function Binance( options = {} ) {
         * @param {function} callback - the callback function
         * @return {promise or undefined} - omitting the callback returns a promise
         */
-        depositAddress: function ( asset, callback ) {
+        depositAddress: function ( coin, callback ) {
             if ( !callback ) {
                 return new Promise( ( resolve, reject ) => {
                     callback = ( error, response ) => {
@@ -3493,10 +3493,10 @@ let api = function Binance( options = {} ) {
                             resolve( response );
                         }
                     }
-                    signedRequest( wapi + 'v3/depositAddress.html', { asset: asset }, callback );
+                    signedRequest( sapi + 'v1/capital/deposit/address', { coin }, callback );
                 } )
             } else {
-                signedRequest( wapi + 'v3/depositAddress.html', { asset: asset }, callback );
+                signedRequest( sapi + 'v1/capital/deposit/address', { coin }, callback );
             }
         },
 
