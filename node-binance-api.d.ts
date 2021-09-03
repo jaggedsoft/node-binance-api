@@ -231,6 +231,8 @@ declare module "node-binance-api" {
             dstreamSingleTest: string;
         }>;
         timeOffset: number;
+        APIKEY: string;
+        APISECRET: string;
     }
 
     class Binance {
