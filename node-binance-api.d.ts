@@ -445,6 +445,7 @@ declare module "node-binance-api" {
         getOptions(...args: any): any;
 
 
+        options(args: Partial<IConstructorArgs>): Binance;
         options(...args: any): Binance;
 
         /**
