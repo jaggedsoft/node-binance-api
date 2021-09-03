@@ -382,7 +382,7 @@ declare module "node-binance-api" {
         * @param {object} value - the value of the key
         * @return {undefined}
         */
-        setOption(key: string, value: any): Binance;
+        setOption<T extends keyof IConstructorArgs>(key: T, value: IConstructorArgs[T]): Binance;
         setOption(...args: any): Binance;
 
         /**
