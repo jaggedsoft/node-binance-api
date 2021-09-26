@@ -3025,7 +3025,7 @@ let api = function Binance( options = {} ) {
         orderStatus: function ( symbol, orderid, callback, flags = {} ) {
             let parameters = Object.assign( { symbol: symbol }, flags );
             if (orderid){
-                Object.assign( { orderId: orderid }, parameters )
+                Object.assign( parameters, { orderId: orderid } );
             }
 
             if ( !callback ) {
@@ -3539,10 +3539,10 @@ let api = function Binance( options = {} ) {
                             resolve( response );
                         }
                     }
-                    signedRequest( wapi + 'v3/tradeFee.html', params, callback );
+                    signedRequest( sapi + 'v1/asset/tradeFee', params, callback );
                 } )
             } else {
-                signedRequest( wapi + 'v3/tradeFee.html', params, callback );
+                signedRequest( sapi + 'v1/asset/tradeFee', params, callback );
             }
         },
 
@@ -4058,7 +4058,7 @@ let api = function Binance( options = {} ) {
             return promiseRequest( 'v1/marginType', params, { base:fapi, method:'POST', type:'SIGNED' } );
         },
 
-        // type: 1: Add postion margin，2: Reduce postion margin
+        // type: 1: Add postion margin, 2: Reduce postion margin
         futuresPositionMargin: async ( symbol, amount, type = 1, params = {} ) => {
             params.symbol = symbol;
             params.amount = amount;
@@ -4343,7 +4343,7 @@ let api = function Binance( options = {} ) {
             return promiseRequest( 'v1/marginType', params, { base:dapi, method:'POST', type:'SIGNED' } );
         },
 
-        // type: 1: Add postion margin，2: Reduce postion margin
+        // type: 1: Add postion margin, 2: Reduce postion margin
         deliveryPositionMargin: async ( symbol, amount, type = 1, params = {} ) => {
             params.symbol = symbol;
             params.amount = amount;
