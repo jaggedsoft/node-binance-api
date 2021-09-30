@@ -122,7 +122,7 @@ let api = function Binance( options = {} ) {
         }
         if ( Binance.options.useServerTime ) {
             publicRequest( base + 'v3/time', {}, function ( error, response ) {
-                Binance.info.timeOffset = response.serverTime - new Date().getTime();
+                Binance.info.timeOffset = response.serverTime - Date.now();
                 //Binance.options.log("server time set: ", response.serverTime, Binance.info.timeOffset);
                 if ( callback ) callback();
             } );
@@ -170,7 +170,7 @@ let api = function Binance( options = {} ) {
     }
 
     const reqHandler = cb => ( error, response, body ) => {
-        Binance.info.lastRequest = new Date().getTime();
+        Binance.info.lastRequest = Date.now();
         if ( response ) {
             Binance.info.statusCode = response.statusCode || 0;
             if ( response.request ) Binance.info.lastURL = response.request.uri.href;
@@ -325,7 +325,7 @@ let api = function Binance( options = {} ) {
      */
     const signedRequest = ( url, data = {}, callback, method = 'GET', noDataInSignature = false ) => {
         requireApiSecret( 'signedRequest' );
-        data.timestamp = new Date().getTime() + Binance.info.timeOffset;
+        data.timestamp = Date.now() + Binance.info.timeOffset;
         if ( typeof data.recvWindow === 'undefined' ) data.recvWindow = Binance.options.recvWindow;
         let query = method === 'POST' && noDataInSignature ? '' : makeQueryString( data );
         let signature = crypto.createHmac( 'sha256', Binance.options.APISECRET ).update( query ).digest( 'hex' ); // set the HMAC hash header
@@ -544,7 +544,7 @@ let api = function Binance( options = {} ) {
             };
             if ( flags.type === 'SIGNED' || flags.type === 'TRADE' || flags.type === 'USER_DATA' ) {
                 if ( !requireApiSecret( 'promiseRequest' ) ) return reject( 'promiseRequest: Invalid API Secret!' );
-                data.timestamp = new Date().getTime() + Binance.info.timeOffset;
+                data.timestamp = Date.now() + Binance.info.timeOffset;
                 query = makeQueryString( data );
                 data.signature = crypto.createHmac( 'sha256', Binance.options.APISECRET ).update( query ).digest( 'hex' ); // HMAC hash header
                 opt.url = `${ baseURL }${ url }?${ query }&signature=${ data.signature }`;
@@ -559,7 +559,7 @@ let api = function Binance( options = {} ) {
                 request( addProxy( opt ), ( error, response, body ) => {
                     if ( error ) return reject( error );
                     try {
-                        Binance.info.lastRequest = new Date().getTime();
+                        Binance.info.lastRequest = Date.now();
                         if ( response ) {
                             Binance.info.statusCode = response.statusCode || 0;
                             if ( response.request ) Binance.info.lastURL = response.request.uri.href;
@@ -3662,7 +3662,7 @@ let api = function Binance( options = {} ) {
                     }
                     publicRequest( base + 'v3/time', {}, function ( error, response ) {
                         if ( !error ) {
-                            Binance.info.timeOffset = response.serverTime - new Date().getTime();
+                            Binance.info.timeOffset = response.serverTime - Date.now();
                             //Binance.options.log("server time set: ", response.serverTime, Binance.info.timeOffset);
                         }
                         callback( error, response );
@@ -3671,7 +3671,7 @@ let api = function Binance( options = {} ) {
             } else {
                 publicRequest( base + 'v3/time', {}, function ( error, response ) {
                     if ( !error ) {
-                        Binance.info.timeOffset = response.serverTime - new Date().getTime();
+                        Binance.info.timeOffset = response.serverTime - Date.now();
                         //Binance.options.log("server time set: ", response.serverTime, Binance.info.timeOffset);
                     }
                     callback( error, response );
