@@ -1,0 +1,20 @@
+Product: nextapp.fx
+Version: r8008 / 8.0.3.0
+Configuration: FX [Plus/Trial Active]
+-------------------
+Android SDK: 30
+Board: QC_Reference_Phone
+Build ID: RP1A.200720.012 release-keys
+CPU: arm64-v8a
+Device: 1906
+Fingerprint: vivo/1906/1906:11/RP1A.200720.012/compiler0607221349:user/release-keys
+Manufacturer: vivo
+Model: vivo 1906
+Product: 1906
+Tags: release-keys
+Screen: 720x1408, 311dpi (1.94375)
+UI Mode Type: 1
+-------------------
+Error Log @ Tue Aug 31 23:18:08 GMT+07:00 2021: logcat -v threadtime -t 1000 -s nextapp.maui -s nextapp.fx -s AndroidRuntime -s dalvikvm
+--------- beginning of main
+08-31 23:15:01.133 26926 26926 E nextapp.fx: Not starting debugger since process cannot load the jdwp agent.
