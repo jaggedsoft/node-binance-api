@@ -1,8 +1,9 @@
 {
-  "name": "node-binance-api-with-trades-and-orders-by-date",
-  "version": "0.12.6",
+  "name": "node-binance-api",
+  "version": "0.13.0",
   "description": "Binance API for node https://github.com/jaggedsoft/node-binance-api",
   "main": "node-binance-api.js",
+  "typings": "node-binance-api.d.ts",
   "dependencies": {
     "async": "^3.1.0",
     "https-proxy-agent": "^3.0.1",
@@ -30,7 +31,7 @@
     "binance",
     "api"
   ],
-  "author": "Jon Eyrick <mm@liquidity.ltd> (https://liquidity.ltd)",
+  "author": "Jon Eyrick <info@liquidity.ltd> (https://darkpool.ventures)",
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/jaggedsoft/node-binance-api/issues"

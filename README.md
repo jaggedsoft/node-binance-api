@@ -80,6 +80,26 @@ console.info( await binance.futuresMarketBuy( 'BNBUSDT', 5 ) );
 ```js
 console.info( await binance.futuresMarketSell( 'TRXUSDT', 1 ) );
 ```
+
+#### Futures Place Multiple Orders
+```js
+let orders = [
+  {
+  symbol:"BTCUSDT",
+  side: "BUY",
+  type: "MARKET",
+  quantity: "0.01",
+  },
+  {
+  symbol:"BNBUSDT",
+  side: "SELL",
+  type: "MARKET",
+  quantity: "0.5",
+  }
+]
+console.info( await binance.futuresMultipleOrders(orders) );
+```
+
 #### Futures Market Orders: Get the fill price using newOrderRespType
 ```js
 console.info( await binance.futuresMarketBuy( 'BNBUSDT', amount, { newOrderRespType: 'RESULT' } ) );
@@ -175,7 +195,7 @@ console.info( await binance.futuresHistDataId(
 ##### Get Download Link
 
 ```js
-console.info( await binance.futuresDownloadLink(7343)
+console.info( await binance.futuresDownloadLink(7343) )
 ```
 
 # Futures WebSocket Streams
@@ -1395,7 +1415,7 @@ Market Buy response {
   transactTime: 1509049376261,
   price: '0.00000000',
   origQty: '1.00000000',
-  exeutedQty: '1.00000000',
+  executedQty: '1.00000000',
   status: 'FILLED',
   timeInForce: 'GTC',
   type: 'MARKET',
@@ -1836,6 +1856,13 @@ binance.withdraw("XMR", address, amount, addressTag);
 binance.withdraw("BTC", "1C5gqLRs96Xq4V2ZZAR1347yUCpHie7sa", 0.2);
 ```
 
+### Univeral Transfer / Internal Wallet Transfer
+Example Spot account transfer to USDⓈ-M Futures account , use ENUM -> "MAIN_UMFUTURE"
+```js
+console.info( await binance.universalTransfer("MAIN_UMFUTURE","USDT",10) );
+```
+for more account transfers (ENUMs) see [docs](https://binance-docs.github.io/apidocs/spot/en/#user-universal-transfer)
+
 # Binance Margin API
 
 #### Transfer from Main account to Margin account
@@ -1894,6 +1921,33 @@ For market orders use `binance.mgMarketBuy()` and `binance.mgMarketSell()`.
 For order operations, use `binance.mgCancel()`, `binance.mgCancelOrders()`, `binance.mgAllOrders()`, `binance.openOrders()`, `binance.mgOrderStatus()`.
 
 Usage and callbacks are the same as the 'regular account' counterparts.
+
+#### Get your Trade History for the Margin account
+Use `binance.mgTrades()` instead of `binance.trades()`. 
+
+```javascript
+binance.mgTrades("ETHUSDT", (error, trades, symbol) => {
+  console.info(symbol+" trade history", trades);
+});
+```
+<details>
+ <summary>View Response</summary>
+
+```js
+[ { symbol: 'ETHUSDT',
+    id: 9572,
+    orderId: 47884,
+    price: '2063.07',
+    qty: '1.44877',
+    commission: '2.98891392',
+    commissionAsset: 'USDT',
+    time: 1617900638521,
+    isBuyer: false,
+    isMaker: false,
+    isBestMatch: true,
+    isIsolated: true }]
+```
+</details>
 
 #### Margin account details
 ```javascript
