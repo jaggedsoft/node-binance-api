@@ -906,7 +906,7 @@ let api = function Binance( options = {} ) {
         ws.on( 'close', handleFuturesSocketClose.bind( ws, params.reconnect ) );
         ws.on( 'message', data => {
             try {
-                callback( JSON.parse( data ) );
+                callback( JSONbig.parse( data ) );
             } catch ( error ) {
                 Binance.options.log( 'Parse error: ' + error.message );
             }
