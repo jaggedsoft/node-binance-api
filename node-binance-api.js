@@ -2498,14 +2498,14 @@ let api = function Binance( options = {} ) {
         let updateDepthCache = () => {
             Binance.depthCache[symbol].eventTime = depth.E;
             for ( obj of depth.b ) { //bids
-                if ( obj[1] === '0.00000000' ) {
+                if ( obj[1] == 0 ) {
                     delete Binance.depthCache[symbol].bids[obj[0]];
                 } else {
                     Binance.depthCache[symbol].bids[obj[0]] = parseFloat( obj[1] );
                 }
             }
             for ( obj of depth.a ) { //asks
-                if ( obj[1] === '0.00000000' ) {
+                if ( obj[1] == 0 ) {
                     delete Binance.depthCache[symbol].asks[obj[0]];
                 } else {
                     Binance.depthCache[symbol].asks[obj[0]] = parseFloat( obj[1] );
