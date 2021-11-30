@@ -231,6 +231,8 @@ declare module "node-binance-api" {
             dstreamSingleTest: string;
         }>;
         timeOffset: number;
+        APIKEY: string;
+        APISECRET: string;
     }
 
     class Binance {
@@ -382,8 +384,8 @@ declare module "node-binance-api" {
         * @param {object} value - the value of the key
         * @return {undefined}
         */
-        setOption(key: string, value: any): any;
-        setOption(...args: any): any;
+        setOption<T extends keyof IConstructorArgs>(key: T, value: IConstructorArgs[T]): Binance;
+        setOption(...args: any): Binance;
 
         /**
         * Gets an option given a key
@@ -443,7 +445,8 @@ declare module "node-binance-api" {
         getOptions(...args: any): any;
 
 
-        options(...args: any): any;
+        options(args: Partial<IConstructorArgs>): Binance;
+        options(...args: any): Binance;
 
         /**
         * Creates an order
@@ -451,7 +454,7 @@ declare module "node-binance-api" {
         * @param {string} symbol - the symbol to buy
         * @param {numeric} quantity - the quantity required
         * @param {numeric} price - the price to pay for each unit
-        * @param {object} flags - aadditionalbuy order flags
+        * @param {object} flags - additional buy order flags
         * @param {function} callback - the callback function
         * @return {promise or undefined} - omitting the callback returns a promise
         */

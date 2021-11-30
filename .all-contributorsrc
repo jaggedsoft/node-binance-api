@@ -451,6 +451,15 @@
         "maintenance", "code"
       ]
     },
+    {
+      "login": "shaunlwm",
+      "name": "Shaun Lim",
+      "avatar_url": "https://avatars.githubusercontent.com/u/37434846?v=4",
+      "profile": "https://github.com/ShaunLWM",
+      "contributions": [
+        "maintenance", "code"
+      ]
+    }
   ],
   "contributorsPerLine": 7
 }
