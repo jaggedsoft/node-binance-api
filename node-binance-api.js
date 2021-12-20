@@ -59,6 +59,7 @@ let api = function Binance( options = {} ) {
     Binance.ohlc = {};
 
     const default_options = {
+        heartbeatInterval: 1000,
         recvWindow: 5000,
         useServerTime: false,
         reconnect: true,
@@ -92,6 +93,7 @@ let api = function Binance( options = {} ) {
         if ( typeof opt === 'string' ) { // Pass json config filename
             Binance.options = JSON.parse( file.readFileSync( opt ) );
         } else Binance.options = opt;
+        if ( typeof Binance.options.heartbeatInterval === 'undefined' ) Binance.options.heartbeatInterval = default_options.heartbeatInterval;
         if ( typeof Binance.options.recvWindow === 'undefined' ) Binance.options.recvWindow = default_options.recvWindow;
         if ( typeof Binance.options.useServerTime === 'undefined' ) Binance.options.useServerTime = default_options.useServerTime;
         if ( typeof Binance.options.reconnect === 'undefined' ) Binance.options.reconnect = default_options.reconnect;
@@ -616,7 +618,7 @@ let api = function Binance( options = {} ) {
     const handleSocketOpen = function ( opened_callback ) {
         this.isAlive = true;
         if ( Object.keys( Binance.subscriptions ).length === 0 ) {
-            Binance.socketHeartbeatInterval = setInterval( socketHeartbeat, 30000 );
+            Binance.socketHeartbeatInterval = setInterval( socketHeartbeat, Binance.options.heartbeatInterval );
         }
         Binance.subscriptions[this.endpoint] = this;
         if ( typeof opened_callback === 'function' ) opened_callback( this.endpoint );
@@ -811,7 +813,7 @@ let api = function Binance( options = {} ) {
     const handleFuturesSocketOpen = function ( openCallback ) {
         this.isAlive = true;
         if ( Object.keys( Binance.futuresSubscriptions ).length === 0 ) {
-            Binance.socketHeartbeatInterval = setInterval( futuresSocketHeartbeat, 30000 );
+            Binance.socketHeartbeatInterval = setInterval( futuresSocketHeartbeat, Binance.options.heartbeatInterval );
         }
         Binance.futuresSubscriptions[this.endpoint] = this;
         if ( typeof openCallback === 'function' ) openCallback( this.endpoint );
@@ -1516,7 +1518,7 @@ let api = function Binance( options = {} ) {
     const handleDeliverySocketOpen = function ( openCallback ) {
         this.isAlive = true;
         if ( Object.keys( Binance.deliverySubscriptions ).length === 0 ) {
-            Binance.socketHeartbeatInterval = setInterval( deliverySocketHeartbeat, 30000 );
+            Binance.socketHeartbeatInterval = setInterval( deliverySocketHeartbeat, Binance.options.heartbeatInterval );
         }
         Binance.deliverySubscriptions[this.endpoint] = this;
         if ( typeof openCallback === 'function' ) openCallback( this.endpoint );
