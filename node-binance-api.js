@@ -595,7 +595,7 @@ let api = function Binance( options = {} ) {
      * Reworked Tuitio's heartbeat code into a shared single interval tick
      * @return {undefined}
      */
-    const socketHeartbeat = () => {
+    const socketHeartbeat = (heartbeatKo_callback) => {
         /* Sockets removed from `subscriptions` during a manual terminate()
          will no longer be at risk of having functions called on them */
         for ( let endpointId in Binance.subscriptions ) {
@@ -604,6 +604,7 @@ let api = function Binance( options = {} ) {
                 ws.isAlive = false;
                 if ( ws.readyState === WebSocket.OPEN ) ws.ping( noop );
             } else {
+                if ( typeof heartbeatKo_callback === 'function' ) heartbeatKo_callback( this.endpoint );
                 if ( Binance.options.verbose ) Binance.options.log( 'Terminating inactive/broken WebSocket: ' + ws.endpoint );
                 if ( ws.readyState === WebSocket.OPEN ) ws.terminate();
             }
@@ -613,12 +614,13 @@ let api = function Binance( options = {} ) {
     /**
      * Called when socket is opened, subscriptions are registered for later reference
      * @param {function} opened_callback - a callback function
+     * @param {function} heartbeatKo_callback - a callback function
      * @return {undefined}
      */
-    const handleSocketOpen = function ( opened_callback ) {
+    const handleSocketOpen = function ( opened_callback, heartbeatKo_callback ) {
         this.isAlive = true;
         if ( Object.keys( Binance.subscriptions ).length === 0 ) {
-            Binance.socketHeartbeatInterval = setInterval( socketHeartbeat, Binance.options.heartbeatInterval );
+            Binance.socketHeartbeatInterval = setInterval( _ => socketHeartbeat(heartbeatKo_callback), Binance.options.heartbeatInterval );
         }
         Binance.subscriptions[this.endpoint] = this;
         if ( typeof opened_callback === 'function' ) opened_callback( this.endpoint );
@@ -677,9 +679,10 @@ let api = function Binance( options = {} ) {
      * @param {function} callback - the function to call when information is received
      * @param {boolean} reconnect - whether to reconnect on disconnect
      * @param {object} opened_callback - the function to call when opened
+     * @param {object} heartbeatKo_callback - the function to call when heartbeat is ko
      * @return {WebSocket} - websocket reference
      */
-    const subscribe = function ( endpoint, callback, reconnect = false, opened_callback = false ) {
+    const subscribe = function ( endpoint, callback, reconnect = false, opened_callback = false, heartbeatKo_callback = false ) {
         let httpsproxy = process.env.https_proxy || false;
         let socksproxy = process.env.socks_proxy || false;
         let ws = false;
@@ -706,7 +709,7 @@ let api = function Binance( options = {} ) {
         ws.reconnect = Binance.options.reconnect;
         ws.endpoint = endpoint;
         ws.isAlive = false;
-        ws.on( 'open', handleSocketOpen.bind( ws, opened_callback ) );
+        ws.on( 'open', handleSocketOpen.bind( ws, opened_callback, heartbeatKo_callback ) );
         ws.on( 'pong', handleSocketHeartbeat );
         ws.on( 'error', handleSocketError );
         ws.on( 'close', handleSocketClose.bind( ws, reconnect ) );
@@ -2144,11 +2147,11 @@ let api = function Binance( options = {} ) {
             Binance.options.log( "Unexpected userDeliveryData: " + type );
         }
     };
-	
+
 	/**
-    * Universal Transfer requires API permissions enabled 
+    * Universal Transfer requires API permissions enabled
     * @param {string} type - ENUM , example MAIN_UMFUTURE for SPOT to USDT futures, see https://binance-docs.github.io/apidocs/spot/en/#user-universal-transfer
-    * @param {string} asset - the asset - example :USDT    * 
+    * @param {string} asset - the asset - example :USDT    *
     * @param {number} amount - the callback function
     * @param {function} callback - the callback function
     * @return {promise}
@@ -4113,7 +4116,7 @@ let api = function Binance( options = {} ) {
         futuresMarketSell: async ( symbol, quantity, params = {} ) => {
             return futuresOrder( 'SELL', symbol, quantity, false, params );
         },
-        
+
         futuresMultipleOrders: async ( orders = [{}] ) => {
             let params = { batchOrders: JSON.stringify(orders) };
             return promiseRequest( 'v1/batchOrders', params, { base:fapi, type:'TRADE', method:'POST'} );
@@ -4293,7 +4296,7 @@ let api = function Binance( options = {} ) {
             params.symbol = symbol;
             return promiseRequest( 'v1/userTrades', params, { base:dapi, type:'SIGNED' } );
         },
-        
+
         deliveryCommissionRate: async ( symbol, params = {} ) => {
             if ( symbol ) params.symbol = symbol;
             return promiseRequest( 'v1/commissionRate', params, { base:dapi, type:'SIGNED' } );
@@ -4652,7 +4655,7 @@ let api = function Binance( options = {} ) {
 			universalTransfer(type, asset, amount, callback),
 
         /**
-        * Get trades for a given symbol - margin account 
+        * Get trades for a given symbol - margin account
         * @param {string} symbol - the symbol
         * @param {function} callback - the callback function
         * @param {object} options - additional options
@@ -4782,7 +4785,7 @@ let api = function Binance( options = {} ) {
                 if ( callback ) return callback( error, data );
             }, 'GET' );
         },
-        
+
         /**
          * Margin account repay
          * @param {string} asset - the asset
@@ -4803,7 +4806,7 @@ let api = function Binance( options = {} ) {
                 if ( callback ) return callback( error, data );
             }, 'POST' );
         },
-        
+
         /**
          * Margin account details
          * @param {function} callback - the callback function
@@ -5873,8 +5876,10 @@ let api = function Binance( options = {} ) {
              * @param {function} opened_callback - opened_callback function
              * @return {string} the websocket endpoint
              */
-            bookTickers: function bookTickerStream( symbol = false, callback = console.log, opened_callback = false ) {
+            bookTickers: function bookTickerStream( symbol = false, callback = console.log, opened_callback = false, heartbeatKo_callback = false ) {
                 if ( typeof symbol == 'function' ) {
+                    heartbeatKo_callback = opened_callback;
+                    opened_callback = callback;
                     callback = symbol;
                     symbol = false;
                 }
@@ -5882,7 +5887,7 @@ let api = function Binance( options = {} ) {
                     if ( Binance.options.reconnect ) bookTickerStream( symbol, callback );
                 };
                 const endpoint = symbol ? `${ symbol.toLowerCase() }@bookTicker` : '!bookTicker'
-                let subscription = subscribe( endpoint, data => callback( fBookTickerConvertData( data ) ), reconnect, opened_callback );
+                let subscription = subscribe( endpoint, data => callback( fBookTickerConvertData( data ) ), reconnect, opened_callback, heartbeatKo_callback );
                 return subscription.endpoint;
             },
 
