@@ -604,7 +604,7 @@ let api = function Binance( options = {} ) {
                 ws.isAlive = false;
                 if ( ws.readyState === WebSocket.OPEN ) ws.ping( noop );
             } else {
-                if ( typeof heartbeatKo_callback === 'function' ) heartbeatKo_callback( this.endpoint );
+                if ( typeof heartbeatKo_callback === 'function' ) heartbeatKo_callback( this.endpoint, 'heartbeat' );
                 if ( Binance.options.verbose ) Binance.options.log( 'Terminating inactive/broken WebSocket: ' + ws.endpoint );
                 if ( ws.readyState === WebSocket.OPEN ) ws.terminate();
             }
@@ -620,7 +620,7 @@ let api = function Binance( options = {} ) {
     const handleSocketOpen = function ( opened_callback, heartbeatKo_callback ) {
         this.isAlive = true;
         if ( Object.keys( Binance.subscriptions ).length === 0 ) {
-            Binance.socketHeartbeatInterval = setInterval( _ => socketHeartbeat(heartbeatKo_callback), Binance.options.heartbeatInterval );
+            Binance.socketHeartbeatInterval = setInterval( socketHeartbeat.bind(this, heartbeatKo_callback), Binance.options.heartbeatInterval );
         }
         Binance.subscriptions[this.endpoint] = this;
         if ( typeof opened_callback === 'function' ) opened_callback( this.endpoint );
@@ -633,7 +633,8 @@ let api = function Binance( options = {} ) {
      * @param {string} reason - string with the response
      * @return {undefined}
      */
-    const handleSocketClose = function ( reconnect, code, reason ) {
+    const handleSocketClose = function ( reconnect, ko_callback, code, reason ) {
+        if ( typeof ko_callback === 'function' ) ko_callback( this.endpoint, 'close' );
         delete Binance.subscriptions[this.endpoint];
         if ( Binance.subscriptions && Object.keys( Binance.subscriptions ).length === 0 ) {
             clearInterval( Binance.socketHeartbeatInterval );
@@ -657,12 +658,13 @@ let api = function Binance( options = {} ) {
      * @param {object} error - error object message
      * @return {undefined}
      */
-    const handleSocketError = function ( error ) {
+    const handleSocketError = function ( ko_callback, error ) {
         /* Errors ultimately result in a `close` event.
          see: https://github.com/websockets/ws/blob/828194044bf247af852b31c49e2800d557fedeff/lib/websocket.js#L126 */
         Binance.options.log( 'WebSocket error: ' + this.endpoint +
           ( error.code ? ' (' + error.code + ')' : '' ) +
           ( error.message ? ' ' + error.message : '' ) );
+        if ( typeof ko_callback === 'function' ) ko_callback( this.endpoint, 'error' );
     };
 
     /**
@@ -679,10 +681,10 @@ let api = function Binance( options = {} ) {
      * @param {function} callback - the function to call when information is received
      * @param {boolean} reconnect - whether to reconnect on disconnect
      * @param {object} opened_callback - the function to call when opened
-     * @param {object} heartbeatKo_callback - the function to call when heartbeat is ko
+     * @param {object} ko_callback - the function to call when a problem is detected
      * @return {WebSocket} - websocket reference
      */
-    const subscribe = function ( endpoint, callback, reconnect = false, opened_callback = false, heartbeatKo_callback = false ) {
+    const subscribe = function ( endpoint, callback, reconnect = false, opened_callback = false, ko_callback = false ) {
         let httpsproxy = process.env.https_proxy || false;
         let socksproxy = process.env.socks_proxy || false;
         let ws = false;
@@ -709,10 +711,10 @@ let api = function Binance( options = {} ) {
         ws.reconnect = Binance.options.reconnect;
         ws.endpoint = endpoint;
         ws.isAlive = false;
-        ws.on( 'open', handleSocketOpen.bind( ws, opened_callback, heartbeatKo_callback ) );
+        ws.on( 'open', handleSocketOpen.bind( ws, opened_callback, ko_callback ) );
         ws.on( 'pong', handleSocketHeartbeat );
-        ws.on( 'error', handleSocketError );
-        ws.on( 'close', handleSocketClose.bind( ws, reconnect ) );
+        ws.on( 'error', handleSocketError.bind( ws, ko_callback ) );
+        ws.on( 'close', handleSocketClose.bind( ws, reconnect, ko_callback ) );
         ws.on( 'message', data => {
             try {
                 callback( JSON.parse( data ) );
@@ -5874,20 +5876,21 @@ let api = function Binance( options = {} ) {
              * @param {symbol} symbol name or false. can also be a callback
              * @param {function} callback - callback function
              * @param {function} opened_callback - opened_callback function
+             * @param {function} ko_callback - ko_callback function
              * @return {string} the websocket endpoint
              */
-            bookTickers: function bookTickerStream( symbol = false, callback = console.log, opened_callback = false, heartbeatKo_callback = false ) {
+            bookTickers: function bookTickerStream( symbol = false, callback = console.log, opened_callback = false, ko_callback = false ) {
                 if ( typeof symbol == 'function' ) {
-                    heartbeatKo_callback = opened_callback;
+                    ko_callback = opened_callback;
                     opened_callback = callback;
                     callback = symbol;
                     symbol = false;
                 }
                 let reconnect = () => {
-                    if ( Binance.options.reconnect ) bookTickerStream( symbol, callback, opened_callback, heartbeatKo_callback );
+                    if ( Binance.options.reconnect ) bookTickerStream( symbol, callback, opened_callback, ko_callback );
                 };
                 const endpoint = symbol ? `${ symbol.toLowerCase() }@bookTicker` : '!bookTicker'
-                let subscription = subscribe( endpoint, data => callback( fBookTickerConvertData( data ) ), reconnect, opened_callback, heartbeatKo_callback );
+                let subscription = subscribe( endpoint, data => callback( fBookTickerConvertData( data ) ), reconnect, opened_callback, ko_callback );
                 return subscription.endpoint;
             },
 
