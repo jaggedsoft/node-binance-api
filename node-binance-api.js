@@ -5884,7 +5884,7 @@ let api = function Binance( options = {} ) {
                     symbol = false;
                 }
                 let reconnect = () => {
-                    if ( Binance.options.reconnect ) bookTickerStream( symbol, callback );
+                    if ( Binance.options.reconnect ) bookTickerStream( symbol, callback, opened_callback, heartbeatKo_callback );
                 };
                 const endpoint = symbol ? `${ symbol.toLowerCase() }@bookTicker` : '!bookTicker'
                 let subscription = subscribe( endpoint, data => callback( fBookTickerConvertData( data ) ), reconnect, opened_callback, heartbeatKo_callback );
