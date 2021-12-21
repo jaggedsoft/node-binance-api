@@ -5870,9 +5870,10 @@ let api = function Binance( options = {} ) {
              * Spot WebSocket bookTicker (bid/ask quotes including price & amount)
              * @param {symbol} symbol name or false. can also be a callback
              * @param {function} callback - callback function
+             * @param {function} opened_callback - opened_callback function
              * @return {string} the websocket endpoint
              */
-            bookTickers: function bookTickerStream( symbol = false, callback = console.log ) {
+            bookTickers: function bookTickerStream( symbol = false, callback = console.log, opened_callback = false ) {
                 if ( typeof symbol == 'function' ) {
                     callback = symbol;
                     symbol = false;
@@ -5881,7 +5882,7 @@ let api = function Binance( options = {} ) {
                     if ( Binance.options.reconnect ) bookTickerStream( symbol, callback );
                 };
                 const endpoint = symbol ? `${ symbol.toLowerCase() }@bookTicker` : '!bookTicker'
-                let subscription = subscribe( endpoint, data => callback( fBookTickerConvertData( data ) ), reconnect );
+                let subscription = subscribe( endpoint, data => callback( fBookTickerConvertData( data ) ), reconnect, opened_callback );
                 return subscription.endpoint;
             },
 
