@@ -3983,6 +3983,12 @@ let api = function Binance( options = {} ) {
             return promiseRequest( 'v1/indexPriceKlines', params, { base:fapi } );
         },
 
+        futuresMarkPriceKlines: async ( symbol, interval = "30m", params = {} ) => {
+            params.symbol = symbol;
+            params.interval = interval;
+            return promiseRequest( 'v1/markPriceKlines', params, { base:fapi } );
+        },
+
         futuresMarkPrice: async ( symbol = false ) => {
             return promiseRequest( 'v1/premiumIndex', symbol ? { symbol } : {}, { base:fapi } );
         },
