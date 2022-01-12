@@ -2142,11 +2142,11 @@ let api = function Binance( options = {} ) {
             Binance.options.log( "Unexpected userDeliveryData: " + type );
         }
     };
-	
+
 	/**
-    * Universal Transfer requires API permissions enabled 
+    * Universal Transfer requires API permissions enabled
     * @param {string} type - ENUM , example MAIN_UMFUTURE for SPOT to USDT futures, see https://binance-docs.github.io/apidocs/spot/en/#user-universal-transfer
-    * @param {string} asset - the asset - example :USDT    * 
+    * @param {string} asset - the asset - example :USDT    *
     * @param {number} amount - the callback function
     * @param {function} callback - the callback function
     * @return {promise}
@@ -3970,6 +3970,25 @@ let api = function Binance( options = {} ) {
             return promiseRequest( 'v1/klines', params, { base:fapi } );
         },
 
+        futuresContinuousKlines : async ( pair, contractType = "PERPETUAL", interval = "30m", params = {} ) => {
+            params.pair = pair;
+            params.interval = interval;
+            params.contractType = contractType;
+            return promiseRequest( 'v1/continuousKlines', params, { base:fapi } );
+        },
+
+        futuresIndexKlines: async ( pair, interval = "30m", params = {} ) => {
+            params.pair = pair;
+            params.interval = interval;
+            return promiseRequest( 'v1/indexPriceKlines', params, { base:fapi } );
+        },
+
+        futuresMarkPriceKlines: async ( symbol, interval = "30m", params = {} ) => {
+            params.symbol = symbol;
+            params.interval = interval;
+            return promiseRequest( 'v1/markPriceKlines', params, { base:fapi } );
+        },
+
         futuresMarkPrice: async ( symbol = false ) => {
             return promiseRequest( 'v1/premiumIndex', symbol ? { symbol } : {}, { base:fapi } );
         },
@@ -4111,7 +4130,7 @@ let api = function Binance( options = {} ) {
         futuresMarketSell: async ( symbol, quantity, params = {} ) => {
             return futuresOrder( 'SELL', symbol, quantity, false, params );
         },
-        
+
         futuresMultipleOrders: async ( orders = [{}] ) => {
             let params = { batchOrders: JSON.stringify(orders) };
             return promiseRequest( 'v1/batchOrders', params, { base:fapi, type:'TRADE', method:'POST'} );
@@ -4291,7 +4310,7 @@ let api = function Binance( options = {} ) {
             params.symbol = symbol;
             return promiseRequest( 'v1/userTrades', params, { base:dapi, type:'SIGNED' } );
         },
-        
+
         deliveryCommissionRate: async ( symbol, params = {} ) => {
             if ( symbol ) params.symbol = symbol;
             return promiseRequest( 'v1/commissionRate', params, { base:dapi, type:'SIGNED' } );
@@ -4650,7 +4669,7 @@ let api = function Binance( options = {} ) {
 			universalTransfer(type, asset, amount, callback),
 
         /**
-        * Get trades for a given symbol - margin account 
+        * Get trades for a given symbol - margin account
         * @param {string} symbol - the symbol
         * @param {function} callback - the callback function
         * @param {object} options - additional options
@@ -4780,7 +4799,7 @@ let api = function Binance( options = {} ) {
                 if ( callback ) return callback( error, data );
             }, 'GET' );
         },
-        
+
         /**
          * Margin account repay
          * @param {string} asset - the asset
@@ -4801,7 +4820,7 @@ let api = function Binance( options = {} ) {
                 if ( callback ) return callback( error, data );
             }, 'POST' );
         },
-        
+
         /**
          * Margin account details
          * @param {function} callback - the callback function
