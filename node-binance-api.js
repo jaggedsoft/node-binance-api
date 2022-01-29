@@ -4810,7 +4810,7 @@ let api = function Binance( options = {} ) {
          */
         mgAccount: function( callback ,isIsolated = false) {
             let endpoint = 'v1/margin';
-	        endpoint += (isIsolated)?'/isolated':'' + '/account';
+	        endpoint += ((isIsolated)?'/isolated':'') + '/account';
             signedRequest( sapi + endpoint, {}, function( error, data ) {
                 if( callback ) return callback( error, data );
             } );
