@@ -3015,7 +3015,10 @@ let api = function Binance( options = {} ) {
                     }, 'DELETE' );
                 } )
             } else {
-                signedRequest( base + 'v3/order', { symbol: symbol, orderId: orderid }, function ( error, data ) {
+		    
+	        options.symbol = symbol
+	        options.orderId = orderid
+                signedRequest( base + 'v3/order', options, function ( error, data ) {
                     return callback.call( this, error, data, symbol );
                 }, 'DELETE' );
             }
