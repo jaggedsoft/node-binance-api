@@ -2990,10 +2990,15 @@ let api = function Binance( options = {} ) {
         * Cancels an order
         * @param {string} symbol - the symbol to cancel
         * @param {string} orderid - the orderid to cancel
+        * @param {object} options - options for the request
         * @param {function} callback - the callback function
         * @return {promise or undefined} - omitting the callback returns a promise
         */
-        cancel: function ( symbol, orderid, callback = false ) {
+        cancel: function ( symbol, orderid, options, callback = false ) {
+	    if (typeof options === 'function') { // Accept callback as third parameter
+                callback = options;
+		options = {}
+            }
             if ( !callback ) {
                 return new Promise( ( resolve, reject ) => {
                     callback = ( error, response ) => {
@@ -3003,7 +3008,9 @@ let api = function Binance( options = {} ) {
                             resolve( response );
                         }
                     }
-                    signedRequest( base + 'v3/order', { symbol: symbol, orderId: orderid }, function ( error, data ) {
+		    options.symbol = symbol
+		    options.orderId = orderid
+                    signedRequest( base + 'v3/order', options, function ( error, data ) {
                         return callback.call( this, error, data, symbol );
                     }, 'DELETE' );
                 } )
