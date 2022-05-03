@@ -5520,9 +5520,9 @@ let api = function Binance( options = {} ) {
              * @param {string} endpoint - the string associated with the endpoint
              * @return {undefined}
              */
-            terminate: function ( endpoint ) {
+            terminate: function ( endpoint, reconnect = false  ) {
                 if ( Binance.options.verbose ) Binance.options.log( 'WebSocket terminating:', endpoint );
-                return terminate( endpoint );
+                return terminate( endpoint, reconnect );
             },
 
             /**
