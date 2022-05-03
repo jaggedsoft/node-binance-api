@@ -528,7 +528,8 @@ let api = function Binance( options = {} ) {
             if ( typeof flags.method === 'undefined' ) flags.method = 'GET'; // GET POST PUT DELETE
             if ( typeof flags.type === 'undefined' ) flags.type = false; // TRADE, SIGNED, MARKET_DATA, USER_DATA, USER_STREAM
             else {
-                if ( typeof data.recvWindow === 'undefined' ) data.recvWindow = Binance.options.recvWindow;
+                if(flags.type !== 'USER_STREAM')
+                    if ( typeof data.recvWindow === 'undefined' ) data.recvWindow = Binance.options.recvWindow;
                 requireApiKey( 'promiseRequest' );
                 headers['X-MBX-APIKEY'] = Binance.options.APIKEY;
             }
