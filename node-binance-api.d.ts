@@ -637,9 +637,11 @@ declare module "node-binance-api" {
 
         /**
         * Withdraws asset to given wallet id
-        * @param {string} asset - the asset symbol
+        * @param {string} coin - the asset symbol
+        * @param {string} network - the network i.e BSC
         * @param {string} address - the wallet to transfer it to
         * @param {number} amount - the amount to transfer
+        * @param {long} timestamp - the timestamp
         * @param {string} addressTag - and addtional address tag
         * @param {function} callback - the callback function
         * @param {string} name - the name to save the address as. Set falsy to prevent Binance saving to address book
