@@ -3422,10 +3422,10 @@ let api = function Binance( options = {} ) {
                             resolve( response );
                         }
                     }
-                    signedRequest( wapi + 'v3/withdraw.html', params, callback, 'POST' );
+                    signedRequest( sapi + 'v1/capital/withdraw/apply', params, callback, 'POST' );
                 } )
             } else {
-                signedRequest( wapi + 'v3/withdraw.html', params, callback, 'POST' );
+                signedRequest( sapi + 'v1/capital/withdraw/apply', params, callback, 'POST' );
             }
         },
 
