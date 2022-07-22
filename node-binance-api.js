@@ -189,7 +189,7 @@ let api = function Binance( options = {} ) {
     }
 
     const proxyRequest = ( opt, cb ) => {
-        const req = request( addProxy( opt ), reqHandler( cb ) ).on('error', (err) => { cb( err, {} ) });
+        const req = request( addProxy( opt ), reqHandler( cb ) ).on( 'error', ( err ) => { cb( err, {} ) } );
         return req;
     }
 
@@ -434,7 +434,7 @@ let api = function Binance( options = {} ) {
             quantity: quantity
         };
         if ( typeof flags.type !== 'undefined' ) opt.type = flags.type;
-        if (typeof flags.isIsolated !== 'undefined') opt.isIsolated = flags.isIsolated;
+        if ( typeof flags.isIsolated !== 'undefined' ) opt.isIsolated = flags.isIsolated;
         if ( opt.type.includes( 'LIMIT' ) ) {
             opt.price = price;
             if ( opt.type !== 'LIMIT_MAKER' ) {
@@ -987,17 +987,21 @@ let api = function Binance( options = {} ) {
      */
     const futuresKlineConcat = ( symbol, interval ) => {
         let output = Binance.futuresTicks[symbol][interval];
-        if ( typeof Binance.futuresRealtime[symbol][interval].time === 'undefined' ) return output;
-        const time = Binance.futuresRealtime[symbol][interval].time;
-        const last_updated = Object.keys( Binance.futuresTicks[symbol][interval] ).pop();
-        if ( time >= last_updated ) {
-            output[time] = Binance.futuresRealtime[symbol][interval];
-            //delete output[time].time;
-            output[last_updated].isFinal = true;
-            output[time].isFinal = false;
+        let realTimeCandle = Binance.futuresRealtime[symbol][interval]
+        if ( typeof realTimeCandle.time !== 'undefined' ) {
+            // there is no current candle
+            // possible causes: ws is not yet connected or ws candle just finalized.
+            const latestTimestamp = realTimeCandle.time;
+            const earliestTimestamp = Object.keys( output ).pop();
+            if ( latestTimestamp >= earliestTimestamp ) {
+                output[latestTimestamp] = realTimeCandle;
+                output[earliestTimestamp].isFinal = true;
+            }
         }
+
         return output;
     };
+
 
     /**
      * Used for websocket futures @kline
@@ -1011,17 +1015,15 @@ let api = function Binance( options = {} ) {
         let { e: eventType, E: eventTime, k: ticks } = kline;
         // eslint-disable-next-line no-unused-vars
         let { o: open, h: high, l: low, c: close, v: volume, i: interval, x: isFinal, q: quoteVolume, V: takerBuyBaseVolume, Q: takerBuyQuoteVolume, n: trades, t: time, T:closeTime } = ticks;
+        let parsedKline = { time, closeTime, open, high, low, close, volume, quoteVolume, takerBuyBaseVolume, takerBuyQuoteVolume, trades, isFinal }
         if ( time <= firstTime ) return;
-        if ( !isFinal ) {
-            // if ( typeof Binance.futuresRealtime[symbol][interval].time !== 'undefined' ) {
-            //     if ( Binance.futuresRealtime[symbol][interval].time > time ) return;
-            // }
-            Binance.futuresRealtime[symbol][interval] = { time, closeTime, open, high, low, close, volume, quoteVolume, takerBuyBaseVolume, takerBuyQuoteVolume, trades, isFinal };
-            return;
+        if ( isFinal ) {
+            // Most recent candle just closed, prune the earliest candle
+            const firstCandleTimestamp = Object.keys( Binance.futuresTicks[symbol][interval] ).shift();
+            if ( firstCandleTimestamp ) delete Binance.futuresTicks[symbol][interval][firstCandleTimestamp];
         }
-        const first_updated = Object.keys( Binance.futuresTicks[symbol][interval] ).shift();
-        if ( first_updated ) delete Binance.futuresTicks[symbol][interval][first_updated];
-        Binance.futuresTicks[symbol][interval][time] = { time, closeTime, open, high, low, close, volume, quoteVolume, takerBuyBaseVolume, takerBuyQuoteVolume, trades, isFinal:false };
+
+        Binance.futuresTicks[symbol][interval][time] = parsedKline;
     };
 
     /**
@@ -2390,15 +2392,13 @@ let api = function Binance( options = {} ) {
      * @return {undefined}
      */
     const futuresKlineData = ( symbol, interval, ticks ) => {
-        let last_time = 0;
         if ( isIterable( ticks ) ) {
             for ( let tick of ticks ) {
                 // eslint-disable-next-line no-unused-vars
                 let [ time, open, high, low, close, volume, closeTime, quoteVolume, trades, takerBuyBaseVolume, takerBuyQuoteVolume, ignored ] = tick;
                 Binance.futuresTicks[symbol][interval][time] = { time, closeTime, open, high, low, close, volume, quoteVolume, takerBuyBaseVolume, takerBuyQuoteVolume, trades };
-                last_time = time;
+                Binance.futuresMeta[symbol][interval].timestamp = time
             }
-            Binance.futuresMeta[symbol][interval].timestamp = last_time;
         }
     };
 
@@ -2920,7 +2920,7 @@ let api = function Binance( options = {} ) {
         * @param {function} callback - the callback function
         * @return {promise or undefined} - omitting the callback returns a promise
         */
-       marketSell: function ( symbol, quantity, flags = { type: 'MARKET' }, callback = false ) {
+        marketSell: function ( symbol, quantity, flags = { type: 'MARKET' }, callback = false ) {
             if ( typeof flags === 'function' ) { // Accept callback as third parameter
                 callback = flags;
                 flags = { type: 'MARKET' };
@@ -4393,8 +4393,8 @@ let api = function Binance( options = {} ) {
          * @param {string} isIsolated - the isolate margin option
          * @return {undefined}
          */
-        mgOrder: function ( side, symbol, quantity, price, flags = {}, callback = false,isIsolated='FALSE'  ) {
-            marginOrder( side, symbol, quantity, price, {...flags,isIsolated}, callback );
+        mgOrder: function ( side, symbol, quantity, price, flags = {}, callback = false, isIsolated = 'FALSE'  ) {
+            marginOrder( side, symbol, quantity, price, { ...flags, isIsolated }, callback );
         },
 
         /**
@@ -4407,8 +4407,8 @@ let api = function Binance( options = {} ) {
          * @param {string} isIsolated - the isolate margin option
          * @return {undefined}
          */
-        mgBuy: function ( symbol, quantity, price, flags = {}, callback = false,isIsolated='FALSE'  ) {
-            marginOrder( 'BUY', symbol, quantity, price, {...flags,isIsolated}, callback );
+        mgBuy: function ( symbol, quantity, price, flags = {}, callback = false, isIsolated = 'FALSE'  ) {
+            marginOrder( 'BUY', symbol, quantity, price, { ...flags, isIsolated }, callback );
         },
 
         /**
@@ -4421,8 +4421,8 @@ let api = function Binance( options = {} ) {
          * @param {string} isIsolated - the isolate margin option
          * @return {undefined}
          */
-        mgSell: function ( symbol, quantity, price, flags = {}, callback = false,isIsolated='FALSE'  ) {
-            marginOrder( 'SELL', symbol, quantity, price, {...flags,isIsolated}, callback );
+        mgSell: function ( symbol, quantity, price, flags = {}, callback = false, isIsolated = 'FALSE'  ) {
+            marginOrder( 'SELL', symbol, quantity, price, { ...flags, isIsolated }, callback );
         },
 
         /**
@@ -4434,13 +4434,13 @@ let api = function Binance( options = {} ) {
          * @param {string} isIsolated - the isolate margin option
          * @return {undefined}
          */
-        mgMarketBuy: function ( symbol, quantity, flags = { type: 'MARKET' }, callback = false,isIsolated='FALSE' ) {
+        mgMarketBuy: function ( symbol, quantity, flags = { type: 'MARKET' }, callback = false, isIsolated = 'FALSE' ) {
             if ( typeof flags === 'function' ) { // Accept callback as third parameter
                 callback = flags;
                 flags = { type: 'MARKET' };
             }
             if ( typeof flags.type === 'undefined' ) flags.type = 'MARKET';
-            marginOrder( 'BUY', symbol, quantity, 0, {...flags,isIsolated}, callback );
+            marginOrder( 'BUY', symbol, quantity, 0, { ...flags, isIsolated }, callback );
         },
 
         /**
@@ -4452,13 +4452,13 @@ let api = function Binance( options = {} ) {
          * @param {string} isIsolated - the isolate margin option
          * @return {undefined}
          */
-        mgMarketSell: function ( symbol, quantity, flags = { type: 'MARKET' }, callback = false, isIsolated='FALSE'  ) {
+        mgMarketSell: function ( symbol, quantity, flags = { type: 'MARKET' }, callback = false, isIsolated = 'FALSE'  ) {
             if ( typeof flags === 'function' ) { // Accept callback as third parameter
                 callback = flags;
                 flags = { type: 'MARKET' };
             }
             if ( typeof flags.type === 'undefined' ) flags.type = 'MARKET';
-            marginOrder( 'SELL', symbol, quantity, 0, {...flags,isIsolated}, callback );
+            marginOrder( 'SELL', symbol, quantity, 0, { ...flags, isIsolated }, callback );
         },
 
         /**
@@ -4468,8 +4468,8 @@ let api = function Binance( options = {} ) {
          * @param {function} callback - the callback function
          * @return {undefined}
          */
-        mgCancel: function ( symbol, orderid, callback = false,isIsolated='FALSE') {
-            signedRequest( sapi + 'v1/margin/order', { symbol: symbol, orderId: orderid,isIsolated }, function ( error, data ) {
+        mgCancel: function ( symbol, orderid, callback = false, isIsolated = 'FALSE' ) {
+            signedRequest( sapi + 'v1/margin/order', { symbol: symbol, orderId: orderid, isIsolated }, function ( error, data ) {
                 if ( callback ) return callback.call( this, error, data, symbol );
             }, 'DELETE' );
         },
@@ -4644,14 +4644,14 @@ let api = function Binance( options = {} ) {
          * @param {string} symbol - symbol for isolated margin
          * @return {undefined}
          */
-        mgBorrow: function ( asset, amount, callback, isIsolated='FALSE',symbol=null ) {
+        mgBorrow: function ( asset, amount, callback, isIsolated = 'FALSE', symbol = null ) {
             let parameters = Object.assign( { asset: asset, amount: amount } );
-            if (isIsolated ==='TRUE' && !symbol) throw new Error('If "isIsolated" = "TRUE", "symbol" must be sent')
-            const isolatedObj = isIsolated === 'TRUE'?{
+            if ( isIsolated === 'TRUE' && !symbol ) throw new Error( 'If "isIsolated" = "TRUE", "symbol" must be sent' )
+            const isolatedObj = isIsolated === 'TRUE' ? {
                 isIsolated,
                 symbol
-            }:{}
-            signedRequest( sapi + 'v1/margin/loan', {...parameters,...isolatedObj}, function ( error, data ) {
+            } : {}
+            signedRequest( sapi + 'v1/margin/loan', { ...parameters, ...isolatedObj }, function ( error, data ) {
                 if ( callback ) return callback( error, data );
             }, 'POST' );
         },
@@ -4665,14 +4665,14 @@ let api = function Binance( options = {} ) {
          * @param {string} symbol - symbol for isolated margin
          * @return {undefined}
          */
-        mgRepay: function ( asset, amount, callback ,isIsolated='FALSE',symbol=null ) {
+        mgRepay: function ( asset, amount, callback, isIsolated = 'FALSE', symbol = null ) {
             let parameters = Object.assign( { asset: asset, amount: amount } );
-            if (isIsolated ==='TRUE' && !symbol) throw new Error('If "isIsolated" = "TRUE", "symbol" must be sent')
-            const isolatedObj = isIsolated === 'TRUE'?{
+            if ( isIsolated === 'TRUE' && !symbol ) throw new Error( 'If "isIsolated" = "TRUE", "symbol" must be sent' )
+            const isolatedObj = isIsolated === 'TRUE' ? {
                 isIsolated,
                 symbol
-            }:{}
-            signedRequest( sapi + 'v1/margin/repay', {...parameters,...isolatedObj}, function ( error, data ) {
+            } : {}
+            signedRequest( sapi + 'v1/margin/repay', { ...parameters, ...isolatedObj }, function ( error, data ) {
                 if ( callback ) return callback( error, data );
             }, 'POST' );
         },
@@ -4682,8 +4682,8 @@ let api = function Binance( options = {} ) {
          * @param {boolean} isIsolated - the callback function
          * @return {undefined}
          */
-        mgAccount: function( callback ,isIsolated = false) {
-            const endpoint = 'v1/margin' + (isIsolated?'/isolated':'')  + '/account'
+        mgAccount: function( callback, isIsolated = false ) {
+            const endpoint = 'v1/margin' + ( isIsolated ? '/isolated' : '' )  + '/account'
             signedRequest( sapi + endpoint, {}, function( error, data ) {
                 if( callback ) return callback( error, data );
             } );
@@ -4887,7 +4887,8 @@ let api = function Binance( options = {} ) {
             let handleFuturesKlineStream = kline => {
                 let symbol = kline.s, interval = kline.k.i;
                 if ( !Binance.futuresMeta[symbol][interval].timestamp ) {
-                    if ( typeof ( Binance.futuresKlineQueue[symbol][interval] ) !== 'undefined' && kline !== null ) {
+                    // kline snapshot not yet fetched
+                    if ( typeof ( Binance.futuresKlineQueue[symbol][interval] ) !== 'undefined' ) {
                         Binance.futuresKlineQueue[symbol][interval].push( kline );
                     }
                 } else {
@@ -4902,7 +4903,9 @@ let api = function Binance( options = {} ) {
                 futuresKlineData( symbol, interval, data );
                 //Binance.options.log('/futures klines at ' + Binance.futuresMeta[symbol][interval].timestamp);
                 if ( typeof Binance.futuresKlineQueue[symbol][interval] !== 'undefined' ) {
-                    for ( let kline of Binance.futuresKlineQueue[symbol][interval] ) futuresKlineHandler( symbol, kline, Binance.futuresMeta[symbol][interval].timestamp );
+                    for ( let kline of Binance.futuresKlineQueue[symbol][interval] ) {
+                        futuresKlineHandler( symbol, kline, Binance.futuresMeta[symbol][interval].timestamp )
+                    }
                     delete Binance.futuresKlineQueue[symbol][interval];
                 }
                 if ( callback ) callback( symbol, interval, futuresKlineConcat( symbol, interval ) );
