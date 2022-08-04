@@ -297,12 +297,23 @@ describe('Buy order advanced', function () {
 });
 
 describe('Sell Stop loess', function () {
-  it('Attempt to create a stop loss order', function (done) {
+  it('Attempt to create a stop loss order with a trailing delta', function (done) {
     let type = 'STOP_LOSS';
     let quantity = 1;
     let price = 0.069;
     let stopPrice = 0.068;
     assert(typeof (binance.sell('ETHBTC', quantity, price, { stopPrice: stopPrice, type: type })) === 'undefined', WARN_SHOULD_BE_UNDEFINED);
+    done();
+  }).timeout(TIMEOUT);
+});
+
+describe('Sell with trailing Stop loss', function () {
+  it('Attempt to create a stop loss order', function (done) {
+    let type = 'STOP_LOSS_LIMIT';
+    let quantity = 1;
+    let price = 0.069;
+    let delta = 100;
+    assert(typeof (binance.sell('ETHBTC', quantity, price, { trailingDelta: delta, type: type })) === 'undefined', WARN_SHOULD_BE_UNDEFINED);
     done();
   }).timeout(TIMEOUT);
 });

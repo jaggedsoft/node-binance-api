@@ -400,6 +400,7 @@ let api = function Binance( options = {} ) {
          * LIMIT_MAKER
          */
         if ( typeof flags.icebergQty !== 'undefined' ) opt.icebergQty = flags.icebergQty;
+        if ( typeof flags.trailingDelta !== 'undefined' ) opt.trailingDelta = flags.trailingDelta;
         if ( typeof flags.stopPrice !== 'undefined' ) {
             opt.stopPrice = flags.stopPrice;
             if ( opt.type === 'LIMIT' ) throw Error( 'stopPrice: Must set "type" to one of the following: STOP_LOSS, STOP_LOSS_LIMIT, TAKE_PROFIT, TAKE_PROFIT_LIMIT' );
