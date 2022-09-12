@@ -2062,7 +2062,7 @@ let api = function Binance( options = {} ) {
             if ( Binance.options.execution_callback ) Binance.options.execution_callback( data );
         } else if ( type === 'listStatus' ) {
             if ( Binance.options.list_status_callback ) Binance.options.list_status_callback( data );
-        } else if ( type === 'outboundAccountPosition' ) {
+        } else if ( type === 'outboundAccountPosition' || type === 'balanceUpdate' ) {
             Binance.options.balance_callback( data );
         } else {
             Binance.options.log( 'Unexpected userData: ' + type );
@@ -2082,7 +2082,7 @@ let api = function Binance( options = {} ) {
             if ( Binance.options.margin_execution_callback ) Binance.options.margin_execution_callback( data );
         } else if ( type === 'listStatus' ) {
             if ( Binance.options.margin_list_status_callback ) Binance.options.margin_list_status_callback( data );
-        } else if ( type === 'outboundAccountPosition' || type === 'balanceUpdate') {
+        } else if ( type === 'outboundAccountPosition' || type === 'balanceUpdate' ) {
             Binance.options.margin_balance_callback( data );
         } else {
             Binance.options.log( 'Unexpected userMarginData: ' + type );
@@ -5347,7 +5347,7 @@ let api = function Binance( options = {} ) {
                         }
                     }, 60 * 30 * 1000 ); // 30 minute keepalive
                     Binance.options.balance_callback = callback;
-                    Binance.options.execution_callback = execution_callback ? callback : execution_callback;//This change is required to listen for Orders
+                    Binance.options.execution_callback = execution_callback === false ? callback : execution_callback;
                     Binance.options.list_status_callback = list_status_callback;
                     const subscription = subscribe( Binance.options.listenKey, userDataHandler, reconnect );
                     if ( subscribed_callback ) subscribed_callback( subscription.endpoint );
