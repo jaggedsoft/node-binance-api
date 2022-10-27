@@ -462,6 +462,10 @@ let api = function Binance( options = {} ) {
             opt.stopPrice = flags.stopPrice;
             if ( opt.type === 'LIMIT' ) throw Error( 'stopPrice: Must set "type" to one of the following: STOP_LOSS, STOP_LOSS_LIMIT, TAKE_PROFIT, TAKE_PROFIT_LIMIT' );
         }
+	if (opt.type == 'MARKET' && typeof flags.quoteOrderQty !== 'undefined') {
+            opt.quoteOrderQty = flags.quoteOrderQty
+            delete opt.quantity;
+        }
         signedRequest( sapi + endpoint, opt, function ( error, response ) {
             if ( !response ) {
                 if ( callback ) callback( error, response );
