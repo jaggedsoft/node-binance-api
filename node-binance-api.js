@@ -3526,6 +3526,7 @@ let api = function Binance( options = {} ) {
         * Get the trade fee
         * @param {function} callback - the callback function
         * @param {string} symbol (optional)
+        * @see https://dev.binance.vision/t/difference-between-get-wapi-v3-tradefee-html-and-get-sapi-v1-asset-tradefee/2592
         * @return {promise or undefined} - omitting the callback returns a promise
         */
         tradeFee: function ( callback, symbol = false ) {
@@ -3539,10 +3540,10 @@ let api = function Binance( options = {} ) {
                             resolve( response );
                         }
                     }
-                    signedRequest( wapi + 'v3/tradeFee.html', params, callback );
+                    signedRequest( sapi + 'v1/asset/tradeFee', params, callback );
                 } )
             } else {
-                signedRequest( wapi + 'v3/tradeFee.html', params, callback );
+                signedRequest( sapi + 'v1/asset/tradeFee', params, callback );
             }
         },
 
