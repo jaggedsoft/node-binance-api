@@ -56,7 +56,7 @@ declare module "node-binance-api" {
          * @param {function} order_update_callback
          * @param {Function} subscribed_callback - subscription callback
          */
-        userFutureData(margin_call_callback: _callback, account_update_callback: _callback, order_update_callback: _callback, subscribed_callback: _callback): any;
+        userFutureData(margin_call_callback: _callback, account_update_callback: _callback, order_update_callback: _callback, subscribed_callback: _callback, error_callback:_callback): any;
         userFutureData(...args: any): any;
 
         /**
