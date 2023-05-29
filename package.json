@@ -6,11 +6,12 @@
   "typings": "node-binance-api.d.ts",
   "dependencies": {
     "async": "^3.1.0",
+    "https": "^1.0.0",
     "https-proxy-agent": "^3.0.1",
+    "json-bigint": "^1.0.0",
     "request": "^2.88.0",
     "socks-proxy-agent": "^4.0.2",
     "string-hash": "^1.1.3",
-    "json-bigint": "^1.0.0",
     "url": "^0.11.0",
     "ws": "^7.2.0"
   },

@@ -12,6 +12,7 @@ let api = function Binance( options = {} ) {
     let Binance = this; // eslint-disable-line consistent-this
     const WebSocket = require( 'ws' );
     const request = require( 'request' );
+    const https = require( 'https' );
     const crypto = require( 'crypto' );
     const file = require( 'fs' );
     const url = require( 'url' );
@@ -57,6 +58,11 @@ let api = function Binance( options = {} ) {
     Binance.ohlcLatest = {};
     Binance.klineQueue = {};
     Binance.ohlc = {};
+
+    const pool_agent = new https.Agent( {
+        maxSockets: 1,
+        keepAlive: true
+    } );
 
     const default_options = {
         recvWindow: 5000,
@@ -550,6 +556,7 @@ let api = function Binance( options = {} ) {
                 opt.url = `${ baseURL }${ url }?${ query }&signature=${ data.signature }`;
             }
             opt.qs = data;
+            opt.agent = pool_agent;
             /*if ( flags.method === 'POST' ) {
                 opt.form = data;
             } else {
