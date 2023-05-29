@@ -58,9 +58,6 @@ let api = function Binance( options = {} ) {
     Binance.klineQueue = {};
     Binance.ohlc = {};
 
-
-
-
     const default_options = {
         recvWindow: 5000,
         useServerTime: false,
@@ -135,9 +132,12 @@ let api = function Binance( options = {} ) {
         return this;
     }
 
+
+    /**
+     * When the 'foreverAgent' is set to true, we need to send a ping request every 30 seconds to keep the request pool alive.
+     */
     if( Binance.options.foreverAgent ) setInterval( () => request( fapi + 'v1/ping' ), 30000 )
     
-
     /**
      * Replaces socks connection uri hostname with IP address
      * @param {string} connString - socks connection string
