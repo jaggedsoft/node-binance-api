@@ -12,7 +12,6 @@ let api = function Binance( options = {} ) {
     let Binance = this; // eslint-disable-line consistent-this
     const WebSocket = require( 'ws' );
     const request = require( 'request' );
-    const https = require( 'https' );
     const crypto = require( 'crypto' );
     const file = require( 'fs' );
     const url = require( 'url' );
@@ -59,10 +58,8 @@ let api = function Binance( options = {} ) {
     Binance.klineQueue = {};
     Binance.ohlc = {};
 
-    const pool_agent = new https.Agent( {
-        maxSockets: 1,
-        keepAlive: true
-    } );
+
+
 
     const default_options = {
         recvWindow: 5000,
@@ -74,6 +71,7 @@ let api = function Binance( options = {} ) {
         hedgeMode: false,
         localAddress: false,
         family: false,
+        foreverAgent: false,
         log: function ( ...args ) {
             console.log( Array.prototype.slice.call( args ) );
         }
@@ -108,6 +106,7 @@ let api = function Binance( options = {} ) {
         if ( typeof Binance.options.keepAlive === 'undefined' ) Binance.options.keepAlive = default_options.keepAlive;
         if ( typeof Binance.options.localAddress === 'undefined' ) Binance.options.localAddress = default_options.localAddress;
         if ( typeof Binance.options.family === 'undefined' ) Binance.options.family = default_options.family;
+        if ( typeof Binance.options.foreverAgent === 'undefined' ) Binance.options.foreverAgent = default_options.foreverAgent;
         if ( typeof Binance.options.urls !== 'undefined' ) {
             const { urls } = Binance.options;
             if ( typeof urls.base === 'string' ) base = urls.base;
@@ -135,6 +134,9 @@ let api = function Binance( options = {} ) {
         } else if ( callback ) callback();
         return this;
     }
+
+    if( Binance.options.foreverAgent ) setInterval( () => request( fapi + 'v1/ping' ), 30000 )
+    
 
     /**
      * Replaces socks connection uri hostname with IP address
@@ -556,7 +558,7 @@ let api = function Binance( options = {} ) {
                 opt.url = `${ baseURL }${ url }?${ query }&signature=${ data.signature }`;
             }
             opt.qs = data;
-            opt.agent = pool_agent;
+            opt.forever = Binance.options.foreverAgent;
             /*if ( flags.method === 'POST' ) {
                 opt.form = data;
             } else {
