@@ -3936,6 +3936,26 @@ let api = function Binance( options = {} ) {
             return promiseRequest( 'v1/lending/union/account', params, { base:sapi, type:'SIGNED' } );
         },
 
+        bswapPools: async ( params = {} ) => {
+            return promiseRequest('v1/bswap/pools', params, { base:sapi, type: 'SIGNED' } );
+        },
+
+        bswapLiquidity: async ( params = {} ) => {
+            return promiseRequest('v1/bswap/liquidity', params, { base:sapi, type: 'SIGNED' } );
+        },
+
+        bswapLiquidityOps: async( params = {} ) => {
+            return promiseRequest('v1/bswap/liquidityOps', params, { base:sapi, type: 'SIGNED' } );
+        },
+
+        bswapQuote: async( params = {} ) => {
+            return promiseRequest('v1/bswap/quote', params, { base:sapi, type: 'SIGNED' } );
+        },
+
+        bswapHistory: async( params = {} ) => {
+            return promiseRequest('v1/bswap/swap', params, { base:sapi, type: 'SIGNED' } );
+        },
+
         //** Futures methods */
         futuresPing: async ( params = {} ) => {
             return promiseRequest( 'v1/ping', params, { base:fapi } );
