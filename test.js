@@ -796,8 +796,8 @@ describe('Deposit address', function () {
       assert(Object.prototype.hasOwnProperty.call(result, 'address'), WARN_SHOULD_HAVE_KEY + 'address');
       assert(Object.prototype.hasOwnProperty.call(result, 'success'), WARN_SHOULD_HAVE_KEY + 'success');
       assert(Object.prototype.hasOwnProperty.call(result, 'addressTag'), WARN_SHOULD_HAVE_KEY + 'addressTag');
-      assert(Object.prototype.hasOwnProperty.call(result, 'asset'), WARN_SHOULD_HAVE_KEY + 'asset');
-      assert(result.asset === 'BTC');
+      assert(Object.prototype.hasOwnProperty.call(result, 'coin'), WARN_SHOULD_HAVE_KEY + 'coin');
+      assert(result.coin === 'BTC');
       assert(result.success === true);
       done();
     });
@@ -814,7 +814,7 @@ describe('Deposit address', function () {
       assert(Object.prototype.hasOwnProperty.call(result, 'address') === false, WARN_SHOULD_NOT_HAVE_KEY + 'address');
       assert(Object.prototype.hasOwnProperty.call(result, 'success'), WARN_SHOULD_NOT_HAVE_KEY + 'success');
       assert(Object.prototype.hasOwnProperty.call(result, 'addressTag') === false, WARN_SHOULD_NOT_HAVE_KEY + 'addressTag');
-      assert(Object.prototype.hasOwnProperty.call(result, 'asset') === false, WARN_SHOULD_NOT_HAVE_KEY + 'asset');
+      assert(Object.prototype.hasOwnProperty.call(result, 'coin') === false, WARN_SHOULD_NOT_HAVE_KEY + 'coin');
       assert(result.success === false);
       done();
     });
