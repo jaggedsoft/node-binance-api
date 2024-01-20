@@ -189,7 +189,7 @@ let api = function Binance( options = {} ) {
     }
 
     const proxyRequest = ( opt, cb ) => {
-        const req = request( addProxy( opt ), reqHandler( cb ) ).on('error', (err) => { cb( err, {} ) });
+        const req = request( addProxy( opt ), reqHandler( cb ) ).on( 'error', ( err ) => { cb( err, {} ) } );
         return req;
     }
 
@@ -375,7 +375,7 @@ let api = function Binance( options = {} ) {
                 opt.timeInForce = 'GTC';
             }
         }
-        if (opt.type == 'MARKET' && typeof flags.quoteOrderQty !== 'undefined') {
+        if ( opt.type == 'MARKET' && typeof flags.quoteOrderQty !== 'undefined' ) {
             opt.quoteOrderQty = flags.quoteOrderQty
             delete opt.quantity;
         }
@@ -438,7 +438,7 @@ let api = function Binance( options = {} ) {
             quantity: quantity
         };
         if ( typeof flags.type !== 'undefined' ) opt.type = flags.type;
-        if (typeof flags.isIsolated !== 'undefined') opt.isIsolated = flags.isIsolated;
+        if ( typeof flags.isIsolated !== 'undefined' ) opt.isIsolated = flags.isIsolated;
         if ( opt.type.includes( 'LIMIT' ) ) {
             opt.price = price;
             if ( opt.type !== 'LIMIT_MAKER' ) {
@@ -2082,7 +2082,7 @@ let api = function Binance( options = {} ) {
             if ( Binance.options.margin_execution_callback ) Binance.options.margin_execution_callback( data );
         } else if ( type === 'listStatus' ) {
             if ( Binance.options.margin_list_status_callback ) Binance.options.margin_list_status_callback( data );
-        } else if ( type === 'outboundAccountPosition' || type === 'balanceUpdate') {
+        } else if ( type === 'outboundAccountPosition' || type === 'balanceUpdate' ) {
             Binance.options.margin_balance_callback( data );
         } else {
             Binance.options.log( 'Unexpected userMarginData: ' + type );
@@ -2143,7 +2143,7 @@ let api = function Binance( options = {} ) {
         }
     };
 	
-	/**
+    /**
     * Universal Transfer requires API permissions enabled 
     * @param {string} type - ENUM , example MAIN_UMFUTURE for SPOT to USDT futures, see https://binance-docs.github.io/apidocs/spot/en/#user-universal-transfer
     * @param {string} asset - the asset - example :USDT    * 
@@ -2151,30 +2151,30 @@ let api = function Binance( options = {} ) {
     * @param {function} callback - the callback function
     * @return {promise}
     */
-    const universalTransfer = (type, asset, amount, callback = false) => {
-        let parameters = Object.assign({
+    const universalTransfer = ( type, asset, amount, callback = false ) => {
+        let parameters = Object.assign( {
             asset,
             amount,
             type,
-        });
-        if (!callback) {
-            return new Promise((resolve, reject) => {
+        } );
+        if ( !callback ) {
+            return new Promise( ( resolve, reject ) => {
                 signedRequest(
                     sapi + "v1/asset/transfer",
                     parameters,
-                    function (error, data) {
-                        if (error) return reject(error);
-                        return resolve(data);
+                    function ( error, data ) {
+                        if ( error ) return reject( error );
+                        return resolve( data );
                     },
                     "POST"
                 );
-            });
+            } );
         }
         signedRequest(
             sapi + "v1/asset/transfer",
             parameters,
-            function (error, data) {
-                if (callback) return callback(error, data);
+            function ( error, data ) {
+                if ( callback ) return callback( error, data );
             },
             "POST"
         );
@@ -2964,7 +2964,7 @@ let api = function Binance( options = {} ) {
         * @param {function} callback - the callback function
         * @return {promise or undefined} - omitting the callback returns a promise
         */
-       marketSell: function ( symbol, quantity, flags = { type: 'MARKET' }, callback = false ) {
+        marketSell: function ( symbol, quantity, flags = { type: 'MARKET' }, callback = false ) {
             if ( typeof flags === 'function' ) { // Accept callback as third parameter
                 callback = flags;
                 flags = { type: 'MARKET' };
@@ -3024,7 +3024,7 @@ let api = function Binance( options = {} ) {
         */
         orderStatus: function ( symbol, orderid, callback, flags = {} ) {
             let parameters = Object.assign( { symbol: symbol }, flags );
-            if (orderid){
+            if ( orderid ){
                 Object.assign( { orderId: orderid }, parameters )
             }
 
@@ -3362,7 +3362,7 @@ let api = function Binance( options = {} ) {
                             resolve( response );
                         }
                     }
-                  signedRequest( sapi + 'v1/asset/dribblet', {}, callback );
+                    signedRequest( sapi + 'v1/asset/dribblet', {}, callback );
                 } )
             } else {
                 signedRequest( sapi + 'v1/asset/dribblet', {}, callback );
@@ -3951,7 +3951,7 @@ let api = function Binance( options = {} ) {
 
         futuresPrices: async ( params = {} ) => {
             let data = await promiseRequest( 'v1/ticker/price', params, { base:fapi } );
-            return Array.isArray(data) ? data.reduce( ( out, i ) => ( ( out[i.symbol] =  i.price ), out ), {} ) : data;
+            return Array.isArray( data ) ? data.reduce( ( out, i ) => ( ( out[i.symbol] =  i.price ), out ), {} ) : data;
         },
 
         futuresDaily: async ( symbol = false, params = {} ) => {
@@ -4112,9 +4112,9 @@ let api = function Binance( options = {} ) {
             return futuresOrder( 'SELL', symbol, quantity, false, params );
         },
         
-        futuresMultipleOrders: async ( orders = [{}] ) => {
-            let params = { batchOrders: JSON.stringify(orders) };
-            return promiseRequest( 'v1/batchOrders', params, { base:fapi, type:'TRADE', method:'POST'} );
+        futuresMultipleOrders: async ( orders = [ {} ] ) => {
+            let params = { batchOrders: JSON.stringify( orders ) };
+            return promiseRequest( 'v1/batchOrders', params, { base:fapi, type:'TRADE', method:'POST' } );
         },
 
         futuresOrder, // side symbol quantity [price] [params]
@@ -4451,8 +4451,8 @@ let api = function Binance( options = {} ) {
          * @param {string} isIsolated - the isolate margin option
          * @return {undefined}
          */
-        mgOrder: function ( side, symbol, quantity, price, flags = {}, callback = false,isIsolated='FALSE'  ) {
-            marginOrder( side, symbol, quantity, price, {...flags,isIsolated}, callback );
+        mgOrder: function ( side, symbol, quantity, price, flags = {}, callback = false, isIsolated = 'FALSE'  ) {
+            marginOrder( side, symbol, quantity, price, { ...flags, isIsolated }, callback );
         },
 
         /**
@@ -4465,8 +4465,8 @@ let api = function Binance( options = {} ) {
          * @param {string} isIsolated - the isolate margin option
          * @return {undefined}
          */
-        mgBuy: function ( symbol, quantity, price, flags = {}, callback = false,isIsolated='FALSE'  ) {
-            marginOrder( 'BUY', symbol, quantity, price, {...flags,isIsolated}, callback );
+        mgBuy: function ( symbol, quantity, price, flags = {}, callback = false, isIsolated = 'FALSE'  ) {
+            marginOrder( 'BUY', symbol, quantity, price, { ...flags, isIsolated }, callback );
         },
 
         /**
@@ -4479,8 +4479,8 @@ let api = function Binance( options = {} ) {
          * @param {string} isIsolated - the isolate margin option
          * @return {undefined}
          */
-        mgSell: function ( symbol, quantity, price, flags = {}, callback = false,isIsolated='FALSE'  ) {
-            marginOrder( 'SELL', symbol, quantity, price, {...flags,isIsolated}, callback );
+        mgSell: function ( symbol, quantity, price, flags = {}, callback = false, isIsolated = 'FALSE'  ) {
+            marginOrder( 'SELL', symbol, quantity, price, { ...flags, isIsolated }, callback );
         },
 
         /**
@@ -4492,13 +4492,13 @@ let api = function Binance( options = {} ) {
          * @param {string} isIsolated - the isolate margin option
          * @return {undefined}
          */
-        mgMarketBuy: function ( symbol, quantity, flags = { type: 'MARKET' }, callback = false,isIsolated='FALSE' ) {
+        mgMarketBuy: function ( symbol, quantity, flags = { type: 'MARKET' }, callback = false, isIsolated = 'FALSE' ) {
             if ( typeof flags === 'function' ) { // Accept callback as third parameter
                 callback = flags;
                 flags = { type: 'MARKET' };
             }
             if ( typeof flags.type === 'undefined' ) flags.type = 'MARKET';
-            marginOrder( 'BUY', symbol, quantity, 0, {...flags,isIsolated}, callback );
+            marginOrder( 'BUY', symbol, quantity, 0, { ...flags, isIsolated }, callback );
         },
 
         /**
@@ -4510,13 +4510,13 @@ let api = function Binance( options = {} ) {
          * @param {string} isIsolated - the isolate margin option
          * @return {undefined}
          */
-        mgMarketSell: function ( symbol, quantity, flags = { type: 'MARKET' }, callback = false, isIsolated='FALSE'  ) {
+        mgMarketSell: function ( symbol, quantity, flags = { type: 'MARKET' }, callback = false, isIsolated = 'FALSE'  ) {
             if ( typeof flags === 'function' ) { // Accept callback as third parameter
                 callback = flags;
                 flags = { type: 'MARKET' };
             }
             if ( typeof flags.type === 'undefined' ) flags.type = 'MARKET';
-            marginOrder( 'SELL', symbol, quantity, 0, {...flags,isIsolated}, callback );
+            marginOrder( 'SELL', symbol, quantity, 0, { ...flags, isIsolated }, callback );
         },
 
         /**
@@ -4526,8 +4526,8 @@ let api = function Binance( options = {} ) {
          * @param {function} callback - the callback function
          * @return {undefined}
          */
-        mgCancel: function ( symbol, orderid, callback = false,isIsolated='FALSE') {
-            signedRequest( sapi + 'v1/margin/order', { symbol: symbol, orderId: orderid,isIsolated }, function ( error, data ) {
+        mgCancel: function ( symbol, orderid, callback = false, isIsolated = 'FALSE' ) {
+            signedRequest( sapi + 'v1/margin/order', { symbol: symbol, orderId: orderid, isIsolated }, function ( error, data ) {
                 if ( callback ) return callback.call( this, error, data, symbol );
             }, 'DELETE' );
         },
@@ -4638,7 +4638,7 @@ let api = function Binance( options = {} ) {
                 if ( callback ) return callback( error, data );
             }, 'POST' );
         },
-		/**
+        /**
 		* Universal Transfer requires API permissions enabled
 		* @param {string} type - ENUM , example MAIN_UMFUTURE for SPOT to USDT futures, see https://binance-docs.github.io/apidocs/spot/en/#user-universal-transfer
 		* @param {string} asset - the asset - example :USDT
@@ -4646,8 +4646,8 @@ let api = function Binance( options = {} ) {
 		* @param {function} callback - the callback function (optionnal)
 		* @return {promise}
 		*/
-		universalTransfer: (type, asset, amount, callback) =>
-			universalTransfer(type, asset, amount, callback),
+        universalTransfer: ( type, asset, amount, callback ) =>
+            universalTransfer( type, asset, amount, callback ),
 
         /**
         * Get trades for a given symbol - margin account 
@@ -4741,14 +4741,14 @@ let api = function Binance( options = {} ) {
          * @param {string} symbol - symbol for isolated margin
          * @return {undefined}
          */
-        mgBorrow: function ( asset, amount, callback, isIsolated='FALSE',symbol=null ) {
+        mgBorrow: function ( asset, amount, callback, isIsolated = 'FALSE', symbol = null ) {
             let parameters = Object.assign( { asset: asset, amount: amount } );
-            if (isIsolated ==='TRUE' && !symbol) throw new Error('If "isIsolated" = "TRUE", "symbol" must be sent')
-            const isolatedObj = isIsolated === 'TRUE'?{
+            if ( isIsolated === 'TRUE' && !symbol ) throw new Error( 'If "isIsolated" = "TRUE", "symbol" must be sent' )
+            const isolatedObj = isIsolated === 'TRUE' ? {
                 isIsolated,
                 symbol
-            }:{}
-            signedRequest( sapi + 'v1/margin/loan', {...parameters,...isolatedObj}, function ( error, data ) {
+            } : {}
+            signedRequest( sapi + 'v1/margin/loan', { ...parameters, ...isolatedObj }, function ( error, data ) {
                 if ( callback ) return callback( error, data );
             }, 'POST' );
         },
@@ -4760,9 +4760,9 @@ let api = function Binance( options = {} ) {
          * @param {function} callback - the callback function
          * @return {undefined}
          */
-        mgQueryLoan: function ( asset, options, callback) {
+        mgQueryLoan: function ( asset, options, callback ) {
             let parameters = Object.assign( { asset: asset }, options );
-            signedRequest( sapi + 'v1/margin/loan', {...parameters}, function ( error, data ) {
+            signedRequest( sapi + 'v1/margin/loan', { ...parameters }, function ( error, data ) {
                 if ( callback ) return callback( error, data );
             }, 'GET' );
         },
@@ -4776,7 +4776,7 @@ let api = function Binance( options = {} ) {
          */
         mgQueryRepay: function ( asset, options, callback ) {
             let parameters = Object.assign( { asset: asset }, options );
-            signedRequest( sapi + 'v1/margin/repay', {...parameters}, function ( error, data ) {
+            signedRequest( sapi + 'v1/margin/repay', { ...parameters }, function ( error, data ) {
                 if ( callback ) return callback( error, data );
             }, 'GET' );
         },
@@ -4790,14 +4790,14 @@ let api = function Binance( options = {} ) {
          * @param {string} symbol - symbol for isolated margin
          * @return {undefined}
          */
-        mgRepay: function ( asset, amount, callback ,isIsolated='FALSE',symbol=null ) {
+        mgRepay: function ( asset, amount, callback, isIsolated = 'FALSE', symbol = null ) {
             let parameters = Object.assign( { asset: asset, amount: amount } );
-            if (isIsolated ==='TRUE' && !symbol) throw new Error('If "isIsolated" = "TRUE", "symbol" must be sent')
-            const isolatedObj = isIsolated === 'TRUE'?{
+            if ( isIsolated === 'TRUE' && !symbol ) throw new Error( 'If "isIsolated" = "TRUE", "symbol" must be sent' )
+            const isolatedObj = isIsolated === 'TRUE' ? {
                 isIsolated,
                 symbol
-            }:{}
-            signedRequest( sapi + 'v1/margin/repay', {...parameters,...isolatedObj}, function ( error, data ) {
+            } : {}
+            signedRequest( sapi + 'v1/margin/repay', { ...parameters, ...isolatedObj }, function ( error, data ) {
                 if ( callback ) return callback( error, data );
             }, 'POST' );
         },
@@ -4808,9 +4808,9 @@ let api = function Binance( options = {} ) {
          * @param {boolean} isIsolated - the callback function
          * @return {undefined}
          */
-        mgAccount: function( callback ,isIsolated = false) {
+        mgAccount: function( callback, isIsolated = false ) {
             let endpoint = 'v1/margin';
-	        endpoint += (isIsolated)?'/isolated':'' + '/account';
+	        endpoint += ( isIsolated ) ? '/isolated' : '' + '/account';
             signedRequest( sapi + endpoint, {}, function( error, data ) {
                 if( callback ) return callback( error, data );
             } );
@@ -5555,7 +5555,7 @@ let api = function Binance( options = {} ) {
              * @param {int} limit - the number of entries
              * @return {string} the websocket endpoint
              */
-            depthCache: function depthCacheFunction( symbols, callback, limit = 500 ) {
+            depthCache: function depthCacheFunction( symbols, callback, limit = 500, speed = '100ms' ) {
                 let reconnect = () => {
                     if ( Binance.options.reconnect ) depthCacheFunction( symbols, callback, limit );
                 };
@@ -5633,7 +5633,7 @@ let api = function Binance( options = {} ) {
                     if ( !isArrayUnique( symbols ) ) throw Error( 'depthCache: "symbols" cannot contain duplicate elements.' );
                     symbols.forEach( symbolDepthInit );
                     let streams = symbols.map( function ( symbol ) {
-                        return symbol.toLowerCase() + `@depth@100ms`;
+                        return symbol.toLowerCase() + `@depth@${ speed }`;
                     } );
                     subscription = subscribeCombined( streams, handleDepthStreamData, reconnect, function () {
                         async.mapLimit( symbols, 50, getSymbolDepthSnapshot, ( err, results ) => {
@@ -5645,7 +5645,7 @@ let api = function Binance( options = {} ) {
                 } else {
                     let symbol = symbols;
                     symbolDepthInit( symbol );
-                    subscription = subscribe( symbol.toLowerCase() + `@depth@100ms`, handleDepthStreamData, reconnect, function () {
+                    subscription = subscribe( symbol.toLowerCase() + `@depth@${ speed }`, handleDepthStreamData, reconnect, function () {
                         async.mapLimit( [ symbol ], 1, getSymbolDepthSnapshot, ( err, results ) => {
                             if ( err ) throw err;
                             results.forEach( updateSymbolDepthCache );
