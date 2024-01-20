@@ -3178,6 +3178,41 @@ let api = function Binance( options = {} ) {
         },
 
         /**
+        * Gets all order of a given symbol
+        * @param {string} symbol - the symbol
+        * @param {number} startTime - the start time
+        * @param {number} endTime - the end time
+        * @param {function} callback - the callback function (can also accept options)
+        * @param {object} options - additional options
+        * @return {promise or undefined} - omitting the callback returns a promise
+        */
+        allOrdersByDate: function ( symbol, startTime, endTime, callback, options = {} ) {
+            let parameters = Object.assign( { symbol: symbol, startTime: startTime, endTime: endTime }, options );
+            if ( typeof callback == 'object' ) {
+                options = callback;
+                callback = false;
+            }
+            if ( !callback ) {
+                return new Promise( ( resolve, reject ) => {
+                    callback = ( error, response ) => {
+                        if ( error ) {
+                            reject( error );
+                        } else {
+                            resolve( response );
+                        }
+                    }
+                    signedRequest( base + 'v3/allOrders', parameters, function ( error, data ) {
+                        return callback.call( this, error, data, symbol, startTime, endTime );
+                    } );
+                } )
+            } else {
+                signedRequest( base + 'v3/allOrders', parameters, function ( error, data ) {
+                    return callback.call( this, error, data, symbol, startTime, endTime );
+                } );
+            }
+        },
+
+        /**
         * Gets the depth information for a given symbol
         * @param {string} symbol - the symbol
         * @param {function} callback - the callback function
@@ -3641,6 +3676,37 @@ let api = function Binance( options = {} ) {
             } else {
                 signedRequest( base + 'v3/myTrades', parameters, function ( error, data ) {
                     return callback.call( this, error, data, symbol );
+                } );
+            }
+        },
+
+        /**
+        * Get trades for a given symbol and date
+        * @param {string} symbol - the symbol
+        * @param {numver} startTime - the start time
+        * @param {number} endTime - the end time
+        * @param {function} callback - the callback function
+        * @param {object} options - additional options
+        * @return {promise or undefined} - omitting the callback returns a promise
+        */
+         tradesByDate: ( symbol, startTime, endTime, callback, options = {} ) => {
+            let parameters = Object.assign( { symbol: symbol, startTime: startTime, endTime: endTime}, options );
+            if ( !callback ) {
+                return new Promise( ( resolve, reject ) => {
+                    callback = ( error, response ) => {
+                        if ( error ) {
+                            reject( error );
+                        } else {
+                            resolve( response );
+                        }
+                    }
+                    signedRequest( base + 'v3/myTrades', parameters, function ( error, data ) {
+                        return callback.call( this, error, data, symbol, startTime, endTime );
+                    } );
+                } )
+            } else {
+                signedRequest( base + 'v3/myTrades', parameters, function ( error, data ) {
+                    return callback.call( this, error, data, symbol, startTime, endTime );
                 } );
             }
         },

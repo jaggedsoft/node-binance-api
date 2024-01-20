@@ -25,7 +25,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git://github.com/jaggedsoft/node-binance-api.git"
+    "url": "https://github.com/devshinon-br/node-binance-api"
   },
   "keywords": [
     "binance",
@@ -49,5 +49,8 @@
     "mocha": "^6.2.2",
     "mocha-lcov-reporter": "^1.3.0",
     "nyc": "^14.1.1"
+  },
+  "directories": {
+    "example": "examples"
   }
 }
